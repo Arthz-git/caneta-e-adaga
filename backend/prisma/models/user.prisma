@@ -1,0 +1,14 @@
+model User {
+    id        Int      @id @default(autoincrement())
+    name      String
+    email     String   @unique
+    password  String
+    role      Int      @default(200)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    characters    UserCharacter[]
+    refreshTokens RefreshToken[]
+
+    @@map("users")
+}

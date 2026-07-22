@@ -1,0 +1,13 @@
+model UserCharacter {
+    id          Int      @id @default(autoincrement())
+    userId      Int
+    user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    name        String
+    description String @db.Text
+    lore        String @db.Text
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@index([userId])
+    @@map("user_character")
+}
