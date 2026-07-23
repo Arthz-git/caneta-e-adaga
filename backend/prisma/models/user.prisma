@@ -9,6 +9,8 @@ model User {
 
     characters    UserCharacter[]
     refreshTokens RefreshToken[]
+    mesasCreated  Mesa[]
+    mesaPlayers   MesaPlayers[]
 
     @@map("users")
 }

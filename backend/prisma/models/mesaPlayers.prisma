@@ -1,0 +1,10 @@
+model MesaPlayers {
+    id       Int      @id @default(autoincrement())
+    userId   Int
+    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+    mesaId   Int
+    mesa     Mesa     @relation(fields: [mesaId], references: [id], onDelete: Cascade)
+    joinedAt DateTime
+
+	@@unique([userId, mesaId])
+}

@@ -1,0 +1,14 @@
+model Mesa {
+    id          Int      @id @default(autoincrement())
+    title       String
+    description String
+    createdBy   Int
+    creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    players MesaPlayers[]
+
+    @@index([createdBy])
+    @@map("mesas")
+}
