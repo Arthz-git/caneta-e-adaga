@@ -7,9 +7,9 @@ export class CreateUserCharacterService {
 	constructor(
 		private userCharactersRepository: IUserCharactersRepository,
 		private usersRepository: IUsersRepository
-	) {}
+	) { }
 
-	async execute(data : CreateUserCharacterDTO) {
+	async execute(data: CreateUserCharacterDTO) {
 		const userExists = await this.usersRepository.findById(data.userId)
 
 		if (!userExists) {
