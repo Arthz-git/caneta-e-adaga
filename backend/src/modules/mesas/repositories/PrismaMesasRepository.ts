@@ -8,13 +8,10 @@ export class PrismaMesasRepository implements IMesasRepository {
 		return prisma.mesa.create({ data })
 	}
 
-	async update(data: UpdateMesaDTO) {
+	async update({ id, ...data }: UpdateMesaDTO) {
 		return prisma.mesa.update({
-			where: { id: data.id },
-			data: {
-				title: data.title,
-				description: data.description
-			}
+			where: { id: id },
+			data: data
 		})
 	}
 

@@ -8,14 +8,10 @@ export class PrismaUserCharactersRepository implements IUserCharactersRepository
 		return prisma.userCharacter.create({ data })
 	}
 
-	async update(data: UpdateUserCharacterDTO) {
+	async update({ id, ...data }: UpdateUserCharacterDTO) {
 		return prisma.userCharacter.update({
-			where: { id: data.id },
-			data: {
-				name: data.name,
-				description: data.description,
-				lore: data.lore
-			}
+			where: { id: id },
+			data: data
 		})
 	}
 
