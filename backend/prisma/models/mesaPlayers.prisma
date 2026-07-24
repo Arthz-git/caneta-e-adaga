@@ -10,6 +10,7 @@ model MesaPlayers {
     joinedAt        DateTime
 
     @@unique([userId, mesaId])
+	@@map("mesa_players")
 }
 
 enum MesaPlayerRole {
