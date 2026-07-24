@@ -16,7 +16,7 @@ const getAllUserCharacterByUserIdController = new GetAllUserCharacterByUserIdCon
 
 userCharactersRoutes.post('/', ensureAuthenticated, (req, res) => createUserCharacterController.handle(req, res))
 userCharactersRoutes.delete('/:id', ensureAuthenticated, (req, res) => deleteUserCharacterController.handle(req, res))
-userCharactersRoutes.put('/', ensureAuthenticated, (req, res) => updateUserCharacterController.handle(req, res))
+userCharactersRoutes.put('/:id', ensureAuthenticated, (req, res) => updateUserCharacterController.handle(req, res))
 userCharactersRoutes.get('/:id', ensureAuthenticated, (req, res) => getUserCharacterController.handle(req, res))
 userCharactersRoutes.get('/userId/:userId', ensureAuthenticated, (req, res) => getAllUserCharacterByUserIdController.handle(req, res))
 

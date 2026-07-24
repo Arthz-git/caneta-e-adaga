@@ -18,7 +18,7 @@ const getAllMesaByCreatorController = new GetAllMesaByCreatorController()
 mesaRoutes.get('/:id', ensureAuthenticated, (req, res) => getMesaController.handle(req, res))
 mesaRoutes.get('/createdBy/:createdBy', ensureAuthenticated, (req, res) => getAllMesaByCreatorController.handle(req, res))
 mesaRoutes.post('/', ensureAuthenticated, (req, res) => createMesaController.handle(req, res))
-mesaRoutes.put('/', ensureAuthenticated, (req, res) => updateMesaController.handle(req, res))
+mesaRoutes.put('/:id', ensureAuthenticated, (req, res) => updateMesaController.handle(req, res))
 mesaRoutes.delete('/:id', ensureAuthenticated, (req, res) => deleteMesaController.handle(req, res))
 
 export { mesaRoutes }

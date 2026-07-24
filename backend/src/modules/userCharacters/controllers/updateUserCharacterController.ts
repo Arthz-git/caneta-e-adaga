@@ -8,7 +8,7 @@ import { ZodError } from 'zod'
 export class UpdateUserCharacterController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = updateUserCharacterSchema.parse(req.body)
+			const data = updateUserCharacterSchema.parse({ ...req.body, id: req.params.id })
 
 			const userCharactersRepository = new PrismaUserCharactersRepository()
 			const updateUserCharacterService = new UpdateUserCharacterService(userCharactersRepository)

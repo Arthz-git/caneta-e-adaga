@@ -8,7 +8,7 @@ import { UpdateMesaService } from '../services/UpdateMesaService'
 export class UpdateMesaController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = updateMesaSchema.parse(req.body)
+			const data = updateMesaSchema.parse({ ...req.body, id: req.params.id })
 
 			const mesaRepository = new PrismaMesasRepository()
 			const updateMesaService = new UpdateMesaService(mesaRepository)
