@@ -2,18 +2,18 @@ import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
 import { PrismaUsersRepository } from '../repositories/PrismaUsersRepository'
-import { findUserByIdSchema } from '../schemas/findUserById.schema'
-import { FindUserByIdService } from '../services/FindUserByIdService'
+import { getUserByIdSchema } from '../schemas/getUserById.schema'
+import { GetUserByIdService } from '../services/GetUserByIdService'
 
-export class FindUserByIdController {
+export class GetUserByIdController {
 	async handle(req: Request, res: Response) {
 		try {
-			const { id } = findUserByIdSchema.parse(req.params)
+			const { id } = getUserByIdSchema.parse(req.params)
 
 			const usersRepository = new PrismaUsersRepository()
-			const findUserByIdService = new FindUserByIdService(usersRepository)
+			const getUserByIdService = new GetUserByIdService(usersRepository)
 
-			const user = await findUserByIdService.execute(id)
+			const user = await getUserByIdService.execute(id)
 
 			return res.status(200).json(user)
 		} catch (error) {

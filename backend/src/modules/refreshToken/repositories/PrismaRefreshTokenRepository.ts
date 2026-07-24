@@ -7,7 +7,7 @@ export class PrismaRefreshTokenRepository implements IRefreshTokenRepository {
 		return prisma.refreshToken.create({ data })
 	}
 
-	async findByHash(tokenHash: string) {
+	async getByHash(tokenHash: string) {
 		return prisma.refreshToken.findUnique({ where: { tokenHash } })
 	}
 

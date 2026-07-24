@@ -1,10 +1,19 @@
 model MesaPlayers {
-    id       Int      @id @default(autoincrement())
-    userId   Int
-    user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-    mesaId   Int
-    mesa     Mesa     @relation(fields: [mesaId], references: [id], onDelete: Cascade)
-    joinedAt DateTime
+    id              Int            @id @default(autoincrement())
+    userId          Int
+    user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+    mesaId          Int
+    mesa            Mesa           @relation(fields: [mesaId], references: [id], onDelete: Cascade)
+    role            MesaPlayerRole @default(PLAYER)
+    userCharacterId Int?
+    userCharacter   UserCharacter? @relation(fields: [userCharacterId], references: [id], onDelete: SetNull)
+    joinedAt        DateTime
 
-	@@unique([userId, mesaId])
+    @@unique([userId, mesaId])
+}
+
+enum MesaPlayerRole {
+    MASTER
+    PLAYER
+    SPECTATOR
 }

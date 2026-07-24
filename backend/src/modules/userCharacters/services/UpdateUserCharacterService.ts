@@ -1,12 +1,12 @@
 import { AppError } from '../../../shared/errors/AppError'
-import { IUserCharactersRepository } from '../repositories/IUserCharactersRepository'
-import { UpdateUserCharacterDTO } from '../schemas/updateUserCharacter.schema'
+import type { IUserCharactersRepository } from '../repositories/IUserCharactersRepository'
+import type { UpdateUserCharacterDTO } from '../schemas/updateUserCharacter.schema'
 
 export class UpdateUserCharacterService {
 	constructor(private userCharactersRepository: IUserCharactersRepository) { }
 
 	async execute(data: UpdateUserCharacterDTO, userId: number) {
-		const userCharacter = await this.userCharactersRepository.find(data.id)
+		const userCharacter = await this.userCharactersRepository.get(data.id)
 
 		if (!userCharacter) {
 			throw new AppError('Personagem não encontrado', 404)

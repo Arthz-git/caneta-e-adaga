@@ -1,7 +1,7 @@
 import { prisma } from '../../../database/prisma-client'
-import { CreateUserCharacterDTO } from '../schemas/createUserCharacter.schema'
-import { UpdateUserCharacterDTO } from '../schemas/updateUserCharacter.schema'
-import { IUserCharactersRepository } from './IUserCharactersRepository'
+import type { CreateUserCharacterDTO } from '../schemas/createUserCharacter.schema'
+import type { UpdateUserCharacterDTO } from '../schemas/updateUserCharacter.schema'
+import type { IUserCharactersRepository } from './IUserCharactersRepository'
 
 export class PrismaUserCharactersRepository implements IUserCharactersRepository {
 	async create(data: CreateUserCharacterDTO) {
@@ -23,11 +23,11 @@ export class PrismaUserCharactersRepository implements IUserCharactersRepository
 		await prisma.userCharacter.delete({ where: { id } })
 	}
 
-	async find(id: number) {
+	async get(id: number) {
 		return prisma.userCharacter.findUnique({ where: { id } })
 	}
 
-	async findAllByUserId(userId: number) {
+	async getAllByUserId(userId: number) {
 		return prisma.userCharacter.findMany({ where: { userId } })
 	}
 }

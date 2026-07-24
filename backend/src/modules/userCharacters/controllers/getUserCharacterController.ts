@@ -1,21 +1,21 @@
 import type { Request, Response } from 'express'
 import { AppError } from '../../../shared/errors/AppError'
 import { PrismaUserCharactersRepository } from '../repositories/PrismaUserCharactersRepository'
-import { FindAllUserCharacterByUserIdService } from '../services/FindAllUserCharacterByUserIdService'
-import { findAllUserCharacterByUserIdSchema } from '../schemas/findAllUserCharacterByUserId.schema'
+import { GetUserCharacterService } from '../services/GetUserCharacterService'
+import { getUserCharacterSchema } from '../schemas/getUserCharacter.schema'
 import { ZodError } from 'zod'
 
-export class FindAllUserCharacterByUserIdController {
+export class GetUserCharacterController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = findAllUserCharacterByUserIdSchema.parse(req.params)
+			const data = getUserCharacterSchema.parse(req.params)
 
 			const userCharactersRepository = new PrismaUserCharactersRepository()
-			const findAllUserCharacterByUserIdService = new FindAllUserCharacterByUserIdService(userCharactersRepository)
+			const getUserCharacterService = new GetUserCharacterService(userCharactersRepository)
 
-			const userCharacters = await findAllUserCharacterByUserIdService.execute(data)
+			const userCharacter = await getUserCharacterService.execute(data)
 
-			return res.status(200).json(userCharacters)
+			return res.status(200).json(userCharacter)
 		}
 		catch (error) {
 			if (error instanceof ZodError) {

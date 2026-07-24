@@ -1,21 +1,21 @@
 import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
-import { PrismaUsersRepository } from '../repositories/PrismaUsersRepository'
-import { findUserByEmailSchema } from '../schemas/findUserByEmail.schema'
-import { FindUserByEmailService } from '../services/FindUserByEmailService'
+import { PrismaMesasRepository } from '../repositories/PrismaMesasRepository'
+import { updateMesaSchema } from '../schemas/updateMesa.schema'
+import { UpdateMesaService } from '../services/UpdateMesaService'
 
-export class FindUserByEmailController {
+export class UpdateMesaController {
 	async handle(req: Request, res: Response) {
 		try {
-			const { email } = findUserByEmailSchema.parse(req.params)
+			const data = updateMesaSchema.parse(req.body)
 
-			const usersRepository = new PrismaUsersRepository()
-			const findUserByEmailService = new FindUserByEmailService(usersRepository)
+			const mesaRepository = new PrismaMesasRepository()
+			const updateMesaService = new UpdateMesaService(mesaRepository)
 
-			const user = await findUserByEmailService.execute(email)
+			const mesa = await updateMesaService.execute(data, req.user!.id)
 
-			return res.status(200).json(user)
+			return res.status(200).json(mesa)
 		}
 		catch (error) {
 			if (error instanceof ZodError) {

@@ -9,7 +9,7 @@ export class LogoutService {
 	async execute({ refreshToken }: LogoutDTO) {
 		const tokenHash = createHash('sha256').update(refreshToken).digest('hex')
 
-		const storedToken = await this.refreshTokenRepository.findByHash(tokenHash)
+		const storedToken = await this.refreshTokenRepository.getByHash(tokenHash)
 
 		if (!storedToken || storedToken.revokedAt) {
 			throw new AppError('Refresh token inválido', 401)

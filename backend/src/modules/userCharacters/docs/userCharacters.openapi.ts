@@ -2,8 +2,8 @@ import { openApiRegistry } from '../../../shared/openapi/registry'
 import { createUserCharacterSchema } from '../schemas/createUserCharacter.schema'
 import { updateUserCharacterSchema } from '../schemas/updateUserCharacter.schema'
 import { deleteUserCharacterSchema } from '../schemas/deleteUserCharacter.schema'
-import { findUserCharacterSchema } from '../schemas/findUserCharacter.schema'
-import { findAllUserCharacterByUserIdSchema } from '../schemas/findAllUserCharacterByUserId.schema'
+import { getUserCharacterSchema } from '../schemas/getUserCharacter.schema'
+import { getAllUserCharacterByUserIdSchema } from '../schemas/getAllUserCharacterByUserId.schema'
 
 openApiRegistry.registerPath({
 	method: 'post',
@@ -102,7 +102,7 @@ openApiRegistry.registerPath({
 	summary: 'Busca um personagem pelo id',
 	security: [{ bearerAuth: [] }],
 	request: {
-		params: findUserCharacterSchema
+		params: getUserCharacterSchema
 	},
 	responses: {
 		200: {
@@ -127,7 +127,7 @@ openApiRegistry.registerPath({
 	summary: 'Lista todos os personagens de um usuário',
 	security: [{ bearerAuth: [] }],
 	request: {
-		params: findAllUserCharacterByUserIdSchema
+		params: getAllUserCharacterByUserIdSchema
 	},
 	responses: {
 		200: {

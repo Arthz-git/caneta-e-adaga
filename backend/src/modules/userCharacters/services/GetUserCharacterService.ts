@@ -1,12 +1,12 @@
 import { AppError } from '../../../shared/errors/AppError'
 import type { IUserCharactersRepository } from '../repositories/IUserCharactersRepository'
-import type { FindUserCharacterDTO } from '../schemas/findUserCharacter.schema'
+import type { GetUserCharacterDTO } from '../schemas/getUserCharacter.schema'
 
-export class FindUserCharacterService {
+export class GetUserCharacterService {
 	constructor(private userCharactersRepository: IUserCharactersRepository) { }
 
-	async execute(data: FindUserCharacterDTO) {
-		const userCharacter = await this.userCharactersRepository.find(data.id)
+	async execute(data: GetUserCharacterDTO) {
+		const userCharacter = await this.userCharactersRepository.get(data.id)
 
 		if (!userCharacter) {
 			throw new AppError('Personagem não encontrado', 404)

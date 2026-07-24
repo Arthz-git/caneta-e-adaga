@@ -6,6 +6,6 @@ export interface IUserCharactersRepository {
 	create(data: CreateUserCharacterDTO): Promise<UserCharacterModel>
 	update(data: UpdateUserCharacterDTO): Promise<UserCharacterModel>
 	delete(id: number): Promise<void>
-	find(id: number): Promise<UserCharacterModel | null>
-	findAllByUserId(userId: number): Promise<UserCharacterModel[] | null>
+	get(id: number): Promise<UserCharacterModel | null>
+	getAllByUserId(userId: number): Promise<UserCharacterModel[]>
 }

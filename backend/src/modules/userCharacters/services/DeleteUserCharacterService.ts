@@ -6,7 +6,7 @@ export class DeleteUserCharacterService {
 	constructor(private userCharactersRepository: IUserCharactersRepository) { }
 
 	async execute(data: DeleteUserCharacterDTO, userId: number) {
-		const userCharacter = await this.userCharactersRepository.find(data.id)
+		const userCharacter = await this.userCharactersRepository.get(data.id)
 
 		if (!userCharacter) {
 			throw new AppError('Personagem não encontrado', 404)

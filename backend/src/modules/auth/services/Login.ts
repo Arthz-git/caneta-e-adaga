@@ -14,7 +14,7 @@ export class LoginService {
 	) {}
 
 	async execute({ email, password }: LoginDTO) {
-		const user = await this.usersRepository.findByEmail(email)
+		const user = await this.usersRepository.getByEmail(email)
 
 		if (!user) {
 			throw new AppError('E-mail ou senha inválidos', 401)

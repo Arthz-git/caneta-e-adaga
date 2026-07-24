@@ -7,11 +7,11 @@ export class PrismaUsersRepository implements IUsersRepository {
 		return prisma.user.create({ data })
 	}
 
-	async findByEmail(email: string) {
+	async getByEmail(email: string) {
 		return prisma.user.findUnique({ where: { email } })
 	}
 
-	async findById(id: number) {
+	async get(id: number) {
 		return prisma.user.findUnique({ where: { id } })
 	}
 }

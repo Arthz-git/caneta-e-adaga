@@ -7,7 +7,7 @@ export class CreateUserService {
 	constructor(private usersRepository: IUsersRepository) {}
 
 	async execute({ name, email, password }: CreateUserDTO) {
-		const userAlreadyExists = await this.usersRepository.findByEmail(email)
+		const userAlreadyExists = await this.usersRepository.getByEmail(email)
 
 		if (userAlreadyExists) {
 			throw new AppError('E-mail já está em uso', 409)

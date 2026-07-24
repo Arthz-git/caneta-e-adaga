@@ -1,7 +1,7 @@
 import { openApiRegistry } from '../../../shared/openapi/registry'
 import { createUserSchema } from '../schemas/createUser.schema'
-import { findUserByEmailSchema } from '../schemas/findUserByEmail.schema'
-import { findUserByIdSchema } from '../schemas/findUserById.schema'
+import { getUserByEmailSchema } from '../schemas/getUserByEmail.schema'
+import { getUserByIdSchema } from '../schemas/getUserById.schema'
 
 openApiRegistry.registerPath({
 	method: 'post',
@@ -37,7 +37,7 @@ openApiRegistry.registerPath({
 	summary: 'Busca um usuário pelo e-mail',
 	security: [{ bearerAuth: [] }],
 	request: {
-		params: findUserByEmailSchema
+		params: getUserByEmailSchema
 	},
 	responses: {
 		200: {
@@ -65,7 +65,7 @@ openApiRegistry.registerPath({
 	summary: 'Busca um usuário pelo id',
 	security: [{ bearerAuth: [] }],
 	request: {
-		params: findUserByIdSchema
+		params: getUserByIdSchema
 	},
 	responses: {
 		200: {

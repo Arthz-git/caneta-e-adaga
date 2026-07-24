@@ -15,13 +15,13 @@ export class RefreshTokenService {
 	async execute({ refreshToken }: RefreshTokenDTO) {
 		const tokenHash = createHash('sha256').update(refreshToken).digest('hex')
 
-		const storedToken = await this.refreshTokenRepository.findByHash(tokenHash)
+		const storedToken = await this.refreshTokenRepository.getByHash(tokenHash)
 
 		if (!storedToken || storedToken.revokedAt || storedToken.expiresAt < new Date()) {
 			throw new AppError('Refresh token inválido', 401)
 		}
 
-		const user = await this.usersRepository.findById(storedToken.userId)
+		const user = await this.usersRepository.get(storedToken.userId)
 
 		if (!user) {
 			throw new AppError('Refresh token inválido', 401)

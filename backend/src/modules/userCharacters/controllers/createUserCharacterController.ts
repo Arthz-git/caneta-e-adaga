@@ -5,7 +5,6 @@ import { createUserCharacterSchema } from '../schemas/createUserCharacter.schema
 import type { CreateUserCharacterDTO } from '../schemas/createUserCharacter.schema'
 import { PrismaUserCharactersRepository } from '../repositories/PrismaUserCharactersRepository'
 import { CreateUserCharacterService } from '../services/CreateUserCharacterService'
-import { PrismaUsersRepository } from '../../users/repositories/PrismaUsersRepository'
 
 export class CreateUserCharacterController {
 	async handle(req: Request, res: Response) {
@@ -13,9 +12,8 @@ export class CreateUserCharacterController {
 			const input = createUserCharacterSchema.parse(req.body)
 			const data: CreateUserCharacterDTO = { ...input, userId: req.user!.id }
 
-			const usersRepository = new PrismaUsersRepository()
 			const userCharactersRepository = new PrismaUserCharactersRepository()
-			const createUserCharacterService = new CreateUserCharacterService(userCharactersRepository, usersRepository)
+			const createUserCharacterService = new CreateUserCharacterService(userCharactersRepository)
 
 			const userCharacter = await createUserCharacterService.execute(data)
 
