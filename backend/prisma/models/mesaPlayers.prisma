@@ -7,10 +7,11 @@ model MesaPlayers {
     role            MesaPlayerRole @default(PLAYER)
     userCharacterId Int?
     userCharacter   UserCharacter? @relation(fields: [userCharacterId], references: [id], onDelete: SetNull)
-    joinedAt        DateTime
+    joinedAt        DateTime       @default(now())
+    updatedAt       DateTime       @updatedAt
 
     @@unique([userId, mesaId])
-	@@map("mesa_players")
+    @@map("mesa_players")
 }
 
 enum MesaPlayerRole {

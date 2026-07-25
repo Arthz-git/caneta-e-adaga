@@ -5,6 +5,7 @@ import { createMesaSchema } from '../schemas/createMesa.schema'
 import type { CreateMesaDTO } from '../schemas/createMesa.schema'
 import { PrismaMesasRepository } from '../repositories/PrismaMesasRepository'
 import { CreateMesaService } from '../services/CreateMesaService'
+import { PrismaMesaPlayersRepository } from '../../mesaPlayers/repositories/PrismaMesaPlayersRepository'
 
 export class CreateMesaController {
 	async handle(req: Request, res: Response) {
@@ -13,7 +14,8 @@ export class CreateMesaController {
 			const data: CreateMesaDTO = { ...input, createdBy: req.user!.id }
 
 			const mesaRepository = new PrismaMesasRepository()
-			const createMesaService = new CreateMesaService(mesaRepository)
+			const mesaPlayersRepository = new PrismaMesaPlayersRepository()
+			const createMesaService = new CreateMesaService(mesaRepository, mesaPlayersRepository)
 
 			const mesa = await createMesaService.execute(data)
 
