@@ -8,5 +8,5 @@ model RefreshToken {
     revokedAt DateTime?
 
     @@index([userId])
-    @@map("refresh_token")
+    @@map("refresh_tokens")
 }

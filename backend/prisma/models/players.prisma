@@ -11,7 +11,7 @@ model Players {
     updatedAt       DateTime       @updatedAt
 
     @@unique([userId, mesaId])
-    @@map("mesa_players")
+    @@map("players")
 }
 
 enum PlayerRole {

@@ -11,5 +11,5 @@ model UserCharacter {
     players Players[]
 
     @@index([userId])
-    @@map("user_character")
+    @@map("characters")
 }
