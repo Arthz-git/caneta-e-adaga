@@ -1,25 +1,27 @@
 import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
-import { createMesaSchema } from '../schemas/createMesa.schema'
-import type { CreateMesaDTO } from '../schemas/createMesa.schema'
-import { PrismaMesasRepository } from '../repositories/PrismaMesasRepository'
-import { CreateMesaService } from '../services/CreateMesaService'
 import { PrismaPlayersRepository } from '../../players/repositories/PrismaPlayersRepository'
+import { PrismaMesasRepository } from '../../mesas/repositories/PrismaMesasRepository'
+import { updateRolePlayerSchema } from '../schemas/updateRolePlayer.schema'
+import { UpdateRolePlayerService } from '../services/UpdateRolePlayerService'
 
-export class CreateMesaController {
+export class UpdateRolePlayerController {
 	async handle(req: Request, res: Response) {
 		try {
-			const input = createMesaSchema.parse(req.body)
-			const data: CreateMesaDTO = { ...input, createdBy: req.user!.id }
+			const data = updateRolePlayerSchema.parse({ ...req.body, id: req.params })
 
-			const mesaRepository = new PrismaMesasRepository()
 			const playersRepository = new PrismaPlayersRepository()
-			const createMesaService = new CreateMesaService(mesaRepository, playersRepository)
+			const mesasRepository = new PrismaMesasRepository()
 
-			const mesa = await createMesaService.execute(data)
+			const updateRolePlayerService = new UpdateRolePlayerService(
+				playersRepository,
+				mesasRepository
+			)
 
-			return res.status(201).json(mesa)
+			const player = await updateRolePlayerService.execute(data, req.user!.id)
+
+			return res.status(200).json(player)
 		}
 		catch (error) {
 			if (error instanceof ZodError) {

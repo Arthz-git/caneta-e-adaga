@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const createMesaPlayerSchema = z.object({
+export const createPlayerSchema = z.object({
 	userId: z
 		.coerce
 		.number('Id do usuário inválido')
@@ -18,4 +18,4 @@ export const createMesaPlayerSchema = z.object({
 		.nullable()
 })
 
-export type CreateMesaPlayerDTO = z.infer<typeof createMesaPlayerSchema>
+export type CreatePlayerDTO = z.infer<typeof createPlayerSchema>

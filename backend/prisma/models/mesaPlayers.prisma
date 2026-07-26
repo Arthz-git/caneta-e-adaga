@@ -1,10 +1,10 @@
-model MesaPlayers {
+model Players {
     id              Int            @id @default(autoincrement())
     userId          Int
     user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
     mesaId          Int
     mesa            Mesa           @relation(fields: [mesaId], references: [id], onDelete: Cascade)
-    role            MesaPlayerRole @default(PLAYER)
+    role            PlayerRole @default(PLAYER)
     userCharacterId Int?
     userCharacter   UserCharacter? @relation(fields: [userCharacterId], references: [id], onDelete: SetNull)
     joinedAt        DateTime       @default(now())
@@ -14,7 +14,7 @@ model MesaPlayers {
     @@map("mesa_players")
 }
 
-enum MesaPlayerRole {
+enum PlayerRole {
     MASTER
     PLAYER
     SPECTATOR

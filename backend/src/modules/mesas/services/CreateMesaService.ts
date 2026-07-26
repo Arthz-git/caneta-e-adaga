@@ -1,17 +1,17 @@
-import { IMesaPlayersRepository } from '../../mesaPlayers/repositories/IMesaPlayersRepository'
+import { IPlayersRepository } from '../../players/repositories/IPlayersRepository'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 import type { CreateMesaDTO } from '../schemas/createMesa.schema'
 
 export class CreateMesaService {
 	constructor(
 		private mesasRepository: IMesasRepository,
-		private mesaPlayersRepository: IMesaPlayersRepository
+		private playersRepository: IPlayersRepository
 	) { }
 
 	async execute(data: CreateMesaDTO) {
 		const created = await this.mesasRepository.create(data)
 
-		await this.mesaPlayersRepository.create({
+		await this.playersRepository.create({
 			userId: data.createdBy,
 			mesaId: created.id,
 			role: 'MASTER',

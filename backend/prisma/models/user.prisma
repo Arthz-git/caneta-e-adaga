@@ -10,7 +10,7 @@ model User {
     characters    UserCharacter[]
     refreshTokens RefreshToken[]
     mesasCreated  Mesa[]
-    mesaPlayers   MesaPlayers[]
+    players   Players[]
 
     @@map("users")
 }

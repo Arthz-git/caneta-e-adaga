@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-export const updateRoleMesaPlayerSchema = z.object({
+export const updateRolePlayerSchema = z.object({
 	id: z
 		.coerce
 		.number('Id do registro inválido')
@@ -9,4 +9,4 @@ export const updateRoleMesaPlayerSchema = z.object({
 		.enum(['MASTER', 'PLAYER', 'SPECTATOR'], 'Função inválida')
 })
 
-export type UpdateRoleMesaPlayerDTO = z.infer<typeof updateRoleMesaPlayerSchema>
+export type UpdateRolePlayerDTO = z.infer<typeof updateRolePlayerSchema>

@@ -10,6 +10,7 @@ import { mesaRoutes } from './modules/mesas/routes/mesas.routes'
 import { createServer } from 'node:http'
 import { createSocketIOServer } from './shared/websocket/io'
 import { env } from './config/env'
+import { playerRoutes } from './modules/players/routes/players.routes'
 
 const app = express()
 const httpServer = createServer(app)
@@ -28,7 +29,8 @@ app.get('/health', (req: Request, res: Response) => {
 app.use('/auth', authRoutes)
 app.use('/users', usersRoutes)
 app.use('/characters', userCharactersRoutes)
-app.use('/mesa', mesaRoutes)
+app.use('/mesas', mesaRoutes)
+app.use('/players', playerRoutes)
 
 const openApiDocument = generateOpenApiDocument()
 

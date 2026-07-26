@@ -7,7 +7,7 @@ model Mesa {
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
 
-    players MesaPlayers[]
+    players Players[]
 
     @@index([createdBy])
     @@map("mesas")
