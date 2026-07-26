@@ -9,7 +9,7 @@ import { UpdateRolePlayerService } from '../services/UpdateRolePlayerService'
 export class UpdateRolePlayerController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = updateRolePlayerSchema.parse({ ...req.body, id: req.params })
+			const data = updateRolePlayerSchema.parse({ ...req.body, id: req.params.id })
 
 			const playersRepository = new PrismaPlayersRepository()
 			const mesasRepository = new PrismaMesasRepository()

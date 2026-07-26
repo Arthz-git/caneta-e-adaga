@@ -12,7 +12,7 @@ export class UpdateCharacterPlayerService {
 			throw new AppError('Registro não encontrado', 404)
 		}
 
-		if (data.id !== userId) {
+		if (player.userId !== userId) {
 			throw new AppError('Você não tem permissão para atualizar este registro', 403)
 		}
 

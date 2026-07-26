@@ -4,7 +4,7 @@ model Players {
     user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
     mesaId          Int
     mesa            Mesa           @relation(fields: [mesaId], references: [id], onDelete: Cascade)
-    role            PlayerRole @default(PLAYER)
+    role            PlayerRole     @default(PLAYER)
     userCharacterId Int?
     userCharacter   UserCharacter? @relation(fields: [userCharacterId], references: [id], onDelete: SetNull)
     joinedAt        DateTime       @default(now())

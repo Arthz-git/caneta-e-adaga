@@ -17,8 +17,8 @@ const getPlayersByMesaIdController = new GetPlayersByMesaIdController()
 
 playerRoutes.post('/', ensureAuthenticated, (req, res) => createPlayerController.handle(req, res))
 playerRoutes.delete('/:id', ensureAuthenticated, (req, res) => deletePlayerController.handle(req, res))
-playerRoutes.patch('/:id', ensureAuthenticated, (req, res) => updateRolePlayerController.handle(req, res))
-playerRoutes.patch('/:id', ensureAuthenticated, (req, res) => updateCharacterPlayerController.handle(req, res))
+playerRoutes.patch('/role/:id', ensureAuthenticated, (req, res) => updateRolePlayerController.handle(req, res))
+playerRoutes.patch('/character/:id', ensureAuthenticated, (req, res) => updateCharacterPlayerController.handle(req, res))
 playerRoutes.get('/mesaId/:mesaId', ensureAuthenticated, (req, res) => getPlayersByMesaIdController.handle(req, res))
 
 export { playerRoutes }

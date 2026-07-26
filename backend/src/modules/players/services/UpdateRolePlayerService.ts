@@ -23,7 +23,7 @@ export class UpdateRolePlayerService {
 		}
 
 		if (
-			data.id !== userId &&
+			player.userId !== userId &&
 			mesa.createdBy !== userId
 		) {
 			throw new AppError('Você não tem permissão para atualizar este registro', 403)

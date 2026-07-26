@@ -8,7 +8,7 @@ import { UpdateCharacterPlayerService } from '../services/UpdateCharacterPlayerS
 export class UpdateCharacterPlayerController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = updateCharacterPlayerSchema.parse({ ...req.body, id: req.params })
+			const data = updateCharacterPlayerSchema.parse({ ...req.body, id: req.params.id })
 
 			const playersRepository = new PrismaPlayersRepository()
 
