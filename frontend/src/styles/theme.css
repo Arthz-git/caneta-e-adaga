@@ -1,0 +1,69 @@
+:root {
+	/* Cores — modo claro (tinta sobre vitela) */
+	--color-paper: #e3e0d1;
+	--color-paper-raised: #ece9dc;
+	--color-ink: #1b1c22;
+	--color-ink-soft: #2e2c33;
+	--color-ink-faint: #5b5847;
+	--color-garnet: #7c2436;
+	--color-garnet-ink: #5e1b28;
+	--color-brass: #8a6a3c;
+	--color-brass-soft: #a9814c;
+	--color-line: rgba(27, 28, 34, 0.16);
+	--color-line-strong: rgba(27, 28, 34, 0.3);
+	--shadow: 0 1px 2px rgba(27, 28, 34, 0.08), 0 8px 24px -12px rgba(27, 28, 34, 0.25);
+
+	/* Tipografia */
+	--font-serif: 'Crimson Pro', 'Iowan Old Style', Georgia, serif;
+	--font-sans: 'Plus Jakarta Sans', Seravek, 'Segoe UI', Roboto, sans-serif;
+	--font-mono: ui-monospace, 'SFMono-Regular', Consolas, Menlo, monospace;
+	--font-size-base: 16px;
+	--line-height-base: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		--color-paper: #16161c;
+		--color-paper-raised: #1d1e25;
+		--color-ink: #e7e2d1;
+		--color-ink-soft: #cfc9b6;
+		--color-ink-faint: #8b8672;
+		--color-garnet: #c14a5e;
+		--color-garnet-ink: #e2879a;
+		--color-brass: #cfa869;
+		--color-brass-soft: #b7935e;
+		--color-line: rgba(231, 226, 209, 0.14);
+		--color-line-strong: rgba(231, 226, 209, 0.28);
+		--shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+	}
+}
+
+:root[data-theme='dark'] {
+	--color-paper: #16161c;
+	--color-paper-raised: #1d1e25;
+	--color-ink: #e7e2d1;
+	--color-ink-soft: #cfc9b6;
+	--color-ink-faint: #8b8672;
+	--color-garnet: #c14a5e;
+	--color-garnet-ink: #e2879a;
+	--color-brass: #cfa869;
+	--color-brass-soft: #b7935e;
+	--color-line: rgba(231, 226, 209, 0.14);
+	--color-line-strong: rgba(231, 226, 209, 0.28);
+	--shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 28px -14px rgba(0, 0, 0, 0.6);
+}
+
+:root[data-theme='light'] {
+	--color-paper: #e3e0d1;
+	--color-paper-raised: #ece9dc;
+	--color-ink: #1b1c22;
+	--color-ink-soft: #2e2c33;
+	--color-ink-faint: #5b5847;
+	--color-garnet: #7c2436;
+	--color-garnet-ink: #5e1b28;
+	--color-brass: #8a6a3c;
+	--color-brass-soft: #a9814c;
+	--color-line: rgba(27, 28, 34, 0.16);
+	--color-line-strong: rgba(27, 28, 34, 0.3);
+	--shadow: 0 1px 2px rgba(27, 28, 34, 0.08), 0 8px 24px -12px rgba(27, 28, 34, 0.25);
+}
