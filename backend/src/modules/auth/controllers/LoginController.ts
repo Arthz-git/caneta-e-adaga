@@ -5,6 +5,7 @@ import { PrismaUsersRepository } from '../../users/repositories/PrismaUsersRepos
 import { PrismaRefreshTokenRepository } from '../../refreshToken/repositories/PrismaRefreshTokenRepository'
 import { loginSchema } from '../schemas/login.schema'
 import { LoginService } from '../services/Login'
+import { REFRESH_TOKEN_COOKIE, refreshTokenCookieOptions } from '../../../shared/http/cookies/refreshTokenCookie'
 
 export class LoginController {
 	async handle(req: Request, res: Response) {
@@ -15,7 +16,9 @@ export class LoginController {
 			const refreshTokenRepository = new PrismaRefreshTokenRepository()
 			const loginService = new LoginService(usersRepository, refreshTokenRepository)
 
-			const result = await loginService.execute(data)
+			const { refreshToken, ...result } = await loginService.execute(data)
+
+			res.cookie(REFRESH_TOKEN_COOKIE, refreshToken, refreshTokenCookieOptions())
 
 			return res.status(200).json(result)
 		}

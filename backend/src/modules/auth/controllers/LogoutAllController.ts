@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { AppError } from '../../../shared/errors/AppError'
 import { PrismaRefreshTokenRepository } from '../../refreshToken/repositories/PrismaRefreshTokenRepository'
 import { LogoutAllService } from '../services/LogoutAll'
+import { REFRESH_TOKEN_COOKIE, refreshTokenCookieOptions } from '../../../shared/http/cookies/refreshTokenCookie'
 
 export class LogoutAllController {
 	async handle(req: Request, res: Response) {
@@ -10,6 +11,8 @@ export class LogoutAllController {
 			const logoutAllService = new LogoutAllService(refreshTokenRepository)
 
 			await logoutAllService.execute(req.user!.id)
+
+			res.clearCookie(REFRESH_TOKEN_COOKIE, refreshTokenCookieOptions())
 
 			return res.status(204).send()
 		}

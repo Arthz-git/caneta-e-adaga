@@ -1,5 +1,7 @@
 import express from 'express'
 import type { Request, Response } from 'express'
+import cors from 'cors'
+import cookieParser from 'cookie-parser'
 import swaggerUi from 'swagger-ui-express'
 import { authRoutes } from './modules/auth/routes/auth.route'
 import { usersRoutes } from './modules/users/routes/users.routes'
@@ -17,7 +19,12 @@ const httpServer = createServer(app)
 
 createSocketIOServer(httpServer)
 
+app.use(cors({
+	origin: env.FRONTEND_URL,
+	credentials: true
+}))
 app.use(express.json())
+app.use(cookieParser())
 
 app.get('/health', (req: Request, res: Response) => {
 	res.json({

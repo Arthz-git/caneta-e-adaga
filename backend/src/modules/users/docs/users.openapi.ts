@@ -2,6 +2,16 @@ import { openApiRegistry } from '../../../shared/openapi/registry'
 import { createUserSchema } from '../schemas/createUser.schema'
 import { getUserByEmailSchema } from '../schemas/getUserByEmail.schema'
 import { getUserByIdSchema } from '../schemas/getUserById.schema'
+import { userResponseSchema } from '../schemas/userResponse.schema'
+
+const userResponseExample = {
+	id: 1,
+	name: 'Fulano de Tal',
+	email: 'fulano@email.com',
+	role: 200,
+	createdAt: '2026-01-10T12:00:00.000Z',
+	updatedAt: '2026-01-10T12:00:00.000Z'
+}
 
 openApiRegistry.registerPath({
 	method: 'post',
@@ -19,7 +29,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		201: {
-			description: 'Usuário criado com sucesso'
+			description: 'Usuário criado com sucesso',
+			content: {
+				'application/json': {
+					schema: userResponseSchema,
+					example: userResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -41,7 +57,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Usuário encontrado com sucesso'
+			description: 'Usuário encontrado com sucesso',
+			content: {
+				'application/json': {
+					schema: userResponseSchema,
+					example: userResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -69,7 +91,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Usuário encontrado com sucesso'
+			description: 'Usuário encontrado com sucesso',
+			content: {
+				'application/json': {
+					schema: userResponseSchema,
+					example: userResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
