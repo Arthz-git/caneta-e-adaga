@@ -3,6 +3,17 @@ import { createMesaSchema } from '../schemas/createMesa.schema'
 import { deleteMesaSchema } from '../schemas/deleteMesa.schema'
 import { getMesaSchema } from '../schemas/getMesa.schema'
 import { getAllMesaByCreatorSchema } from '../schemas/getAllMesaByCreator.schema'
+import { mesaResponseSchema } from '../schemas/mesaResponse.schema'
+import { z } from 'zod'
+
+const mesaResponseExample = {
+	id: 1,
+	title: 'A Torre Esquecida',
+	description: 'Uma antiga torre guarda segredos que poucos ousam buscar.',
+	createdBy: 1,
+	createdAt: '2026-01-10T12:00:00.000Z',
+	updatedAt: '2026-01-10T12:00:00.000Z'
+}
 
 openApiRegistry.registerPath({
 	method: 'post',
@@ -22,7 +33,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		201: {
-			description: 'Mesa criada com sucesso'
+			description: 'Mesa criada com sucesso',
+			content: {
+				'application/json': {
+					schema: mesaResponseSchema,
+					example: mesaResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -44,7 +61,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Mesa encontrada com sucesso'
+			description: 'Mesa encontrada com sucesso',
+			content: {
+				'application/json': {
+					schema: mesaResponseSchema,
+					example: mesaResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -69,7 +92,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Lista de mesas retornada com sucesso'
+			description: 'Lista de mesas retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.array(mesaResponseSchema),
+					example: [mesaResponseExample]
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -101,7 +130,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Mesa atualizada com sucesso'
+			description: 'Mesa atualizada com sucesso',
+			content: {
+				'application/json': {
+					schema: mesaResponseSchema,
+					example: mesaResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'

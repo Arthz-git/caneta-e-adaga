@@ -4,6 +4,18 @@ import { deletePlayerSchema } from '../schemas/deletePlayer.schema'
 import { getPlayersByMesaIdSchema } from '../schemas/getPlayersByMesaId.schema'
 import { updateRolePlayerSchema } from '../schemas/updateRolePlayer.schema'
 import { updateCharacterPlayerSchema } from '../schemas/updateCharacterPlayer.schema'
+import { playerResponseSchema } from '../schemas/playerResponse.schema'
+import { z } from 'zod'
+
+const playerResponseExample = {
+	id: 1,
+	userId: 1,
+	mesaId: 1,
+	role: 'MASTER',
+	userCharacterId: null,
+	joinedAt: '2026-01-10T12:00:00.000Z',
+	updatedAt: '2026-01-10T12:00:00.000Z'
+}
 
 openApiRegistry.registerPath({
 	method: 'post',
@@ -23,7 +35,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		201: {
-			description: 'Jogador adicionado com sucesso'
+			description: 'Jogador adicionado com sucesso',
+			content: {
+				'application/json': {
+					schema: playerResponseSchema,
+					example: playerResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -55,7 +73,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Lista de jogadores retornada com sucesso'
+			description: 'Lista de jogadores retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.array(playerResponseSchema),
+					example: [playerResponseExample]
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -91,7 +115,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Função atualizada com sucesso'
+			description: 'Função atualizada com sucesso',
+			content: {
+				'application/json': {
+					schema: playerResponseSchema,
+					example: playerResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -127,7 +157,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Personagem atualizado com sucesso'
+			description: 'Personagem atualizado com sucesso',
+			content: {
+				'application/json': {
+					schema: playerResponseSchema,
+					example: playerResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'

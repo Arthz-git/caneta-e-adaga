@@ -4,6 +4,18 @@ import { updateUserCharacterSchema } from '../schemas/updateUserCharacter.schema
 import { deleteUserCharacterSchema } from '../schemas/deleteUserCharacter.schema'
 import { getUserCharacterSchema } from '../schemas/getUserCharacter.schema'
 import { getAllUserCharacterByUserIdSchema } from '../schemas/getAllUserCharacterByUserId.schema'
+import { userCharacterResponseSchema } from '../schemas/userCharacterResponse.schema'
+import { z } from 'zod'
+
+const userCharacterResponseExample = {
+	id: 1,
+	userId: 1,
+	name: 'Aldric Ferro Negro',
+	description: 'Um mercenário cansado de guerras, em busca de redenção.',
+	lore: 'Nascido nas terras geladas do norte, Aldric perdeu tudo em uma guerra que não escolheu lutar...',
+	createdAt: '2026-01-10T12:00:00.000Z',
+	updatedAt: '2026-01-10T12:00:00.000Z'
+}
 
 openApiRegistry.registerPath({
 	method: 'post',
@@ -22,7 +34,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		201: {
-			description: 'Personagem criado com sucesso'
+			description: 'Personagem criado com sucesso',
+			content: {
+				'application/json': {
+					schema: userCharacterResponseSchema,
+					example: userCharacterResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos ou usuário do token não encontrado'
@@ -106,7 +124,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Personagem encontrado com sucesso'
+			description: 'Personagem encontrado com sucesso',
+			content: {
+				'application/json': {
+					schema: userCharacterResponseSchema,
+					example: userCharacterResponseExample
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
@@ -131,7 +155,13 @@ openApiRegistry.registerPath({
 	},
 	responses: {
 		200: {
-			description: 'Lista de personagens retornada com sucesso'
+			description: 'Lista de personagens retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.array(userCharacterResponseSchema),
+					example: [userCharacterResponseExample]
+				}
+			}
 		},
 		400: {
 			description: 'Dados inválidos'
