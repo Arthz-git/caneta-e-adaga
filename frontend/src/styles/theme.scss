@@ -1,0 +1,96 @@
+@use 'sass:map';
+@use './breakpoints';
+
+$tema-claro: (
+	papel: #e3e0d1,
+	papel-elevado: #ece9dc,
+	tinta: #1b1c22,
+	tinta-suave: #2e2c33,
+	tinta-fraca: #5b5847,
+	granada: #7c2436,
+	granada-tinta: #5e1b28,
+	latao: #8a6a3c,
+	latao-suave: #a9814c,
+	linha: rgba(27, 28, 34, 0.16),
+	linha-forte: rgba(27, 28, 34, 0.3),
+	shadow: (0 1px 2px rgba(27, 28, 34, 0.08), 0 8px 24px -12px rgba(27, 28, 34, 0.25))
+);
+
+$tema-escuro: (
+	papel: #16161c,
+	papel-elevado: #1d1e25,
+	tinta: #e7e2d1,
+	tinta-suave: #cfc9b6,
+	tinta-fraca: #8b8672,
+	granada: #c14a5e,
+	granada-tinta: #e2879a,
+	latao: #cfa869,
+	latao-suave: #b7935e,
+	linha: rgba(231, 226, 209, 0.14),
+	linha-forte: rgba(231, 226, 209, 0.28),
+	shadow: (0 1px 2px rgba(0, 0, 0, 0.4), 0 12px 28px -14px rgba(0, 0, 0, 0.6))
+);
+
+@mixin cores($tema) {
+	--cor-papel: #{map.get($tema, papel)};
+	--cor-papel-elevado: #{map.get($tema, papel-elevado)};
+	--cor-tinta: #{map.get($tema, tinta)};
+	--cor-tinta-suave: #{map.get($tema, tinta-suave)};
+	--cor-tinta-fraca: #{map.get($tema, tinta-fraca)};
+	--cor-granada: #{map.get($tema, granada)};
+	--cor-granada-tinta: #{map.get($tema, granada-tinta)};
+	--cor-latao: #{map.get($tema, latao)};
+	--cor-latao-suave: #{map.get($tema, latao-suave)};
+	--cor-linha: #{map.get($tema, linha)};
+	--cor-linha-forte: #{map.get($tema, linha-forte)};
+	--shadow: #{map.get($tema, shadow)};
+}
+
+:root {
+	/* Espaçamento */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-5: 24px;
+	--space-6: 32px;
+	--space-7: 48px;
+	--space-8: 64px;
+
+	/* Padding padrão de página/layout */
+	--space-page-x: var(--space-4);
+	--space-page-y: var(--space-5);
+
+	@media (--md-up) {
+		--space-page-x: var(--space-6);
+		--space-page-y: var(--space-7);
+	}
+
+	@media (--lg-up) {
+		--space-page-x: var(--space-8);
+	}
+
+	/* Cores — modo claro (tinta sobre vitela) */
+	@include cores($tema-claro);
+
+	/* Tipografia */
+	--font-serif: 'Crimson Pro', 'Iowan Old Style', Georgia, serif;
+	--font-sans: 'Plus Jakarta Sans', Seravek, 'Segoe UI', Roboto, sans-serif;
+	--font-mono: ui-monospace, 'SFMono-Regular', Consolas, Menlo, monospace;
+	--font-size-base: 16px;
+	--line-height-base: 1.5;
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		@include cores($tema-escuro);
+	}
+}
+
+:root[data-theme='dark'] {
+	@include cores($tema-escuro);
+}
+
+:root[data-theme='light'] {
+	@include cores($tema-claro);
+}

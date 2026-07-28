@@ -1,20 +1,22 @@
+@use './breakpoints';
+
 :root {
-	--text: var(--color-ink-soft);
-	--text-h: var(--color-ink);
-	--bg: var(--color-paper);
-	--border: var(--color-line);
-	--code-bg: var(--color-paper-raised);
-	--accent: var(--color-garnet);
-	--accent-bg: color-mix(in srgb, var(--color-garnet) 12%, transparent);
-	--accent-border: color-mix(in srgb, var(--color-garnet) 50%, transparent);
-	--social-bg: color-mix(in srgb, var(--color-paper-raised) 50%, transparent);
+	--text: var(--cor-tinta-suave);
+	--text-h: var(--cor-tinta);
+	--bg: var(--cor-papel);
+	--border: var(--cor-linha);
+	--code-bg: var(--cor-papel-elevado);
+	--accent: var(--cor-granada);
+	--accent-bg: color-mix(in srgb, var(--cor-granada) 12%, transparent);
+	--accent-border: color-mix(in srgb, var(--cor-granada) 50%, transparent);
+	--social-bg: color-mix(in srgb, var(--cor-papel-elevado) 50%, transparent);
 
 	--sans: var(--font-sans);
 	--heading: var(--font-serif);
 	--mono: var(--font-mono);
 
-	font: 18px/145% var(--sans);
-	letter-spacing: 0.18px;
+	font: 1rem/145% var(--sans);
+	letter-spacing: 0.01125em;
 	color-scheme: light dark;
 	color: var(--text);
 	background: var(--bg);
@@ -23,8 +25,8 @@
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 
-	@media (max-width: 1024px) {
-		font-size: 16px;
+	@media (--md-up) {
+		font-size: 1.125rem;
 	}
 }
 
@@ -56,24 +58,28 @@ h2 {
 }
 
 h1 {
-	font-size: 56px;
+	font-size: 2.25rem;
 	letter-spacing: -1.68px;
-	margin: 32px 0;
+	margin: 0;
 
-	@media (max-width: 1024px) {
-		font-size: 36px;
-		margin: 20px 0;
+	@media (--md-up) {
+		font-size: 3.1111rem;
+		margin: 0;
+	}
+
+	@media (--lg-up) {
+		margin: 0;
 	}
 }
 
 h2 {
-	font-size: 24px;
+	font-size: 1.25rem;
 	line-height: 118%;
 	letter-spacing: -0.24px;
-	margin: 0 0 8px;
+	margin: 0;
 
-	@media (max-width: 1024px) {
-		font-size: 20px;
+	@media (--md-up) {
+		font-size: 1.3333rem;
 	}
 }
 
@@ -86,7 +92,7 @@ code {
 	display: inline-flex;
 	border-radius: 4px;
 	color: var(--text-h);
-	font-size: 15px;
+	font-size: 0.9375rem;
 	line-height: 135%;
 	padding: 4px 8px;
 	background: var(--code-bg);

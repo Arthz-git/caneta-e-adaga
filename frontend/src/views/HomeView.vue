@@ -2,7 +2,5 @@
 </script>
 
 <template>
-	<div>
-		<h1>Caneta e Adaga</h1>
-	</div>
+	<h1>HomeView</h1>
 </template>
