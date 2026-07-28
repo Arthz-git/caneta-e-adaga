@@ -1,18 +1,96 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { NForm, NFormItem, NInput, NButton, NIcon } from 'naive-ui'
+import { reactive, ref } from 'vue'
+import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
+import type { FormInst, FormRules } from 'naive-ui'
 import { RouterLink } from 'vue-router'
 import IconArrowLeft from '~icons/feather/arrow-left'
+import { registerUserService } from '@/services/register.service'
+
+const message = useMessage()
+
+const formRef = ref<FormInst | null>(null)
 
 const registerForm = reactive({
-	username: '',
-	email: '',
-	password: '',
-	confirmPassword: ''
+	name: 'Arthur',
+	email: 'arthur@email.com',
+	password: 'admin123',
+	confirmPassword: 'admin123'
 })
 
-const handleRegisterSubmit = () => {
+const rules: FormRules = {
+	name: {
+		required: true,
+		message: 'Nome é um campo obrigatório',
+		trigger: ['input', 'blur']
+	},
+	email: {
+		required: true,
+		type: 'email',
+		message: 'Informe um email válido',
+		trigger: ['input', 'blur']
+	},
+	password: [
+		{
+			required: true,
+			message: 'Senha é um campo obrigatório',
+			trigger: ['input', 'blur']
+		},
+		{
+			min: 8,
+			message: 'A senha deve ter no mínimo 8 caracteres',
+			trigger: ['input', 'blur']
+		},
+		{
+			pattern: /[a-z]/,
+			message: 'A senha deve conter ao menos uma letra minúscula',
+			trigger: ['input', 'blur']
+		},
+		{
+			pattern: /[A-Z]/,
+			message: 'A senha deve conter ao menos uma letra maiúscula',
+			trigger: ['input', 'blur']
+		},
+		{
+			pattern: /[0-9]/,
+			message: 'A senha deve conter ao menos um número',
+			trigger: ['input', 'blur']
+		},
+		{
+			pattern: /[^a-zA-Z0-9]/,
+			message: 'A senha deve conter ao menos um caractere especial',
+			trigger: ['input', 'blur']
+		}
+	],
+	confirmPassword: [
+		{
+			required: true,
+			message: 'Confirmar senha é um campo obrigatório',
+			trigger: ['input', 'blur']
+		},
+		{
+			validator: (_rule, value: string) => value === registerForm.password,
+			message: 'As senhas não são iguais',
+			trigger: ['input', 'blur']
+		}
+	]
+}
 
+const handleRegisterSubmit = async () => {
+	try {
+		await formRef.value?.validate()
+
+		await registerUserService({
+			name: registerForm.name.trim(),
+			email: registerForm.email.trim(),
+			password: registerForm.password.trim()
+		})
+
+		message.success('Usuário criado com sucesso')
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
+		message.error(errorMessage)
+	}
 }
 
 </script>
@@ -20,7 +98,9 @@ const handleRegisterSubmit = () => {
 <template>
 	<div class="register">
 		<router-link to="/auth/login" class="register__back">
-			<n-icon><IconArrowLeft /></n-icon>
+			<n-icon>
+				<IconArrowLeft />
+			</n-icon>
 			Voltar
 		</router-link>
 
@@ -30,21 +110,22 @@ const handleRegisterSubmit = () => {
 			<p class="register__subtitle">Registre sua conta e entre no seu mundo fantástico.</p>
 		</header>
 
-		<n-form class="register__form" label-placement="top" @submit.prevent="handleRegisterSubmit">
-			<n-form-item label="E-mail">
-				<n-input v-model:value="registerForm.username" type="text" placeholder="seu@email.com" />
+		<n-form ref="formRef" :model="registerForm" :rules="rules" class="register__form" label-placement="top"
+			@submit.prevent="handleRegisterSubmit">
+			<n-form-item label="Nome/Username" path="name">
+				<n-input v-model:value="registerForm.name" type="text" placeholder="Como quer ser chamado" />
 			</n-form-item>
 
-			<n-form-item label="E-mail">
+			<n-form-item label="Email" path="email">
 				<n-input v-model:value="registerForm.email" type="text" placeholder="seu@email.com" />
 			</n-form-item>
 
-			<n-form-item label="Senha">
+			<n-form-item label="Senha" path="password">
 				<n-input v-model:value="registerForm.password" type="password" show-password-on="click"
 					placeholder="********" />
 			</n-form-item>
 
-			<n-form-item label="Confirmar Senha">
+			<n-form-item label="Confirmar Senha" path="confirmPassword">
 				<n-input v-model:value="registerForm.confirmPassword" type="password" show-password-on="click"
 					placeholder="********" />
 			</n-form-item>

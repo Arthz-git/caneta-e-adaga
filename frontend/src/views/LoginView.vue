@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { reactive } from 'vue'
 import { NForm, NFormItem, NInput, NButton, useMessage } from 'naive-ui'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/useAuth'
 
 const message = useMessage()
+const auth = useAuthStore()
+const router = useRouter()
 
 const loginForm = reactive({
 	email: '',
@@ -12,14 +15,24 @@ const loginForm = reactive({
 
 const handleLoginSubmit = async () => {
 	if (!loginForm.email) {
-		message.warning('Email é um campo obrigatório')
+		return message.warning('Email é um campo obrigatório')
 	}
 
 	if (!loginForm.password) {
-		message.warning('Password é um campo obrigatório')
+		return message.warning('Password é um campo obrigatório')
 	}
 
-	
+	try {
+		await auth.login(loginForm.email, loginForm.password)
+
+		message.success('Login efetuado com sucesso')
+
+		router.push({ name: 'home' })
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
+		message.error(errorMessage)
+	}
 }
 </script>
 

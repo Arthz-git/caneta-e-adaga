@@ -5,7 +5,8 @@
 	<meta charset="UTF-8" />
 	<script>
 		(function () {
-			var stored = localStorage.getItem('theme')
+			// themeKey
+			var stored = localStorage.getItem('@canetaeadaga/theme')
 			var theme = stored === 'light' || stored === 'dark'
 				? stored
 				: (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')

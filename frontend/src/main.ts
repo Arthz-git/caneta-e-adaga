@@ -5,11 +5,14 @@ import './styles/theme.scss'
 import './styles/base.scss'
 import './styles/utilities.scss'
 import { createPinia } from 'pinia'
+import { useAuthStore } from './stores/useAuth'
 
 const app = createApp(App)
 
-app.use(router)
-
 app.use(createPinia())
+
+useAuthStore().init()
+
+app.use(router)
 
 app.mount('#app')
