@@ -10,12 +10,14 @@ const message = useMessage()
 
 const formRef = ref<FormInst | null>(null)
 
-const registerForm = reactive({
-	name: 'Arthur',
-	email: 'arthur@email.com',
-	password: 'admin123',
-	confirmPassword: 'admin123'
-})
+const initialStateForm = {
+	name: '',
+	email: '',
+	password: '',
+	confirmPassword: ''
+}
+
+const registerForm = reactive({ ...initialStateForm })
 
 const rules: FormRules = {
 	name: {
@@ -86,6 +88,8 @@ const handleRegisterSubmit = async () => {
 		})
 
 		message.success('Usuário criado com sucesso')
+
+		Object.assign(registerForm, initialStateForm)
 	}
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
@@ -110,30 +114,32 @@ const handleRegisterSubmit = async () => {
 			<p class="register__subtitle">Registre sua conta e entre no seu mundo fantástico.</p>
 		</header>
 
-		<n-form ref="formRef" :model="registerForm" :rules="rules" class="register__form" label-placement="top"
-			@submit.prevent="handleRegisterSubmit">
-			<n-form-item label="Nome/Username" path="name">
-				<n-input v-model:value="registerForm.name" type="text" placeholder="Como quer ser chamado" />
-			</n-form-item>
+		<div class="register__card">
+			<n-form ref="formRef" :model="registerForm" :rules="rules" class="register__form" label-placement="top"
+				@submit.prevent="handleRegisterSubmit">
+				<n-form-item label="Nome/Username" path="name">
+					<n-input v-model:value="registerForm.name" type="text" placeholder="Como quer ser chamado" />
+				</n-form-item>
 
-			<n-form-item label="Email" path="email">
-				<n-input v-model:value="registerForm.email" type="text" placeholder="seu@email.com" />
-			</n-form-item>
+				<n-form-item label="Email" path="email">
+					<n-input v-model:value="registerForm.email" type="text" placeholder="seu@email.com" />
+				</n-form-item>
 
-			<n-form-item label="Senha" path="password">
-				<n-input v-model:value="registerForm.password" type="password" show-password-on="click"
-					placeholder="********" />
-			</n-form-item>
+				<n-form-item label="Senha" path="password">
+					<n-input v-model:value="registerForm.password" type="password" show-password-on="click"
+						placeholder="********" />
+				</n-form-item>
 
-			<n-form-item label="Confirmar Senha" path="confirmPassword">
-				<n-input v-model:value="registerForm.confirmPassword" type="password" show-password-on="click"
-					placeholder="********" />
-			</n-form-item>
+				<n-form-item label="Confirmar Senha" path="confirmPassword">
+					<n-input v-model:value="registerForm.confirmPassword" type="password" show-password-on="click"
+						placeholder="********" />
+				</n-form-item>
 
-			<n-button type="primary" attr-type="submit" block strong>
-				Registrar
-			</n-button>
-		</n-form>
+				<n-button type="primary" attr-type="submit" block strong>
+					Registrar
+				</n-button>
+			</n-form>
+		</div>
 	</div>
 </template>
 
@@ -153,6 +159,14 @@ const handleRegisterSubmit = async () => {
 .register__subtitle {
 	color: var(--text);
 	font-size: 0.9375rem;
+}
+
+.register__card {
+	padding: var(--space-6) var(--space-5);
+	border-radius: 16px;
+	background: var(--cor-papel-elevado);
+	border: 1px solid var(--cor-linha);
+	box-shadow: var(--shadow);
 }
 
 .register__form {

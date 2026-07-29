@@ -1,12 +1,16 @@
 <script setup lang="ts">
-import { reactive } from 'vue'
-import { NForm, NFormItem, NInput, NButton, useMessage } from 'naive-ui'
+import { reactive, ref } from 'vue'
+import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import { RouterLink, useRouter } from 'vue-router'
+import IconMail from '~icons/feather/mail'
+import IconLock from '~icons/feather/lock'
 import { useAuthStore } from '@/stores/useAuth'
 
 const message = useMessage()
 const auth = useAuthStore()
 const router = useRouter()
+
+const loading = ref(false)
 
 const loginForm = reactive({
 	email: '',
@@ -22,6 +26,8 @@ const handleLoginSubmit = async () => {
 		return message.warning('Password é um campo obrigatório')
 	}
 
+	loading.value = true
+
 	try {
 		await auth.login(loginForm.email, loginForm.password)
 
@@ -32,6 +38,9 @@ const handleLoginSubmit = async () => {
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
 		message.error(errorMessage)
+	}
+	finally {
+		loading.value = false
 	}
 }
 </script>
@@ -44,20 +53,30 @@ const handleLoginSubmit = async () => {
 			<p class="login__subtitle">Acesse sua conta para continuar sua jornada.</p>
 		</header>
 
-		<n-form class="login__form" label-placement="top" @submit.prevent="handleLoginSubmit">
-			<n-form-item label="Email">
-				<n-input v-model:value="loginForm.email" type="text" placeholder="seu@email.com" />
-			</n-form-item>
+		<div class="login__card">
+			<n-form class="login__form" label-placement="top" @submit.prevent="handleLoginSubmit">
+				<n-form-item label="Email">
+					<n-input v-model:value="loginForm.email" type="text" placeholder="seu@email.com">
+						<template #prefix>
+							<n-icon :component="IconMail" />
+						</template>
+					</n-input>
+				</n-form-item>
 
-			<n-form-item label="Senha">
-				<n-input v-model:value="loginForm.password" type="password" show-password-on="click"
-					placeholder="********" />
-			</n-form-item>
+				<n-form-item label="Senha">
+					<n-input v-model:value="loginForm.password" type="password" show-password-on="click"
+						placeholder="********">
+						<template #prefix>
+							<n-icon :component="IconLock" />
+						</template>
+					</n-input>
+				</n-form-item>
 
-			<n-button type="primary" attr-type="submit" block strong>
-				Entrar
-			</n-button>
-		</n-form>
+				<n-button type="primary" attr-type="submit" block strong size="large" :loading="loading">
+					Entrar
+				</n-button>
+			</n-form>
+		</div>
 
 		<p class="login__footer">
 			Ainda não tem conta?
@@ -69,10 +88,10 @@ const handleLoginSubmit = async () => {
 <style scoped>
 .login {
 	width: 100%;
-	max-width: 360px;
+	max-width: 380px;
 	display: flex;
 	flex-direction: column;
-	gap: var(--space-5);
+	gap: var(--space-6);
 }
 
 .login__header h2 {
@@ -82,6 +101,14 @@ const handleLoginSubmit = async () => {
 .login__subtitle {
 	color: var(--text);
 	font-size: 0.9375rem;
+}
+
+.login__card {
+	padding: var(--space-6) var(--space-5);
+	border-radius: 16px;
+	background: var(--cor-papel-elevado);
+	border: 1px solid var(--cor-linha);
+	box-shadow: var(--shadow);
 }
 
 .login__form {
