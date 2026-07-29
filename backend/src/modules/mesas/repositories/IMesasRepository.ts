@@ -8,4 +8,5 @@ export interface IMesasRepository {
 	delete(id: number): Promise<void>
 	get(id: number): Promise<MesaModel | null>
 	getAllByCreator(userId: number): Promise<MesaModel[]>
+	getAll(): Promise<MesaModel[]>
 }

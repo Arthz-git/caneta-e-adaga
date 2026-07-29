@@ -113,6 +113,31 @@ openApiRegistry.registerPath({
 })
 
 openApiRegistry.registerPath({
+	method: 'get',
+	path: '/mesas',
+	tags: ['Mesas'],
+	summary: 'Lista todas as mesas',
+	security: [{ bearerAuth: [] }],
+	responses: {
+		200: {
+			description: 'Lista de mesas retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.array(mesaResponseSchema),
+					example: [mesaResponseExample]
+				}
+			}
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
+		},
+		404: {
+			description: 'Nenhuma mesa encontrada'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
 	method: 'put',
 	path: '/mesas/{id}',
 	tags: ['Mesas'],

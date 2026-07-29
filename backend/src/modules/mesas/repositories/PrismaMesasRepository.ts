@@ -10,7 +10,7 @@ export class PrismaMesasRepository implements IMesasRepository {
 
 	async update({ id, ...data }: UpdateMesaDTO) {
 		return prisma.mesa.update({
-			where: { id: id },
+			where: { id },
 			data: data
 		})
 	}
@@ -25,5 +25,9 @@ export class PrismaMesasRepository implements IMesasRepository {
 
 	async getAllByCreator(createdBy: number) {
 		return prisma.mesa.findMany({ where: { createdBy } })
+	}
+
+	async getAll() {
+		return prisma.mesa.findMany()
 	}
 }
