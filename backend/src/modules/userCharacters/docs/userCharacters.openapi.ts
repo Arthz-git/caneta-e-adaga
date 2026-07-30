@@ -1,6 +1,5 @@
 import { openApiRegistry } from '../../../shared/openapi/registry'
 import { createUserCharacterSchema } from '../schemas/createUserCharacter.schema'
-import { updateUserCharacterSchema } from '../schemas/updateUserCharacter.schema'
 import { deleteUserCharacterSchema } from '../schemas/deleteUserCharacter.schema'
 import { getUserCharacterSchema } from '../schemas/getUserCharacter.schema'
 import { getAllUserCharacterByUserIdSchema } from '../schemas/getAllUserCharacterByUserId.schema'
@@ -53,15 +52,16 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
 	method: 'put',
-	path: '/characters',
+	path: '/characters/{id}',
 	tags: ['Characters'],
 	summary: 'Atualiza um personagem do usuário autenticado',
 	security: [{ bearerAuth: [] }],
 	request: {
+		params: deleteUserCharacterSchema,
 		body: {
 			content: {
 				'application/json': {
-					schema: updateUserCharacterSchema
+					schema: createUserCharacterSchema
 				}
 			}
 		}

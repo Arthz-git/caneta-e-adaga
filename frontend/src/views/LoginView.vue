@@ -71,7 +71,7 @@ const handleLoginSubmit = async () => {
 					</n-input>
 				</n-form-item>
 
-				<n-button type="primary" attr-type="submit" block strong size="large" :isLoading="isLoading">
+				<n-button type="primary" attr-type="submit" block strong size="large" :loading="isLoading">
 					Entrar
 				</n-button>
 			</n-form>

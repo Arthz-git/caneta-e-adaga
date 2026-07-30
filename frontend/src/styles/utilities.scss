@@ -10,6 +10,14 @@
 	.my-#{$i} { margin-block: var(--space-#{$i}); }
 	.px-#{$i} { padding-inline: var(--space-#{$i}); }
 	.py-#{$i} { padding-block: var(--space-#{$i}); }
+	.ml-#{$i} { margin-left: var(--space-#{$i}); }
+	.pl-#{$i} { padding-left: var(--space-#{$i}); }
+	.mt-#{$i} { margin-top: var(--space-#{$i}); }
+	.pt-#{$i} { padding-top: var(--space-#{$i}); }
+	.mr-#{$i} { margin-right: var(--space-#{$i}); }
+	.pr-#{$i} { padding-right: var(--space-#{$i}); }
+	.mb-#{$i} { margin-bottom: var(--space-#{$i}); }
+	.pb-#{$i} { padding-bottom: var(--space-#{$i}); }
 }
 
 /* Página (usa os tokens de padding padrão de layout) */

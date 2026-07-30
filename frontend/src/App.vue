@@ -1,9 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { NConfigProvider, darkTheme } from 'naive-ui'
+import {
+	NConfigProvider,
+	darkTheme,
+	NMessageProvider,
+	NDialogProvider
+} from 'naive-ui'
 import type { GlobalThemeOverrides } from 'naive-ui'
 import { useThemeStore } from '@/stores/useTheme'
-import { NMessageProvider } from 'naive-ui'
 
 const useTheme = useThemeStore()
 const naiveTheme = computed(() => (useTheme.mode === 'dark' ? darkTheme : null))
@@ -35,7 +39,9 @@ const themeOverrides = computed<GlobalThemeOverrides>(() => ({
 <template>
 	<n-config-provider :theme="naiveTheme" :theme-overrides="themeOverrides">
 		<n-messageProvider>
-			<router-view />
+			<n-dialog-provider>
+				<router-view />
+			</n-dialog-provider>
 		</n-messageProvider>
 	</n-config-provider>
 </template>

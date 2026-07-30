@@ -1,3 +1,0 @@
--- AlterTable
-ALTER TABLE `user_character` MODIFY `description` TEXT NOT NULL,
-    MODIFY `lore` TEXT NOT NULL;
