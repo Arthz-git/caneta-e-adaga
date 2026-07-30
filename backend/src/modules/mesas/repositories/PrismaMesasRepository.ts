@@ -1,7 +1,7 @@
 import { prisma } from '../../../database/prisma-client'
 import type { CreateMesaDTO } from '../schemas/createMesa.schema'
 import type { UpdateMesaDTO } from '../schemas/updateMesa.schema'
-import type { IMesasRepository } from './IMesasRepository'
+import type { GetAllPaginatedParams, IMesasRepository } from './IMesasRepository'
 
 export class PrismaMesasRepository implements IMesasRepository {
 	async create(data: CreateMesaDTO) {
@@ -20,14 +20,75 @@ export class PrismaMesasRepository implements IMesasRepository {
 	}
 
 	async get(id: number) {
-		return prisma.mesa.findUnique({ where: { id } })
+		return prisma.mesa.findUnique({
+			where: { id },
+			include: {
+				creator: {
+					select: { id: true, name: true }
+				},
+				_count: {
+					select: { players: true }
+				}
+			}
+		})
 	}
 
 	async getAllByCreator(createdBy: number) {
-		return prisma.mesa.findMany({ where: { createdBy } })
+		return prisma.mesa
+			.findMany({
+				where: { createdBy },
+				include: {
+					creator: {
+						select: { id: true, name: true }
+					},
+					_count: {
+						select: { players: true }
+					}
+				}
+			})
 	}
 
 	async getAll() {
-		return prisma.mesa.findMany()
+		return prisma.mesa
+			.findMany({
+				include: {
+					creator: {
+						select: { id: true, name: true }
+					},
+					_count: {
+						select: { players: true }
+					}
+				}
+			})
+	}
+
+	async getAllPaginated({ page, limit, search }: GetAllPaginatedParams) {
+		const where = search
+			? {
+				OR: [
+					{ title: { contains: search } },
+					{ description: { contains: search } }
+				]
+			}
+			: {}
+
+		const [data, total] = await prisma.$transaction([
+			prisma.mesa.findMany({
+				where,
+				include: {
+					creator: {
+						select: { id: true, name: true }
+					},
+					_count: {
+						select: { players: true }
+					}
+				},
+				skip: (page - 1) * limit,
+				take: limit
+			}),
+			prisma.mesa.count({ where })
+		])
+
+		return { data, total }
 	}
 }
