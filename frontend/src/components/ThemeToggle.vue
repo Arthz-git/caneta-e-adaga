@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { NButton, NIcon } from 'naive-ui'
-import IconSun from '~icons/feather/sun'
-import IconMoon from '~icons/feather/moon'
+import { SunnyOutline as IconSun, MoonOutline as IconMoon } from '@vicons/ionicons5'
 import { useThemeStore } from '@/stores/useTheme'
 
 const themeStore = useThemeStore()

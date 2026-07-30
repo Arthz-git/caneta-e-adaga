@@ -3,7 +3,7 @@ import { computed, h } from 'vue'
 import { NDropdown, NAvatar, NIcon } from 'naive-ui'
 import type { DropdownOption } from 'naive-ui'
 import { useRouter } from 'vue-router'
-import IconLogOut from '~icons/feather/log-out'
+import { LogOutOutline as IconLogOut } from '@vicons/ionicons5'
 import { useAuthStore } from '@/stores/useAuth'
 
 const authStore = useAuthStore()

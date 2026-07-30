@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NIcon } from 'naive-ui'
-import IconMenu from '~icons/feather/menu'
+import { MenuOutline as IconMenu } from '@vicons/ionicons5'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import DashboardUserMenu from '@/components/DashboardUserMenu.vue'
 

@@ -3,7 +3,7 @@ import { reactive, ref } from 'vue'
 import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import type { FormInst, FormRules } from 'naive-ui'
 import { RouterLink } from 'vue-router'
-import IconArrowLeft from '~icons/feather/arrow-left'
+import { ArrowBackOutline as IconArrowLeft } from '@vicons/ionicons5'
 import { registerUserService } from '@/services/register.service'
 
 const message = useMessage()

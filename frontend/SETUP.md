@@ -291,57 +291,26 @@ Teste com um componente simples num view, ex. `<Button label="Testar" />`.
 
 ---
 
-## 7. Ícones — Vue Feather ou alternativa
+## 7. Ícones — xicons (`@vicons/ionicons5`)
 
-`vue-feather` está sem manutenção há anos e não tem suporte oficial ao Vue 3 com tree-shaking adequado. Recomendo substituir por uma das duas opções abaixo:
-
-- **`unplugin-icons`** (recomendado): permite importar qualquer ícone do Iconify (incluindo o set `feather`) como componente, sob demanda, com tree-shaking automático. Mantido ativamente.
-- **`lucide-vue-next`**: sucessor espiritual do Feather Icons (mesmo estilo visual, ícones adicionais), com build para Vue 3 nativo.
-
-Passo a passo com `unplugin-icons` (mantendo a estética Feather):
+Usamos os componentes de ícone do pacote `@vicons/ionicons5` (parte do ecossistema xicons), integrados via `<n-icon>` do naive-ui — sem plugin de build, importação direta como componente Vue.
 
 ```bash
-npm install -D unplugin-icons @iconify-json/feather
-```
-
-No `vite.config.ts`:
-
-```ts
-import Icons from 'unplugin-icons/vite'
-
-export default defineConfig({
-  plugins: [
-    vue(),
-    Icons({ compiler: 'vue3' }),
-  ],
-})
+npm install @vicons/ionicons5
 ```
 
 Uso em componente:
 
 ```vue
 <script setup lang="ts">
-import IconHome from '~icons/feather/home'
+import { NIcon } from 'naive-ui'
+import { HomeOutline } from '@vicons/ionicons5'
 </script>
 
 <template>
-  <IconHome />
-</template>
-```
-
-Se preferir a alternativa mais simples (sem plugin de build), use `lucide-vue-next`:
-
-```bash
-npm install lucide-vue-next
-```
-
-```vue
-<script setup lang="ts">
-import { Home } from 'lucide-vue-next'
-</script>
-
-<template>
-  <Home :size="20" />
+  <n-icon>
+    <HomeOutline />
+  </n-icon>
 </template>
 ```
 
@@ -355,6 +324,6 @@ import { Home } from 'lucide-vue-next'
 4. Vue Router
 5. Pinia
 6. PrimeVue
-7. Ícones (Vue Feather → sugerido substituir por `unplugin-icons` + set `feather`, ou `lucide-vue-next`)
+7. Ícones (`@vicons/ionicons5`, integrado via `<n-icon>` do naive-ui)
 
 Depois de cada passo, rode `npm run dev` e `npm run type-check` para confirmar que nada quebrou antes de seguir para o próximo.
