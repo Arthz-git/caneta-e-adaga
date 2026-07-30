@@ -10,7 +10,8 @@
 		"start": "node --env-file=.env dist/index.js",
 		"postinstall": "prisma generate",
 		"prisma:generate": "prisma generate",
-		"prisma:migrate": "prisma migrate dev"
+		"prisma:migrate": "prisma migrate dev",
+		"prisma:seed": "node --env-file=.env node_modules/tsx/dist/cli.mjs prisma/seed.ts"
 	},
 	"keywords": [],
 	"author": "",
