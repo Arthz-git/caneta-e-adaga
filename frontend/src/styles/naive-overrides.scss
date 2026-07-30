@@ -1,0 +1,19 @@
+/* Sobrescritas de estilo para classes internas do naive-ui que não são
+   cobertas pelo mecanismo de themeOverrides. Cobre todos os componentes
+   naive-ui usados no projeto para garantir --font-sans consistente. */
+
+.n-form-item-label__text,
+.n-button,
+.n-input__input-el,
+.n-input__textarea-el,
+.n-input__placeholder,
+.n-dropdown-option-body__label,
+.n-menu-item-content-header,
+.n-avatar__text,
+.n-pagination-item,
+.n-message__content {
+	/* naive-ui injeta seu próprio CSS em runtime (cssr) e costuma vencer
+	   o cascade por ordem de inserção mesmo com especificidade igual;
+	   !important garante que essa sobrescrita sempre prevaleça. */
+	font-family: var(--font-sans) !important;
+}

@@ -46,8 +46,16 @@ svg {
 	display: block;
 }
 
+input,
+textarea,
+select,
+button {
+	font-family: inherit;
+}
+
 #app {
 	min-height: 100svh;
+	font-family: var(--sans);
 }
 
 h1,

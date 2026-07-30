@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { NLayout, NLayoutSider, NLayoutContent } from 'naive-ui'
+import { NLayout, NLayoutSider } from 'naive-ui'
 import DashboardHeader from '@/components/DashboardHeader.vue'
 import DashboardSidebar from '@/components/DashboardSidebar.vue'
 
@@ -21,12 +21,29 @@ const colapsado = ref(false)
 			<DashboardSidebar />
 		</n-layout-sider>
 
-		<n-layout>
+		<div class="dashboard-main">
 			<DashboardHeader @toggle-sidebar="colapsado = !colapsado" />
 
-			<n-layout-content content-style="padding: var(--space-page-y) var(--space-page-x)">
+			<div class="dashboard-main__content">
 				<router-view />
-			</n-layout-content>
-		</n-layout>
+			</div>
+		</div>
 	</n-layout>
 </template>
+
+<style scoped>
+.dashboard-main {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-width: 0;
+	min-height: 0;
+}
+
+.dashboard-main__content {
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+	padding: var(--space-page-y) var(--space-page-x);
+}
+</style>

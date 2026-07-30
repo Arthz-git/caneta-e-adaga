@@ -2,15 +2,14 @@
 import { reactive, ref } from 'vue'
 import { NForm, NFormItem, NInput, NButton, NIcon, useMessage } from 'naive-ui'
 import { RouterLink, useRouter } from 'vue-router'
-import IconMail from '~icons/feather/mail'
-import IconLock from '~icons/feather/lock'
+import { MailOutline as IconMail, LockClosedOutline as IconLock } from '@vicons/ionicons5'
 import { useAuthStore } from '@/stores/useAuth'
 
 const message = useMessage()
 const auth = useAuthStore()
 const router = useRouter()
 
-const loading = ref(false)
+const isLoading = ref(false)
 
 const loginForm = reactive({
 	email: '',
@@ -26,7 +25,7 @@ const handleLoginSubmit = async () => {
 		return message.warning('Password é um campo obrigatório')
 	}
 
-	loading.value = true
+	isLoading.value = true
 
 	try {
 		await auth.login(loginForm.email, loginForm.password)
@@ -40,7 +39,7 @@ const handleLoginSubmit = async () => {
 		message.error(errorMessage)
 	}
 	finally {
-		loading.value = false
+		isLoading.value = false
 	}
 }
 </script>
@@ -72,7 +71,7 @@ const handleLoginSubmit = async () => {
 					</n-input>
 				</n-form-item>
 
-				<n-button type="primary" attr-type="submit" block strong size="large" :loading="loading">
+				<n-button type="primary" attr-type="submit" block strong size="large" :isLoading="isLoading">
 					Entrar
 				</n-button>
 			</n-form>
