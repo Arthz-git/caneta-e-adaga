@@ -4,6 +4,8 @@ import AuthLayout from '@/layouts/AuthLayout.vue'
 import RegisterView from '@/views/RegisterView.vue'
 import LoginView from '@/views/LoginView.vue'
 import { useAuthStore } from '@/stores/useAuth'
+import CharactersView from '@/views/CharactersView.vue'
+import MesasView from '@/views/MesasView.vue'
 
 declare module 'vue-router' {
 	interface RouteMeta {
@@ -25,7 +27,19 @@ const router = createRouter({
 					component: () => import('@/views/HomeView.vue'),
 					meta: { requiresAuth: true }
 				},
-			],
+				{
+					path: '/characters',
+					name: 'characters',
+					component: CharactersView,
+					meta: { requiresAuth: true }
+				},
+				{
+					path: '/mesas',
+					name: 'mesas',
+					component: MesasView,
+					meta: { requiresAuth: true }
+				}
+			]
 		},
 		{
 			path: '/auth',

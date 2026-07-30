@@ -3,7 +3,11 @@ import { computed, h } from 'vue'
 import { NMenu, NIcon } from 'naive-ui'
 import type { MenuOption } from 'naive-ui'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
-import IconHome from '~icons/feather/home'
+import {
+	HomeOutline as IconHome,
+	PeopleOutline as IconUsers,
+	GridOutline as IconTable
+} from '@vicons/ionicons5'
 
 const route = useRoute()
 const router = useRouter()
@@ -12,8 +16,18 @@ const menuOptions: MenuOption[] = [
 	{
 		label: () => h(RouterLink, { to: { name: 'home' } }, { default: () => 'Início' }),
 		key: 'home',
-		icon: () => h(NIcon, null, { default: () => h(IconHome) }),
+		icon: () => h(NIcon, null, { default: () => h(IconHome) })
 	},
+	{
+		label: () => h(RouterLink, { to: { name: 'characters' } }, { default: () => 'Personagens' }),
+		key: 'characters',
+		icon: () => h(NIcon, null, { default: () => h(IconUsers) })
+	},
+	{
+		label: () => h(RouterLink, { to: { name: 'mesas' } }, { default: () => 'Mesas' }),
+		key: 'mesas',
+		icon: () => h(NIcon, null, { default: () => h(IconTable) })
+	}
 ]
 
 const selectedKey = computed(() => route.name as string)
@@ -36,7 +50,7 @@ const selectedKey = computed(() => route.name as string)
 
 <style scoped>
 .dashboard-sidebar {
-	height: 100%;
+	height: 100vh;
 	display: flex;
 	flex-direction: column;
 	background: var(--cor-papel-elevado);
