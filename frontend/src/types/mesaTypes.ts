@@ -3,16 +3,17 @@ interface MesaResponse {
 	id: number
 	title: string
 	description: string
-	createdBy: number
 	createdAt: Date
-	updatedAt: Date,
+	updatedAt: Date
+	isPrivate: boolean
+	allowSpectators: boolean
+	maxPlayers: number
 	creator: {
 		id: number
 		name: string
-	},
-	_count: {
-		players: number
 	}
+	countSpectators: number
+	countPlayers: number
 }
 
 interface PaginationMeta {

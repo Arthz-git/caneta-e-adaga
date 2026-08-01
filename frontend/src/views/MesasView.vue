@@ -1,12 +1,27 @@
 <script setup lang="ts">
-import { getAllMesaPaginated } from '@/services/mesas.service'
+import { getAllMesaPaginated, createMesa } from '@/services/mesas.service'
 import { MesaResponse } from '@/types/mesaTypes'
-import { ref, watch } from 'vue'
-import { SearchOutline as IconSearch, PeopleOutline as IconUsers } from '@vicons/ionicons5'
-import { NInput, NIcon, NPagination, NSpin, useMessage } from 'naive-ui'
-import { format } from 'date-fns'
-import { ptBR } from 'date-fns/locale'
+import { ref, reactive, watch } from 'vue'
+import {
+	SearchOutline as IconSearch,
+	Add as IconAdd
+} from '@vicons/ionicons5'
+import {
+	NInput,
+	NInputNumber,
+	NSwitch,
+	NIcon,
+	NPagination,
+	NSpin,
+	NButton,
+	NModal,
+	NForm,
+	NFormItem,
+	useMessage
+} from 'naive-ui'
+import type { FormInst, FormRules } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuth'
+import CardMesa from '@/components/CardMesa.vue'
 
 const message = useMessage()
 const auth = useAuthStore()
@@ -14,11 +29,98 @@ const auth = useAuthStore()
 const LIMIT = 9
 const SEARCH_DEBOUNCE_MS = 400
 
+const initialForm = {
+	title: '',
+	description: '',
+	isPrivate: false,
+	allowSpectators: true,
+	maxPlayers: 4
+}
+
+const addMesaForm = reactive({ ...initialForm })
+const addMesaFormRef = ref<FormInst | null>(null)
+
+const addMesaRules: FormRules = {
+	title: [
+		{
+			required: true,
+			message: 'Título é um campo obrigatório',
+			trigger: ['input', 'blur']
+		},
+		{
+			min: 2,
+			max: 100,
+			message: 'O título deve ter entre 2 e 100 caracteres',
+			trigger: ['input', 'blur']
+		}
+	],
+	description: [
+		{
+			required: true,
+			message: 'Descrição é um campo obrigatório',
+			trigger: ['input', 'blur']
+		},
+		{
+			min: 2,
+			max: 400,
+			message: 'A descrição deve ter entre 2 e 400 caracteres',
+			trigger: ['input', 'blur']
+		}
+	],
+	maxPlayers: {
+		required: true,
+		type: 'number',
+		min: 1,
+		max: 8,
+		message: 'O máximo de jogadores deve ser um número entre 1 e 8',
+		trigger: ['input', 'blur', 'change']
+	}
+}
+
 const mesas = ref<MesaResponse[]>([])
 const searchMesa = ref('')
 const page = ref(1)
 const totalPages = ref(1)
 const isLoading = ref(false)
+const isSubmitting = ref(false)
+const showModal = ref(false)
+
+function handleAddMesaButton() {
+	showModal.value = true
+}
+
+async function handleAddMesaSubmit() {
+	try {
+		await addMesaFormRef.value?.validate()
+
+		isSubmitting.value = true
+
+		await createMesa({ ...addMesaForm })
+
+		message.success('Mesa criada com sucesso')
+
+		onCloseModal()
+
+		if (page.value === 1) {
+			fetchMesas()
+		}
+		else {
+			page.value = 1
+		}
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isSubmitting.value = false
+	}
+}
+
+function onCloseModal() {
+	showModal.value = false
+	Object.assign(addMesaForm, initialForm)
+}
 
 let searchTimeout: ReturnType<typeof setTimeout>
 
@@ -59,12 +161,77 @@ fetchMesas()
 </script>
 
 <template>
+	<n-modal v-model:show="showModal" :on-after-leave="onCloseModal">
+		<div class="modal__container">
+			<h2 class="modal__title">Crie uma nova mesa</h2>
+
+			<n-form ref="addMesaFormRef" :model="addMesaForm" :rules="addMesaRules" class="modal__form" label-placement="top" @submit.prevent="handleAddMesaSubmit">
+				<n-form-item label="Título" path="title">
+					<n-input v-model:value="addMesaForm.title" type="text" placeholder="Ex: A Torre Esquecida"></n-input>
+				</n-form-item>
+
+				<n-form-item label="Descrição" path="description">
+					<n-input
+						v-model:value="addMesaForm.description"
+						type="textarea"
+						placeholder="Do que se trata essa mesa?"
+						:autosize="{ minRows: 6, maxRows: 12 }"
+						:rows="6"
+					></n-input>
+				</n-form-item>
+
+				<n-form-item label="Máximo de jogadores" path="maxPlayers">
+					<n-input-number v-model:value="addMesaForm.maxPlayers" :min="1" :max="8" class="modal__number" />
+				</n-form-item>
+
+				<div class="modal__switches">
+					<n-form-item label="Mesa privada" style="width: 50%;">
+						<n-switch v-model:value="addMesaForm.isPrivate" />
+					</n-form-item>
+
+					<n-form-item label="Permitir espectadores">
+						<n-switch v-model:value="addMesaForm.allowSpectators" />
+					</n-form-item>
+				</div>
+
+				<n-button
+					type="primary"
+					attr-type="submit"
+					block
+					strong
+					:loading="isSubmitting"
+					:disabled="isSubmitting"
+					:focusable="false"
+				>
+					Criar
+				</n-button>
+			</n-form>
+		</div>
+	</n-modal>
+
 	<div>
-		<n-input v-model:value="searchMesa" type="text" placeholder="Procurar mesa">
-			<template #prefix>
-				<n-icon :component="IconSearch" />
-			</template>
-		</n-input>
+		<div class="toolbar">
+			<n-input class="toolbar__search" v-model:value="searchMesa" type="text" placeholder="Procurar mesa">
+				<template #prefix>
+					<n-icon :component="IconSearch" />
+				</template>
+			</n-input>
+
+			<n-button
+				type="primary"
+				strong
+				@click.prevent="handleAddMesaButton"
+				:focusable="false"
+			>
+				<template #icon>
+					<n-icon>
+						<IconAdd />
+					</n-icon>
+				</template>
+
+				Crie uma nova mesa
+			</n-button>
+		</div>
 
 		<div class="empty__card" v-if="mesas.length === 0 ? true : false">
 			<p>
@@ -81,29 +248,12 @@ fetchMesas()
 
 		<div v-else>
 			<div class="cards__wrapper">
-				<div
-					class="card__mesa"
+				<CardMesa
 					v-for="mesa in mesas"
 					:key="mesa.id"
-				>
-					<div>
-						<p class="card__mesa__title">{{ mesa.title }}</p>
-
-						<p class="card__mesa__subtitle">"{{ mesa.description }}"</p>
-					</div>
-
-					<div class="card__mesa__footer">
-						<p>
-							Criador por {{ mesa.creator.name }} desde {{ format(mesa.createdAt, 'dd/MM/yyyy HH:mm:ss', { locale: ptBR }) }}
-						</p>
-
-						<div class="players__count__wrapper">
-							<n-icon :component="IconUsers" size="18" />
-
-							<p>{{ mesa._count.players }}</p>
-						</div>
-					</div>
-				</div>
+					:mesa="mesa"
+					:is-owner="mesa.creator.id === auth.user!.id"
+				/>
 			</div>
 
 			<n-pagination v-if="totalPages > 1" v-model:page="page" :page-count="totalPages" class="pagination" />
@@ -112,83 +262,50 @@ fetchMesas()
 </template>
 
 <style scoped>
+.modal__container {
+	width: 90vw;
+	max-width: 720px;
+	padding: var(--space-6) var(--space-5);
+	border-radius: 16px;
+	background: var(--cor-papel-elevado);
+	border: 1px solid var(--cor-linha);
+	box-shadow: var(--shadow);
+}
+
+.modal__title {
+	margin-bottom: var(--space-5);
+}
+
+.modal__form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.toolbar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-4);
+}
+
+.toolbar__search {
+	flex: 1;
+}
+
+.modal__number {
+	width: 120px;
+}
+
+.modal__switches {
+	display: flex;
+}
+
 .cards__wrapper {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
 	gap: var(--space-5);
 
 	margin-top: var(--space-6);
-}
-
-.card__mesa {
-	display: flex;
-	flex-direction: column;
-	justify-content: space-between;
-
-	padding: var(--space-3);
-	border-radius: 16px;
-	background: var(--cor-papel-elevado);
-	border: 1px solid var(--cor-linha);
-	box-shadow: var(--shadow);
-
-	height: 240px;
-	cursor: pointer;
-	transition: box-shadow 0.2s ease, transform 0.2s ease;
-}
-
-.card__mesa:hover {
-	box-shadow: var(--shadow-hover, var(--shadow));
-	transform: translateY(-2px);
-}
-
-.card__mesa__title {
-	font-family: var(--font-serif);
-	color: var(--cor-granada);
-	font-size: 1.1rem;
-	font-weight: 600;
-
-	margin-bottom: var(--space-2);
-}
-
-.card__mesa__subtitle {
-	font-family: var(--font-serif);
-	color: var(--cor-tinta);
-	font-size: 0.9rem;
-	font-style: italic;
-
-	display: -webkit-box;
-	-webkit-line-clamp: 4;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-}
-
-.card__mesa__footer {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-	align-items: center;
-}
-
-.card__mesa__footer>p {
-	font-family: var(--font-sans);
-	font-size: 0.7rem;
-	color: var(--cor-tinta-fraca);
-}
-
-.players__count__wrapper {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	border-radius: 6px;
-	border: 1px solid var(--cor-linha);
-
-	padding: var(--space-1) var(--space-2);
-
-	font-family: var(--font-sans);
-}
-
-.players__count__wrapper :first-child {
-	margin-right: var(--space-2);
 }
 
 .pagination {
