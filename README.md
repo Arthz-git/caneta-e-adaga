@@ -5,7 +5,7 @@
 ### Pré-requisitos
 
 - Node.js 20+
-- Um banco de dados MySQL/MariaDB acessível
+- Um banco de dados PostgreSQL acessível
 
 ### Setup
 
@@ -26,7 +26,7 @@
    ```env
    NODE_ENV=development
    PORT=3000
-   DATABASE_URL=mysql://usuario:senha@localhost:3306/nome_do_banco
+   DATABASE_URL=postgresql://usuario:senha@localhost:5432/nome_do_banco
    JWT_SECRET=uma_string_com_pelo_menos_32_caracteres
    JWT_EXPIRES_IN=3600
    REFRESH_TOKEN_TTL_DAYS=7
