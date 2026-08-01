@@ -30,5 +30,10 @@ export class DeletePlayerService {
 		}
 
 		await this.playersRepository.delete(data.id)
+
+		const playersFromThisMesa = await this.playersRepository.getPlayersByMesaId(mesa.id)
+		if (playersFromThisMesa.length === 0) {
+			await this.mesasRepository.delete(mesa.id)
+		}
 	}
 }

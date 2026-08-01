@@ -1,5 +1,6 @@
 import { openApiRegistry } from '../../../shared/openapi/registry'
 import { createMesaSchema } from '../schemas/createMesa.schema'
+import { updateMesaSchema } from '../schemas/updateMesa.schema'
 import { deleteMesaSchema } from '../schemas/deleteMesa.schema'
 import { getMesaSchema } from '../schemas/getMesa.schema'
 import { getAllMesaByCreatorSchema } from '../schemas/getAllMesaByCreator.schema'
@@ -10,9 +11,17 @@ const mesaResponseExample = {
 	id: 1,
 	title: 'A Torre Esquecida',
 	description: 'Uma antiga torre guarda segredos que poucos ousam buscar.',
-	createdBy: 1,
 	createdAt: '2026-01-10T12:00:00.000Z',
-	updatedAt: '2026-01-10T12:00:00.000Z'
+	updatedAt: '2026-01-10T12:00:00.000Z',
+	isPrivate: false,
+	allowSpectators: true,
+	maxPlayers: 4,
+	creator: {
+		id: 1,
+		name: 'Fulano'
+	},
+	countSpectators: 0,
+	countPlayers: 1
 }
 
 openApiRegistry.registerPath({
@@ -141,14 +150,14 @@ openApiRegistry.registerPath({
 	method: 'put',
 	path: '/mesas/{id}',
 	tags: ['Mesas'],
-	summary: 'Atualiza título e descrição de uma mesa',
+	summary: 'Atualiza título, descrição, privacidade, espectadores e limite de jogadores de uma mesa',
 	security: [{ bearerAuth: [] }],
 	request: {
 		params: deleteMesaSchema,
 		body: {
 			content: {
 				'application/json': {
-					schema: createMesaSchema
+					schema: updateMesaSchema.pick({ title: true, description: true, isPrivate: true, allowSpectators: true, maxPlayers: true })
 				}
 			}
 		}

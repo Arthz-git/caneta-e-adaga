@@ -9,6 +9,7 @@ model Players {
     userCharacter   UserCharacter? @relation(fields: [userCharacterId], references: [id], onDelete: SetNull)
     joinedAt        DateTime       @default(now())
     updatedAt       DateTime       @updatedAt
+    isFavorite      Boolean        @default(false)
 
     @@unique([userId, mesaId])
     @@map("players")

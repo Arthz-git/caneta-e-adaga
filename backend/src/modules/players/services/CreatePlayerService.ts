@@ -53,7 +53,8 @@ export class CreatePlayerService {
 			throw new AppError('Usuário já está nesta mesa', 409)
 		}
 
-		const created = await this.playersRepository.create(data)
+		// checagem de lotação e criação em transação (com lock na mesa) para evitar race condition
+		const created = await this.playersRepository.createWithCapacityCheck(data, mesa.maxPlayers)
 
 		return created
 	}

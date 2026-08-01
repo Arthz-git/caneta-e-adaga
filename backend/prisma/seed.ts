@@ -170,7 +170,10 @@ async function main() {
 			prisma.mesa.create({
 				data: {
 					...mesa,
-					createdBy: pick(users, index).id
+					createdBy: pick(users, index).id,
+					isPrivate: index % 4 === 0,
+					allowSpectators: index % 5 !== 0,
+					maxPlayers: 3 + (index % 4)
 				}
 			})
 		)
@@ -182,25 +185,53 @@ async function main() {
 		mesaId: number
 		role: 'MASTER' | 'PLAYER' | 'SPECTATOR'
 		userCharacterId?: number
+		isFavorite: boolean
 	}[] = []
 
 	mesas.forEach((mesa, mesaIndex) => {
+		// apenas 1 mestre por mesa
 		const masterId = pick(users, mesaIndex).id
-		playersData.push({ userId: masterId, mesaId: mesa.id, role: 'MASTER' })
+		playersData.push({ userId: masterId, mesaId: mesa.id, role: 'MASTER', isFavorite: mesaIndex % 3 === 0 })
 
-		const participantsCount = 2 + (mesaIndex % 3)
-		for (let i = 1; i <= participantsCount; i++) {
-			const user = pick(users, mesaIndex + i)
-			if (user.id === masterId) continue
+		const usedUserIds = new Set([masterId])
+		let offset = 1
 
-			const isSpectator = (mesaIndex + i) % 5 === 0
-			const character = isSpectator ? undefined : pick(characters, mesaIndex + i)
+		const nextUnusedUser = () => {
+			let user = pick(users, mesaIndex + offset)
+			while (usedUserIds.has(user.id)) {
+				offset++
+				user = pick(users, mesaIndex + offset)
+			}
+			usedUserIds.add(user.id)
+			offset++
+			return user
+		}
+
+		// jogadores contam para o limite da mesa, então nunca ultrapassam maxPlayers - 1 (a vaga do mestre)
+		const playersCount = Math.min(1 + (mesaIndex % 3), mesa.maxPlayers - 1)
+		for (let i = 0; i < playersCount; i++) {
+			const user = nextUnusedUser()
+			const character = pick(characters, mesaIndex + offset)
 
 			playersData.push({
 				userId: user.id,
 				mesaId: mesa.id,
-				role: isSpectator ? 'SPECTATOR' : 'PLAYER',
-				userCharacterId: character?.id
+				role: 'PLAYER',
+				userCharacterId: character.id,
+				isFavorite: (mesaIndex + offset) % 4 === 0
+			})
+		}
+
+		// espectadores não contam para o limite, mas só existem se a mesa permitir
+		const spectatorsCount = mesa.allowSpectators ? mesaIndex % 2 : 0
+		for (let i = 0; i < spectatorsCount; i++) {
+			const user = nextUnusedUser()
+
+			playersData.push({
+				userId: user.id,
+				mesaId: mesa.id,
+				role: 'SPECTATOR',
+				isFavorite: false
 			})
 		}
 	})

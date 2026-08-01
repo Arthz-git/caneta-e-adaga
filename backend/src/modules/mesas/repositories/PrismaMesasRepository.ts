@@ -24,10 +24,19 @@ export class PrismaMesasRepository implements IMesasRepository {
 			where: { id },
 			include: {
 				creator: {
-					select: { id: true, name: true }
+					select: { name: true }
 				},
-				_count: {
-					select: { players: true }
+				players: {
+					select: {
+						id: true,
+						userId: true,
+						mesaId: true,
+						role: true,
+						userCharacterId: true,
+						joinedAt: true,
+						updatedAt: true,
+						isFavorite: true
+					}
 				}
 			}
 		})
@@ -39,10 +48,19 @@ export class PrismaMesasRepository implements IMesasRepository {
 				where: { createdBy },
 				include: {
 					creator: {
-						select: { id: true, name: true }
+						select: { name: true }
 					},
-					_count: {
-						select: { players: true }
+					players: {
+						select: {
+							id: true,
+							userId: true,
+							mesaId: true,
+							role: true,
+							userCharacterId: true,
+							joinedAt: true,
+							updatedAt: true,
+							isFavorite: true
+						}
 					}
 				}
 			})
@@ -53,10 +71,19 @@ export class PrismaMesasRepository implements IMesasRepository {
 			.findMany({
 				include: {
 					creator: {
-						select: { id: true, name: true }
+						select: { name: true }
 					},
-					_count: {
-						select: { players: true }
+					players: {
+						select: {
+							id: true,
+							userId: true,
+							mesaId: true,
+							role: true,
+							userCharacterId: true,
+							joinedAt: true,
+							updatedAt: true,
+							isFavorite: true
+						}
 					}
 				}
 			})
@@ -77,10 +104,19 @@ export class PrismaMesasRepository implements IMesasRepository {
 				where,
 				include: {
 					creator: {
-						select: { id: true, name: true }
+						select: { name: true }
 					},
-					_count: {
-						select: { players: true }
+					players: {
+						select: {
+							id: true,
+							userId: true,
+							mesaId: true,
+							role: true,
+							userCharacterId: true,
+							joinedAt: true,
+							updatedAt: true,
+							isFavorite: true
+						}
 					}
 				},
 				skip: (page - 1) * limit,

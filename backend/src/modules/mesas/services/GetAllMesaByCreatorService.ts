@@ -1,3 +1,4 @@
+import { TransformMesa } from '../../../shared/composables/transformMesa'
 import { AppError } from '../../../shared/errors/AppError'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 import type { GetAllMesaByCreatorDTO } from '../schemas/getAllMesaByCreator.schema'
@@ -10,6 +11,8 @@ export class GetAllMesaByCreatorService {
 			throw new AppError('Você não tem permissão para visualizar as mesas deste usuário', 403)
 		}
 
-		return await this.mesasRepository.getAllByCreator(data.createdBy)
+		const mesas = await this.mesasRepository.getAllByCreator(data.createdBy)
+
+		return TransformMesa(mesas)
 	}
 }

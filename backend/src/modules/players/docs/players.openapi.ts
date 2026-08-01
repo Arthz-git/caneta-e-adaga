@@ -4,6 +4,7 @@ import { deletePlayerSchema } from '../schemas/deletePlayer.schema'
 import { getPlayersByMesaIdSchema } from '../schemas/getPlayersByMesaId.schema'
 import { updateRolePlayerSchema } from '../schemas/updateRolePlayer.schema'
 import { updateCharacterPlayerSchema } from '../schemas/updateCharacterPlayer.schema'
+import { updateFavoritePlayerSchema } from '../schemas/updateFavoritePlayer.schema'
 import { playerResponseSchema } from '../schemas/playerResponse.schema'
 import { z } from 'zod'
 
@@ -14,7 +15,8 @@ const playerResponseExample = {
 	role: 'MASTER',
 	userCharacterId: null,
 	joinedAt: '2026-01-10T12:00:00.000Z',
-	updatedAt: '2026-01-10T12:00:00.000Z'
+	updatedAt: '2026-01-10T12:00:00.000Z',
+	isFavorite: false
 }
 
 openApiRegistry.registerPath({
@@ -50,7 +52,7 @@ openApiRegistry.registerPath({
 			description: 'Token não informado, mal formatado ou inválido'
 		},
 		403: {
-			description: 'Usuário autenticado não tem permissão para adicionar o jogador, ou o personagem informado não pertence ao usuário'
+			description: 'Usuário autenticado não tem permissão para adicionar o jogador, o personagem informado não pertence ao usuário, a mesa já está lotada, ou a mesa já possui um mestre'
 		},
 		404: {
 			description: 'Usuário, mesa ou personagem não encontrados'
@@ -130,7 +132,7 @@ openApiRegistry.registerPath({
 			description: 'Token não informado, mal formatado ou inválido'
 		},
 		403: {
-			description: 'Usuário autenticado não tem permissão para atualizar este registro'
+			description: 'Usuário autenticado não tem permissão para atualizar este registro, ou a mesa já possui um mestre'
 		},
 		404: {
 			description: 'Jogador ou mesa não encontrados'
@@ -158,6 +160,48 @@ openApiRegistry.registerPath({
 	responses: {
 		200: {
 			description: 'Personagem atualizado com sucesso',
+			content: {
+				'application/json': {
+					schema: playerResponseSchema,
+					example: playerResponseExample
+				}
+			}
+		},
+		400: {
+			description: 'Dados inválidos'
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
+		},
+		403: {
+			description: 'Usuário autenticado não tem permissão para atualizar este registro'
+		},
+		404: {
+			description: 'Jogador não encontrado'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
+	method: 'patch',
+	path: '/players/favorite/{id}',
+	tags: ['Players'],
+	summary: 'Favorita ou desfavorita uma mesa para o jogador',
+	description: 'Apenas o próprio jogador pode alterar o campo de favorito do seu registro.',
+	security: [{ bearerAuth: [] }],
+	request: {
+		params: deletePlayerSchema,
+		body: {
+			content: {
+				'application/json': {
+					schema: updateFavoritePlayerSchema.pick({ isFavorite: true })
+				}
+			}
+		}
+	},
+	responses: {
+		200: {
+			description: 'Favorito atualizado com sucesso',
 			content: {
 				'application/json': {
 					schema: playerResponseSchema,

@@ -1,3 +1,4 @@
+import { TransformMesa } from '../../../shared/composables/transformMesa'
 import { AppError } from '../../../shared/errors/AppError'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 
@@ -11,6 +12,6 @@ export class GetAllMesaService {
 			return new AppError('Nenhuma mesa encontrada', 404)
 		}
 
-		return mesas
+		return TransformMesa(mesas)
 	}
 }

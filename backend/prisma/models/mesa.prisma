@@ -1,11 +1,14 @@
 model Mesa {
-    id          Int      @id @default(autoincrement())
-    title       String
-    description String
-    createdBy   Int
-    creator     User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
+    id              Int      @id @default(autoincrement())
+    title           String
+    description     String
+    createdBy       Int
+    creator         User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+    createdAt       DateTime @default(now())
+    updatedAt       DateTime @updatedAt
+    isPrivate       Boolean  @default(false)
+    allowSpectators Boolean  @default(true)
+    maxPlayers      Int      @default(4)
 
     players Players[]
 

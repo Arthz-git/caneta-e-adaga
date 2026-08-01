@@ -1,3 +1,4 @@
+import { TransformMesa } from '../../../shared/composables/transformMesa'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 import type { GetAllMesaPaginatedDTO } from '../schemas/getAllMesaPaginated.schema'
 
@@ -8,7 +9,7 @@ export class GetAllMesaPaginatedService {
 		const { data, total } = await this.mesasRepository.getAllPaginated({ page, limit, search })
 
 		return {
-			data,
+			data: TransformMesa(data),
 			meta: {
 				total,
 				page,

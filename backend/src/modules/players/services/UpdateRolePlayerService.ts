@@ -29,6 +29,6 @@ export class UpdateRolePlayerService {
 			throw new AppError('Você não tem permissão para atualizar este registro', 403)
 		}
 
-		return await this.playersRepository.updateRole(data)
+		return await this.playersRepository.updateRoleWithMasterCheck(data, mesa.id)
 	}
 }
