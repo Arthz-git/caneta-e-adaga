@@ -7,7 +7,10 @@ const envSchema = z.object({
 	FRONTEND_URL: z.string().url('A URL do frontend é inválida'),
 	JWT_SECRET: z.string().min(32, 'O JWT_SECRET deve ter pelo menos 32 caracteres'),
 	JWT_EXPIRES_IN: z.coerce.number().positive(),
-	REFRESH_TOKEN_TTL_DAYS: z.coerce.number().positive()
+	REFRESH_TOKEN_TTL_DAYS: z.coerce.number().positive(),
+	CLOUDINARY_CLOUD_NAME: z.string().min(1, 'O CLOUDINARY_CLOUD_NAME é obrigatório'),
+	CLOUDINARY_API_KEY: z.string().min(1, 'O CLOUDINARY_API_KEY é obrigatório'),
+	CLOUDINARY_API_SECRET: z.string().min(1, 'O CLOUDINARY_API_SECRET é obrigatório')
 })
 
 const _env = envSchema.safeParse(process.env)

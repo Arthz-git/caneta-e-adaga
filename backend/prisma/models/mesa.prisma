@@ -9,6 +9,7 @@ model Mesa {
     isPrivate       Boolean  @default(false)
     allowSpectators Boolean  @default(true)
     maxPlayers      Int      @default(4)
+    imageUrl        String?
 
     players Players[]
 

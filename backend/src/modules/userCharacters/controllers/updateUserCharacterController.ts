@@ -3,12 +3,14 @@ import { AppError } from '../../../shared/errors/AppError'
 import { PrismaUserCharactersRepository } from '../repositories/PrismaUserCharactersRepository'
 import { UpdateUserCharacterService } from '../services/UpdateUserCharacterService'
 import { updateUserCharacterSchema } from '../schemas/updateUserCharacter.schema'
+import type { UpdateUserCharacterDTO } from '../schemas/updateUserCharacter.schema'
 import { ZodError } from 'zod'
 
 export class UpdateUserCharacterController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = updateUserCharacterSchema.parse({ ...req.body, id: req.params.id })
+			const parsed = updateUserCharacterSchema.parse({ ...req.body, id: req.params.id })
+			const data: UpdateUserCharacterDTO = { ...parsed, imageUrl: req.file?.path }
 
 			const userCharactersRepository = new PrismaUserCharactersRepository()
 			const updateUserCharacterService = new UpdateUserCharacterService(userCharactersRepository)

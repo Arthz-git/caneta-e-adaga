@@ -16,6 +16,7 @@ const mesaResponseExample = {
 	isPrivate: false,
 	allowSpectators: true,
 	maxPlayers: 4,
+	imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/mesas/exemplo.jpg',
 	creator: {
 		id: 1,
 		name: 'Fulano'
@@ -29,12 +30,12 @@ openApiRegistry.registerPath({
 	path: '/mesas',
 	tags: ['Mesas'],
 	summary: 'Cria uma nova mesa para o usuário autenticado',
-	description: 'O usuário autenticado é definido como criador da mesa e adicionado automaticamente como jogador com a função MASTER.',
+	description: 'O usuário autenticado é definido como criador da mesa e adicionado automaticamente como jogador com a função MASTER. Aceita opcionalmente um arquivo de imagem (campo "image") via multipart/form-data.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		body: {
 			content: {
-				'application/json': {
+				'multipart/form-data': {
 					schema: createMesaSchema
 				}
 			}
@@ -150,13 +151,14 @@ openApiRegistry.registerPath({
 	method: 'put',
 	path: '/mesas/{id}',
 	tags: ['Mesas'],
-	summary: 'Atualiza título, descrição, privacidade, espectadores e limite de jogadores de uma mesa',
+	summary: 'Atualiza título, descrição, privacidade, espectadores, limite de jogadores e imagem de uma mesa',
+	description: 'Aceita opcionalmente um arquivo de imagem (campo "image") via multipart/form-data. Quando nenhum arquivo é enviado, a imagem atual é mantida.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		params: deleteMesaSchema,
 		body: {
 			content: {
-				'application/json': {
+				'multipart/form-data': {
 					schema: updateMesaSchema.pick({ title: true, description: true, isPrivate: true, allowSpectators: true, maxPlayers: true })
 				}
 			}

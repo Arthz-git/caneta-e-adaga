@@ -6,6 +6,7 @@ export const userCharacterResponseSchema = z.object({
 	name: z.string(),
 	description: z.string(),
 	lore: z.string(),
+	imageUrl: z.string().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date()
 })

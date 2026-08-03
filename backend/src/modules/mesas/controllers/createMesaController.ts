@@ -11,7 +11,7 @@ export class CreateMesaController {
 	async handle(req: Request, res: Response) {
 		try {
 			const input = createMesaSchema.parse(req.body)
-			const data: CreateMesaDTO = { ...input, createdBy: req.user!.id }
+			const data: CreateMesaDTO = { ...input, createdBy: req.user!.id, imageUrl: req.file?.path }
 
 			const mesaRepository = new PrismaMesasRepository()
 			const playersRepository = new PrismaPlayersRepository()

@@ -15,6 +15,7 @@ export function TransformMesa(mesas: MesaResponseRepository[]): MesaResponseDTO[
 			isPrivate: item.isPrivate,
 			allowSpectators: item.allowSpectators,
 			maxPlayers: item.maxPlayers,
+			imageUrl: item.imageUrl,
 			countSpectators: item.players.filter(player => player.role === 'SPECTATOR').length,
 			countPlayers: item.players.filter(player => player.role !== 'SPECTATOR').length
 		}

@@ -3,12 +3,14 @@ import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
 import { PrismaMesasRepository } from '../repositories/PrismaMesasRepository'
 import { updateMesaSchema } from '../schemas/updateMesa.schema'
+import type { UpdateMesaDTO } from '../schemas/updateMesa.schema'
 import { UpdateMesaService } from '../services/UpdateMesaService'
 
 export class UpdateMesaController {
 	async handle(req: Request, res: Response) {
 		try {
-			const data = updateMesaSchema.parse({ ...req.body, id: req.params.id })
+			const parsed = updateMesaSchema.parse({ ...req.body, id: req.params.id })
+			const data: UpdateMesaDTO = { ...parsed, imageUrl: req.file?.path }
 
 			const mesaRepository = new PrismaMesasRepository()
 			const updateMesaService = new UpdateMesaService(mesaRepository)

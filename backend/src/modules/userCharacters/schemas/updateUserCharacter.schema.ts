@@ -7,11 +7,17 @@ export const updateUserCharacterSchema = z.object({
 		.int({ error: 'Id de registro inválido' })
 		.positive({ error: 'Id de registro inválido' }),
 	name: z
-		.string({ error: 'Nome é um campo obrigatório' }),
+		.string({ error: 'Nome é um campo obrigatório' })
+		.trim()
+		.min(1, 'Nome é um campo obrigatório'),
 	description: z
-		.string({ error: 'Descrição é um campo obrigatório ' }),
+		.string({ error: 'Descrição é um campo obrigatório ' })
+		.trim()
+		.min(1, 'Descrição é um campo obrigatório'),
 	lore: z
 		.string({ error: 'História é um campo obrigatório ' })
+		.trim()
+		.min(1, 'História é um campo obrigatório')
 })
 
-export type UpdateUserCharacterDTO = z.infer<typeof updateUserCharacterSchema>
+export type UpdateUserCharacterDTO = z.infer<typeof updateUserCharacterSchema> & { imageUrl?: string }

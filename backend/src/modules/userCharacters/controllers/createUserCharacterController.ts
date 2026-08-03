@@ -10,7 +10,7 @@ export class CreateUserCharacterController {
 	async handle(req: Request, res: Response) {
 		try {
 			const input = createUserCharacterSchema.parse(req.body)
-			const data: CreateUserCharacterDTO = { ...input, userId: req.user!.id }
+			const data: CreateUserCharacterDTO = { ...input, userId: req.user!.id, imageUrl: req.file?.path }
 
 			const userCharactersRepository = new PrismaUserCharactersRepository()
 			const createUserCharacterService = new CreateUserCharacterService(userCharactersRepository)

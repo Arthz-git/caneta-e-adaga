@@ -12,6 +12,7 @@ const userCharacterResponseExample = {
 	name: 'Aldric Ferro Negro',
 	description: 'Um mercenário cansado de guerras, em busca de redenção.',
 	lore: 'Nascido nas terras geladas do norte, Aldric perdeu tudo em uma guerra que não escolheu lutar...',
+	imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/characters/exemplo.jpg',
 	createdAt: '2026-01-10T12:00:00.000Z',
 	updatedAt: '2026-01-10T12:00:00.000Z'
 }
@@ -21,11 +22,12 @@ openApiRegistry.registerPath({
 	path: '/characters',
 	tags: ['Characters'],
 	summary: 'Cria um novo personagem para o usuário autenticado',
+	description: 'Aceita opcionalmente um arquivo de imagem (campo "image") via multipart/form-data.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		body: {
 			content: {
-				'application/json': {
+				'multipart/form-data': {
 					schema: createUserCharacterSchema
 				}
 			}
@@ -55,12 +57,13 @@ openApiRegistry.registerPath({
 	path: '/characters/{id}',
 	tags: ['Characters'],
 	summary: 'Atualiza um personagem do usuário autenticado',
+	description: 'Aceita opcionalmente um arquivo de imagem (campo "image") via multipart/form-data. Quando nenhum arquivo é enviado, a imagem atual é mantida.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		params: deleteUserCharacterSchema,
 		body: {
 			content: {
-				'application/json': {
+				'multipart/form-data': {
 					schema: createUserCharacterSchema
 				}
 			}

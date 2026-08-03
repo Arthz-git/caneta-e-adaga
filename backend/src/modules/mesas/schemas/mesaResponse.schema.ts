@@ -9,6 +9,7 @@ export const mesaResponseSchema = z.object({
 	isPrivate: z.boolean(),
 	allowSpectators: z.boolean(),
 	maxPlayers: z.number(),
+	imageUrl: z.string().nullable(),
 	creator: z.object({
 		id: z.number(),
 		name: z.string()
@@ -27,6 +28,7 @@ export const mesaResponseRepository = z.object({
 	isPrivate: z.boolean(),
 	allowSpectators: z.boolean(),
 	maxPlayers: z.number(),
+	imageUrl: z.string().nullable(),
 	creator: z.object({
 		name: z.string()
 	}),

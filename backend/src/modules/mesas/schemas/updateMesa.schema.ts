@@ -27,4 +27,4 @@ export const updateMesaSchema = z.object({
 		.max(20, 'A mesa deve permitir no máximo 20 jogadores')
 })
 
-export type UpdateMesaDTO = z.infer<typeof updateMesaSchema>
+export type UpdateMesaDTO = z.infer<typeof updateMesaSchema> & { imageUrl?: string }

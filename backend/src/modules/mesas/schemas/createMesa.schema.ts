@@ -26,4 +26,4 @@ export const createMesaSchema = z.object({
 })
 
 export type CreateMesaInput = z.infer<typeof createMesaSchema>
-export type CreateMesaDTO = CreateMesaInput & { createdBy: number }
+export type CreateMesaDTO = CreateMesaInput & { createdBy: number, imageUrl?: string }
