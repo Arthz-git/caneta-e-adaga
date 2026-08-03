@@ -21,7 +21,8 @@ const emit = defineEmits<{
 	<div class="card-base">
 		<div class="card-base__header">
 			<div class="card-base__avatar card-base__avatar--round">
-				<n-icon>
+				<img v-if="char.imageUrl" :src="char.imageUrl" :alt="char.name" class="card-base__avatar-img">
+				<n-icon v-else>
 					<IconUser />
 				</n-icon>
 			</div>

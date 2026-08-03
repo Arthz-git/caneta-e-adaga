@@ -1,16 +1,19 @@
 <script setup lang="ts">
-import { deleteMyCharacter, getMyCharacters, updateMyCharacter } from '@/services/characters.service'
+import { createMyCharacter, deleteMyCharacter, getMyCharacters, updateMyCharacter } from '@/services/characters.service'
 import { useAuthStore } from '@/stores/useAuth'
 import { useDialog, useMessage } from 'naive-ui'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed, onBeforeUnmount } from 'vue'
 import type { CharactersResponse } from '@/types/charactersTypes'
-import { NButton, NIcon, NSpin, NModal, NForm, NFormItem, NInput } from 'naive-ui'
-import { Add as IconAdd } from '@vicons/ionicons5'
+import { NButton, NIcon, NSpin, NModal, NForm, NFormItem, NInput, NUpload } from 'naive-ui'
+import type { FormInst, FormRules, UploadFileInfo } from 'naive-ui'
+import { Add as IconAdd, ImageOutline as IconImage, CloseOutline as IconClose } from '@vicons/ionicons5'
 import CardPersonagem from '@/components/CardPersonagem.vue'
 
 const dialog = useDialog()
 const message = useMessage()
 const auth = useAuthStore()
+
+const formRef = ref<FormInst | null>(null)
 
 const chars = ref<CharactersResponse[]>([])
 const isLoading = ref(false)
@@ -25,13 +28,70 @@ const initialStateForm = {
 }
 
 const characterForm = reactive({ ... initialStateForm })
+const characterImage = ref<File | null>(null)
+const existingImageUrl = ref<string | null>(null)
+const characterImagePreview = ref<string | null>(null)
+
+const displayedImageUrl = computed(() => characterImagePreview.value ?? existingImageUrl.value)
+
+const rules: FormRules = {
+	name: {
+		required: true,
+		message: 'Nome é um campo obrigatório',
+		trigger: ['input', 'blur']
+	},
+	description: {
+		required: true,
+		message: 'Descrição é um campo obrigatório',
+		trigger: ['input', 'blur']
+	},
+	lore: {
+		required: true,
+		message: 'História é um campo obrigatório',
+		trigger: ['input', 'blur']
+	}
+}
+
+function handleImageChange({ file }: { file: UploadFileInfo }) {
+	characterImage.value = file.file ?? null
+
+	if (characterImagePreview.value) {
+		URL.revokeObjectURL(characterImagePreview.value)
+	}
+
+	characterImagePreview.value = characterImage.value ? URL.createObjectURL(characterImage.value) : null
+}
+
+onBeforeUnmount(() => {
+	if (characterImagePreview.value) {
+		URL.revokeObjectURL(characterImagePreview.value)
+	}
+})
 
 function handleAddCharButton() {
 	showModal.value = true
 }
 
 async function handleAddCharSubmit() {
+	try {
+		await formRef.value?.validate()
 
+		isLoading.value = true
+
+		await createMyCharacter({ ...characterForm, image: characterImage.value ?? undefined })
+
+		message.success('Personagem criado com sucesso')
+
+		onCloseModal()
+		await fetchMyCharacters()
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isLoading.value = false
+	}
 }
 
 function handleEditChar(charId: number) {
@@ -41,6 +101,7 @@ function handleEditChar(charId: number) {
 		characterForm.name = selectedChar.name
 		characterForm.description = selectedChar.description
 		characterForm.lore = selectedChar.lore
+		existingImageUrl.value = selectedChar.imageUrl
 
 		showModal.value = true
 		editId.value = charId
@@ -49,11 +110,14 @@ function handleEditChar(charId: number) {
 
 async function handleEditCharSubmit() {
 	try {
+		await formRef.value?.validate()
+
 		isLoading.value = true
 
 		const payload = {
 			id: editId.value,
-			...characterForm
+			...characterForm,
+			image: characterImage.value ?? undefined
 		}
 
 		await updateMyCharacter(payload)
@@ -61,7 +125,7 @@ async function handleEditCharSubmit() {
 		message.success('Personagem atualizado com sucesso')
 
 		onCloseModal()
-		fetchMyCharacters()
+		await fetchMyCharacters()
 	}
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
@@ -92,7 +156,7 @@ async function handleDeleteCharSubmit(charId: number) {
 
 		message.success('Personagem excluído com sucesso')
 
-		fetchMyCharacters()
+		await fetchMyCharacters()
 	}
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
@@ -106,6 +170,14 @@ async function handleDeleteCharSubmit(charId: number) {
 function onCloseModal() {
 	showModal.value = false
 	Object.assign(characterForm, initialStateForm)
+
+	if (characterImagePreview.value) {
+		URL.revokeObjectURL(characterImagePreview.value)
+	}
+
+	characterImage.value = null
+	characterImagePreview.value = null
+	existingImageUrl.value = null
 	editId.value = 0
 }
 
@@ -115,9 +187,7 @@ async function fetchMyCharacters() {
 
 		const myChars = await getMyCharacters(auth.user!.id)
 
-		if (myChars.length > 0) {
-			chars.value = myChars
-		}
+		chars.value = myChars
 	}
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
@@ -134,20 +204,65 @@ fetchMyCharacters()
 <template>
 	<n-modal v-model:show="showModal" :on-after-leave="onCloseModal">
 		<div class="modal__container">
-			<h2 class="modal__title">Novo personagem</h2>
+			<div class="modal__header">
+				<h2 class="modal__title">Novo personagem</h2>
 
-			<n-form class="modal__form" label-placement="top" @submit.prevent="handleAddCharSubmit">
-				<n-form-item label="Nome">
-					<n-input v-model:value="characterForm.name" type="text" placeholder="Ex: Elyndra Corvain"></n-input>
-				</n-form-item>
+				<n-button quaternary circle :focusable="false" @click="showModal = false">
+					<template #icon>
+						<n-icon>
+							<IconClose />
+						</n-icon>
+					</template>
+				</n-button>
+			</div>
 
-				<n-form-item label="Descrição">
-					<n-input v-model:value="characterForm.description" type="textarea" placeholder="Aparência, personalidade, trejeitos... como alguém reconheceria seu personagem em um relance?" :autosize="{ minRows: 3, maxRows: 6 }"></n-input>
-				</n-form-item>
+			<n-form ref="formRef" :model="characterForm" :rules="rules" class="modal__form" label-placement="top" @submit.prevent="handleAddCharSubmit">
+				<div class="modal__form-body">
+					<div class="modal__image">
+						<n-upload
+							accept="image/*"
+							:show-file-list="false"
+							:default-upload="false"
+							@change="handleImageChange"
+						>
+							<div class="modal__image-preview">
+								<img v-if="displayedImageUrl" :src="displayedImageUrl" alt="Prévia do personagem" class="modal__image-img">
+								<div v-else class="modal__image-placeholder">
+									<n-icon size="48">
+										<IconImage />
+									</n-icon>
+									<span>Selecionar imagem</span>
+								</div>
+							</div>
+						</n-upload>
+					</div>
 
-				<n-form-item label="História">
-					<n-input v-model:value="characterForm.lore" type="textarea" placeholder="De onde ele veio, o que já viveu, o que carrega consigo até aqui..." :autosize="{ minRows: 4, maxRows: 10 }"></n-input>
-				</n-form-item>
+					<div class="modal__fields">
+						<n-form-item label="Nome" path="name">
+							<n-input v-model:value="characterForm.name" type="text" placeholder="Ex: Elyndra Corvain"></n-input>
+						</n-form-item>
+
+						<n-form-item
+							label="Descrição"
+							path="description"
+						>
+							<n-input
+								v-model:value="characterForm.description"
+								type="textarea"
+								placeholder="Aparência, personalidade, trejeitos... como alguém reconheceria seu personagem em um relance?"
+								:autosize="{ minRows: 4, maxRows: 8 }"
+							></n-input>
+						</n-form-item>
+
+						<n-form-item label="História" path="lore">
+							<n-input
+								v-model:value="characterForm.lore"
+								type="textarea" placeholder="De onde ele veio, o que já viveu, o que carrega consigo até aqui..."
+								:autosize="{ minRows: 8, maxRows: 12 }"
+							></n-input>
+						</n-form-item>
+					</div>
+				</div>
 
 				<n-button
 					type="primary"
@@ -201,7 +316,7 @@ fetchMyCharacters()
 			</p>
 		</div>
 
-		<div class="center__container" v-if="isLoading">
+		<div class="center__container" v-else-if="isLoading">
 			<n-spin size="large" />
 		</div>
 
@@ -222,7 +337,7 @@ fetchMyCharacters()
 <style scoped>
 .modal__container {
 	width: 90vw;
-	max-width: 720px;
+	max-width: 900px;
 	padding: var(--space-6) var(--space-5);
 	border-radius: 16px;
 	background: var(--cor-papel-elevado);
@@ -230,14 +345,88 @@ fetchMyCharacters()
 	box-shadow: var(--shadow);
 }
 
-.modal__title {
+.modal__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
 	margin-bottom: var(--space-5);
 }
 
 .modal__form {
 	display: flex;
 	flex-direction: column;
+	gap: var(--space-5);
+}
+
+.modal__form-body {
+	display: flex;
+	grid-template-columns: 1fr;
+	gap: var(--space-3);
+	align-items: start;
+	justify-items: center;
+}
+
+.modal__fields {
+	min-width: 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.modal__image {
+	width: 100%;
+}
+
+.modal__image :deep(.n-upload) {
+	width: 100%;
+}
+
+.modal__image :deep(.n-upload-trigger) {
+	width: 100%;
+}
+
+.modal__image-preview {
+	width: 100%;
+	aspect-ratio: 3 / 4;
+	border-radius: 12px;
+	overflow: hidden;
+	border: 1px solid var(--cor-linha);
+	background: var(--cor-papel);
+	cursor: pointer;
+	transition: border-color 0.2s ease;
+}
+
+.modal__image-preview:hover {
+	border-color: var(--cor-granada);
+}
+
+.modal__image-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	display: block;
+}
+
+.modal__image-placeholder {
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
 	gap: var(--space-2);
+	color: var(--cor-tinta-fraca);
+	font-family: var(--font-sans);
+	font-size: 0.8rem;
+}
+
+@media (min-width: 860px) {
+	.modal__form-body {
+		grid-template-columns: 320px 1fr;
+		gap: var(--space-6);
+		justify-items: initial;
+	}
 }
 
 .center__container {

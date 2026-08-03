@@ -8,6 +8,7 @@ interface CreateMesaParams {
 	isPrivate: boolean
 	allowSpectators: boolean
 	maxPlayers: number
+	image?: File
 }
 
 async function getAllMesa() {
@@ -17,7 +18,13 @@ async function getAllMesa() {
 }
 
 async function createMesa(newMesa: CreateMesaParams) {
-	const mesa = await api.post<MesaResponse>('/mesas', newMesa)
+	const { image, ...data } = newMesa
+
+	const formData = new FormData()
+	Object.entries(data).forEach(([key, value]) => formData.append(key, String(value)))
+	if (image) formData.append('image', image)
+
+	const mesa = await api.post<MesaResponse>('/mesas', formData)
 
 	return mesa.data
 }

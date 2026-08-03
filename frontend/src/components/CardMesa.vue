@@ -15,18 +15,20 @@ import { formatDateIntoString } from '@/composables/transformDateIntoString'
 defineProps<{
 	mesa: MesaResponse
 	isOwner: boolean
+	onCardClick: (payload: MouseEvent) => void
 }>()
 </script>
 
 <template>
-	<div class="card__mesa card-base card-base--clickable">
+	<div class="card__mesa card-base card-base--clickable" @click="onCardClick">
 		<div class="card__mesa__badge" v-if="isOwner">
 			Sua mesa
 		</div>
 
 		<div class="card-base__header">
 			<div class="card-base__avatar card-base__avatar--square">
-				<n-icon>
+				<img v-if="mesa.imageUrl" :src="mesa.imageUrl" :alt="mesa.title" class="card-base__avatar-img">
+				<n-icon v-else>
 					<IconImage />
 				</n-icon>
 			</div>

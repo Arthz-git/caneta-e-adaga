@@ -8,6 +8,7 @@ interface MesaResponse {
 	isPrivate: boolean
 	allowSpectators: boolean
 	maxPlayers: number
+	imageUrl: string | null
 	creator: {
 		id: number
 		name: string

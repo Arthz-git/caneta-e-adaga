@@ -4,6 +4,7 @@ interface CharactersResponse {
 	name: string
 	description: string
 	lore: string
+	imageUrl: string | null
 	createdAt: Date
 	updatedAt: Date
 }
@@ -13,6 +14,7 @@ interface CharacterUpdateParams {
 	name: string
 	description: string
 	lore: string
+	image?: File
 }
 
 export type {
