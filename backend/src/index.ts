@@ -9,15 +9,10 @@ import { generateOpenApiDocument } from './shared/openapi/document'
 import { errorHandler } from './shared/http/middlewares/errorHandler'
 import { userCharactersRoutes } from './modules/userCharacters/routes/userCharacters.routes'
 import { mesaRoutes } from './modules/mesas/routes/mesas.routes'
-import { createServer } from 'node:http'
-import { createSocketIOServer } from './shared/websocket/io'
 import { env } from './config/env'
 import { playerRoutes } from './modules/players/routes/players.routes'
 
 const app = express()
-const httpServer = createServer(app)
-
-createSocketIOServer(httpServer)
 
 app.use(cors({
 	origin: env.FRONTEND_URL,
@@ -45,6 +40,6 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument))
 
 app.use(errorHandler)
 
-httpServer.listen(env.PORT, () => {
+app.listen(env.PORT, () => {
 	console.log(`Servidor rodando: http://localhost:${env.PORT}/docs`)
 })
