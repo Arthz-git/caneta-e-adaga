@@ -15,7 +15,8 @@ export const mesaResponseSchema = z.object({
 		name: z.string()
 	}),
 	countSpectators: z.number(),
-	countPlayers: z.number()
+	countPlayers: z.number(),
+	isMember: z.boolean()
 })
 
 export const mesaResponseRepository = z.object({

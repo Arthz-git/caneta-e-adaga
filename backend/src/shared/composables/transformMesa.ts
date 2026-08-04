@@ -1,6 +1,6 @@
 import type { MesaResponseDTO, MesaResponseRepository } from '../../modules/mesas/schemas/mesaResponse.schema'
 
-export function TransformMesa(mesas: MesaResponseRepository[]): MesaResponseDTO[] {
+export function TransformMesa(mesas: MesaResponseRepository[], userId?: number): MesaResponseDTO[] {
 	return mesas.map(item => {
 		return {
 			id: item.id,
@@ -17,7 +17,8 @@ export function TransformMesa(mesas: MesaResponseRepository[]): MesaResponseDTO[
 			maxPlayers: item.maxPlayers,
 			imageUrl: item.imageUrl,
 			countSpectators: item.players.filter(player => player.role === 'SPECTATOR').length,
-			countPlayers: item.players.filter(player => player.role !== 'SPECTATOR').length
+			countPlayers: item.players.filter(player => player.role !== 'SPECTATOR').length,
+			isMember: userId !== undefined && item.players.some(player => player.userId === userId)
 		}
 	})
 }

@@ -15,6 +15,7 @@ interface MesaResponse {
 	}
 	countSpectators: number
 	countPlayers: number
+	isMember: boolean
 }
 
 interface PaginationMeta {

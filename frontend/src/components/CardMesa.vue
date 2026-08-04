@@ -24,6 +24,9 @@ defineProps<{
 		<div class="card__mesa__badge" v-if="isOwner">
 			Sua mesa
 		</div>
+		<div class="card__mesa__badge card__mesa__badge--member" v-else-if="mesa.isMember">
+			Você é membro
+		</div>
 
 		<div class="card-base__header">
 			<div class="card-base__avatar card-base__avatar--square">
@@ -110,7 +113,7 @@ defineProps<{
 						</template>
 					</n-button>
 				</template>
-				{{ mesa.isPrivate ? 'Solicitar entrada' : 'Entrar na mesa' }}
+				{{ mesa.isPrivate && isOwner === false && mesa.isMember === false ? 'Solicitar entrada' : 'Entrar na mesa' }}
 			</n-tooltip>
 		</div>
 	</div>
@@ -119,6 +122,10 @@ defineProps<{
 <style scoped>
 .card__mesa:has(.card__mesa__badge) {
 	border-color: var(--cor-latao);
+}
+
+.card__mesa__badge--member {
+	background: var(--cor-tinta-fraca);
 }
 
 .card__mesa__badge {

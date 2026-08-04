@@ -6,14 +6,8 @@ import {
 	SearchOutline as IconSearch,
 	Add as IconAdd,
 	ImageOutline as IconImage,
-	CloseOutline as IconClose,
-	PeopleOutline as IconUsers,
-	EyeOutline as IconEye,
-	LockClosedOutline as IconLocked,
-	LockOpenOutline as IconUnlocked,
-	CalendarOutline as IconCalendar
+	CloseOutline as IconClose
 } from '@vicons/ionicons5'
-import { formatDateIntoString } from '@/composables/transformDateIntoString'
 import {
 	NInput,
 	NInputNumber,
@@ -31,6 +25,7 @@ import {
 import type { FormInst, FormRules, UploadFileInfo } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuth'
 import CardMesa from '@/components/CardMesa.vue'
+import ViewMesaModal from '@/components/ViewMesaModal.vue'
 
 const message = useMessage()
 const auth = useAuthStore()
@@ -149,8 +144,6 @@ function onCardClick(mesaId: number) {
 		viewMesa.value = mesa
 	}
 }
-
-function onCloseViewMesaModal() {}
 
 let searchTimeout: ReturnType<typeof setTimeout>
 
@@ -287,89 +280,10 @@ fetchMesas()
 		</div>
 	</n-modal>
 
-	<n-modal
-		v-model:show="showViewMesaModal" :on-after-leave="onCloseViewMesaModal"
-	>
-		<div class="modal__container view__container" v-if="viewMesa">
-			<div class="modal__header">
-				<h2 class="modal__title">{{ viewMesa.title }}</h2>
-
-				<n-button quaternary circle :focusable="false" @click="showViewMesaModal = false">
-					<template #icon>
-						<n-icon>
-							<IconClose />
-						</n-icon>
-					</template>
-				</n-button>
-			</div>
-
-			<div class="view__body">
-				<div class="view__image">
-					<img v-if="viewMesa.imageUrl" :src="viewMesa.imageUrl" :alt="viewMesa.title" class="view__image-img">
-					<div v-else class="view__image-placeholder">
-						<n-icon size="48">
-							<IconImage />
-						</n-icon>
-					</div>
-				</div>
-
-				<div class="view__fields">
-					<div class="view__field">
-						<span class="view__label">Descrição</span>
-						<p class="view__description">{{ viewMesa.description }}</p>
-					</div>
-
-					<div class="view__field">
-						<span class="view__label">Criador</span>
-						<p>{{ viewMesa.creator.name }}</p>
-					</div>
-
-					<div class="view__info">
-						<div class="info__item">
-							<n-icon>
-								<IconUsers />
-							</n-icon>
-							<span>{{ viewMesa.countPlayers }}/{{ viewMesa.maxPlayers }} jogadores</span>
-						</div>
-
-						<div class="info__item" v-if="viewMesa.allowSpectators">
-							<n-icon>
-								<IconEye />
-							</n-icon>
-							<span>{{ viewMesa.countSpectators }} espectadores</span>
-						</div>
-
-						<div class="info__item">
-							<n-icon>
-								<IconLocked v-if="viewMesa.isPrivate" />
-								<IconUnlocked v-else />
-							</n-icon>
-							<span>{{ viewMesa.isPrivate ? 'Mesa privada' : 'Mesa pública' }}</span>
-						</div>
-
-						<div class="info__item">
-							<n-icon>
-								<IconCalendar />
-							</n-icon>
-							<span>Criada em {{ formatDateIntoString(viewMesa.createdAt) }}</span>
-						</div>
-					</div>
-				</div>
-
-				<n-button
-					type="primary"
-					attr-type="submit"
-					block
-					strong
-					:loading="isSubmitting"
-					:disabled="isSubmitting"
-					:focusable="false"
-				>
-					{{ viewMesa.isPrivate ? 'Solicitar entrada' : 'Entrar' }}
-				</n-button>
-			</div>
-		</div>
-	</n-modal>
+	<ViewMesaModal
+		v-model:show="showViewMesaModal"
+		:mesa="viewMesa"
+	/>
 
 	<div>
 		<div class="toolbar">
@@ -533,87 +447,6 @@ fetchMesas()
 	color: var(--cor-tinta-fraca);
 	font-family: var(--font-sans);
 	font-size: 0.8rem;
-}
-
-.view__container {
-	max-width: 640px;
-}
-
-.view__body {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-4);
-}
-
-.view__image {
-	width: 100%;
-	aspect-ratio: 16 / 9;
-	border-radius: 12px;
-	overflow: hidden;
-	border: 1px solid var(--cor-linha);
-	background: var(--cor-papel);
-}
-
-.view__image-img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	display: block;
-}
-
-.view__image-placeholder {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: var(--cor-tinta-fraca);
-}
-
-.view__fields {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-}
-
-.view__field {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-1);
-}
-
-.view__label {
-	font-family: var(--font-sans);
-	font-size: 0.75rem;
-	font-weight: 600;
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
-	color: var(--cor-tinta-fraca);
-}
-
-.view__description {
-	font-family: var(--font-serif);
-	font-style: italic;
-	color: var(--cor-tinta);
-	font-size: 1rem;
-	max-height: 240px;
-	overflow: auto;
-}
-
-.view__info {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-4);
-}
-
-.info__item {
-	display: flex;
-	align-items: center;
-	gap: var(--space-1);
-
-	font-family: var(--font-sans);
-	font-size: 0.75rem;
-	color: var(--cor-tinta-fraca);
 }
 
 .cards__wrapper {

@@ -13,7 +13,7 @@ export class GetAllMesaPaginatedController {
 			const mesaRepository = new PrismaMesasRepository()
 			const getAllMesaPaginatedService = new GetAllMesaPaginatedService(mesaRepository)
 
-			const result = await getAllMesaPaginatedService.execute(data)
+			const result = await getAllMesaPaginatedService.execute(data, req.user!.id)
 
 			return res.status(200).json(result)
 		}

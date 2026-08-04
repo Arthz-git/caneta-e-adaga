@@ -18,7 +18,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-	<div class="card-base">
+	<div class="card-base" @click.prevent="emit('edit', char.id)">
 		<div class="card-base__header">
 			<div class="card-base__avatar card-base__avatar--round">
 				<img v-if="char.imageUrl" :src="char.imageUrl" :alt="char.name" class="card-base__avatar-img">
