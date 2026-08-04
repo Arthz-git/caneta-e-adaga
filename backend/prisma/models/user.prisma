@@ -11,6 +11,8 @@ model User {
     refreshTokens RefreshToken[]
     mesasCreated  Mesa[]
     players       Players[]
+    solicitacoesEnviadas  Solicitacao[] @relation("SolicitacoesEnviadas")
+    solicitacoesRecebidas Solicitacao[] @relation("SolicitacoesRecebidas")
 
     @@map("users")
 }

@@ -11,6 +11,7 @@ import { userCharactersRoutes } from './modules/userCharacters/routes/userCharac
 import { mesaRoutes } from './modules/mesas/routes/mesas.routes'
 import { env } from './config/env'
 import { playerRoutes } from './modules/players/routes/players.routes'
+import { solicitacaoRoutes } from './modules/solicitacoes/routes/solicitacoes.routes'
 
 const app = express()
 
@@ -33,6 +34,7 @@ app.use('/users', usersRoutes)
 app.use('/characters', userCharactersRoutes)
 app.use('/mesas', mesaRoutes)
 app.use('/players', playerRoutes)
+app.use('/solicitacoes', solicitacaoRoutes)
 
 const openApiDocument = generateOpenApiDocument()
 

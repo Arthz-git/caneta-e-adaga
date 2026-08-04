@@ -11,7 +11,8 @@ model Mesa {
     maxPlayers      Int      @default(4)
     imageUrl        String?
 
-    players Players[]
+    players       Players[]
+    solicitacoes  Solicitacao[]
 
     @@index([createdBy])
     @@map("mesas")
