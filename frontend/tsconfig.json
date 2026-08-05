@@ -16,7 +16,6 @@
 		"noEmit": true,
 		"jsx": "preserve",
 		"strict": true,
-		"ignoreDeprecations": "6.0",
 		"baseUrl": ".",
 		"paths": {
 			"@/*": [

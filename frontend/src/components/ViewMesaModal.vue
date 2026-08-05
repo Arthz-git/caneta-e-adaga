@@ -11,8 +11,12 @@ import {
 	CalendarOutline as IconCalendar
 } from '@vicons/ionicons5'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
-import { NButton, NIcon, NModal } from 'naive-ui'
+import { NButton, NIcon, NModal, numberAnimationProps } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuth'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const auth = useAuthStore()
 
 const isMember = ref<boolean | null>(null)
 
@@ -25,11 +29,21 @@ const emit = defineEmits<{
 	'update:show': [value: boolean]
 }>()
 
-const auth = useAuthStore()
-
 function close() {
 	emit('update:show', false)
 	isMember.value = null
+}
+
+function handleButtonClick(mesaId: number) {
+	if ( // Botão solicitar entrada
+		props.mesa!.isPrivate &&
+		props.mesa!.isMember === false ||
+		props.mesa!.creator.id !== auth.user?.id
+	) {
+	}
+	else { // Botão entrar
+		router.push({ name: 'mesa', params: { mesaId }})
+	}
 }
 </script>
 
@@ -40,7 +54,9 @@ function close() {
 	>
 		<div class="modal__container view__container" v-if="props.mesa">
 			<div class="modal__header">
-				<h2 class="modal__title">{{ props.mesa.title }}</h2>
+				<h2 class="modal__title">
+					{{ props.mesa.title }}
+				</h2>
 
 				<n-button quaternary circle :focusable="false" @click="close">
 					<template #icon>
@@ -110,11 +126,12 @@ function close() {
 					block
 					strong
 					:focusable="false"
+					@click.prevent="() => handleButtonClick(props.mesa!.id)"
 				>
 					{{
-						props.mesa.isPrivate &&
-						props.mesa.isMember === false &&
-						props.mesa.creator.id !== auth.user?.id ?
+						props.mesa!.isPrivate &&
+						props.mesa!.isMember === false &&
+						props.mesa!.creator.id !== auth.user!.id ?
 							'Solicitar entrada' : 'Entrar'
 					}}
 				</n-button>
