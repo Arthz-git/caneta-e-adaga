@@ -1,7 +1,9 @@
 import { openApiRegistry } from '../../../shared/openapi/registry'
 import { loginSchema } from '../schemas/login.schema'
+import { devTokenSchema } from '../schemas/devToken.schema'
 import { authResponseSchema } from '../schemas/authResponse.schema'
 import { userResponseSchema } from '../../users/schemas/userResponse.schema'
+import { env } from '../../../config/env'
 
 const authResponseExample = {
 	user: {
@@ -117,6 +119,40 @@ openApiRegistry.registerPath({
 		}
 	}
 })
+
+if (env.NODE_ENV !== 'production') {
+	openApiRegistry.registerPath({
+		method: 'post',
+		path: '/auth/dev-token',
+		tags: ['Auth'],
+		summary: '[DEV] Gera um access token para um usuário existente, sem senha. Indisponível em produção.',
+		request: {
+			body: {
+				content: {
+					'application/json': {
+						schema: devTokenSchema
+					}
+				}
+			}
+		},
+		responses: {
+			200: {
+				description: 'Token gerado com sucesso',
+				content: {
+					'application/json': {
+						example: { accessToken: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' }
+					}
+				}
+			},
+			400: {
+				description: 'Dados inválidos'
+			},
+			404: {
+				description: 'Usuário não encontrado'
+			}
+		}
+	})
+}
 
 openApiRegistry.registerPath({
 	method: 'post',
