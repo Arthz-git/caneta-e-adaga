@@ -1,5 +1,4 @@
 import { AppError } from '../../../shared/errors/AppError'
-import { IPlayersRepository } from '../../players/repositories/IPlayersRepository'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 import { GetMesaDTO } from '../schemas/getMesa.schema'
 
