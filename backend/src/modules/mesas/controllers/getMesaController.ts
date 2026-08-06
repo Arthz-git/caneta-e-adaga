@@ -13,7 +13,7 @@ export class GetMesaController {
 			const mesaRepository = new PrismaMesasRepository()
 			const getMesaService = new GetMesaService(mesaRepository)
 
-			const mesa = await getMesaService.execute(data)
+			const mesa = await getMesaService.execute(data, req.user!.id)
 
 			return res.status(200).json(mesa)
 		}

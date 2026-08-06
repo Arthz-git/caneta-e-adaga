@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import type { MesaResponse } from '@/types/mesaTypes'
 import {
 	ImageOutline as IconImage,
@@ -34,12 +34,15 @@ function close() {
 	isMember.value = null
 }
 
+const needsRequest = computed(() =>
+	!!props.mesa?.isPrivate &&
+	props.mesa.isMember === false &&
+	props.mesa.creator.id !== auth.user?.id
+)
+
 function handleButtonClick(mesaId: number) {
-	if ( // Botão solicitar entrada
-		props.mesa!.isPrivate &&
-		props.mesa!.isMember === false ||
-		props.mesa!.creator.id !== auth.user?.id
-	) {
+	console.log(props.mesa)
+	if (needsRequest.value) { // Botão solicitar entrada
 	}
 	else { // Botão entrar
 		router.push({ name: 'mesa', params: { mesaId }})
@@ -128,12 +131,7 @@ function handleButtonClick(mesaId: number) {
 					:focusable="false"
 					@click.prevent="() => handleButtonClick(props.mesa!.id)"
 				>
-					{{
-						props.mesa!.isPrivate &&
-						props.mesa!.isMember === false &&
-						props.mesa!.creator.id !== auth.user!.id ?
-							'Solicitar entrada' : 'Entrar'
-					}}
+					{{ needsRequest ? 'Solicitar entrada' : 'Entrar' }}
 				</n-button>
 			</div>
 		</div>
@@ -156,6 +154,10 @@ function handleButtonClick(mesaId: number) {
 	align-items: center;
 	justify-content: space-between;
 	margin-bottom: var(--space-5);
+}
+
+.modal__title {
+	color: var(--cor-granada);
 }
 
 .view__container {

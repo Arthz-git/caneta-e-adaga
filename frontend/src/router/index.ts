@@ -43,6 +43,7 @@ const router = createRouter({
 					path: '/mesa/:mesaId',
 					name: 'mesa',
 					component: () => import('@/views/MesaView.vue'),
+					props: true,
 					meta: { requiresAuth: true }
 				}
 			]

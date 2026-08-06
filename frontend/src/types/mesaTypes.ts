@@ -30,8 +30,52 @@ interface PaginatedMesaResponse {
 	meta: PaginationMeta
 }
 
+interface CreateMesaParams {
+	title: string
+	description: string
+	isPrivate: boolean
+	allowSpectators: boolean
+	maxPlayers: number
+	image?: File
+}
+
+interface GetAllMesaPaginatedParams {
+	page?: number
+	limit?: number
+	search?: string
+}
+
+interface GetMesaInfoResponse {
+	id: number
+	title: string
+	description: string
+	createdBy: number
+	createdAt: Date
+	updatedAt: Date
+	isPrivate: boolean
+	allowSpectators: boolean
+	maxPlayers: number
+	imageUrl: string | null
+	creator: {
+		name: string
+	}
+	players: {
+		id: number
+		userId: number
+		mesaId: number
+		role: "MASTER" | "PLAYER" | "SPECTATOR"
+		userCharacterId: number | null
+		joinedAt: Date
+		updatedAt: Date
+		isFavorite: boolean
+	}[]
+}
+
 export type {
 	MesaResponse,
 	PaginationMeta,
-	PaginatedMesaResponse
+	PaginatedMesaResponse,
+	CreateMesaParams,
+	GetAllMesaPaginatedParams,
+	GetMesaInfoResponse
 }

@@ -1,15 +1,12 @@
 
-import type { MesaResponse, PaginatedMesaResponse } from '@/types/mesaTypes'
+import type {
+	CreateMesaParams,
+	GetAllMesaPaginatedParams,
+	GetMesaInfoResponse,
+	MesaResponse,
+	PaginatedMesaResponse
+} from '@/types/mesaTypes'
 import api from './api'
-
-interface CreateMesaParams {
-	title: string
-	description: string
-	isPrivate: boolean
-	allowSpectators: boolean
-	maxPlayers: number
-	image?: File
-}
 
 async function getAllMesa() {
 	const mesas = await api.get<MesaResponse[]>('/mesas')
@@ -29,20 +26,21 @@ async function createMesa(newMesa: CreateMesaParams) {
 	return mesa.data
 }
 
-interface GetAllMesaPaginatedParams {
-	page?: number
-	limit?: number
-	search?: string
-}
-
 async function getAllMesaPaginated(params: GetAllMesaPaginatedParams = {}) {
 	const mesas = await api.get<PaginatedMesaResponse>('/mesas/paginated', { params })
 
 	return mesas.data
 }
 
+async function getMesaInfo(mesaId: number) {
+	const mesa = await api.get<GetMesaInfoResponse>(`/mesas/${mesaId}`)
+
+	return mesa.data
+}
+
 export {
 	getAllMesa,
 	getAllMesaPaginated,
-	createMesa
+	createMesa,
+	getMesaInfo
 }

@@ -1,31 +1,24 @@
 <script setup lang="ts">
 import { getAllMesaPaginated, createMesa } from '@/services/mesas.service'
 import { MesaResponse } from '@/types/mesaTypes'
-import { ref, reactive, watch, onBeforeUnmount } from 'vue'
+import { ref, reactive, watch } from 'vue'
 import {
 	SearchOutline as IconSearch,
-	Add as IconAdd,
-	ImageOutline as IconImage,
-	CloseOutline as IconClose
+	Add as IconAdd
 } from '@vicons/ionicons5'
 import {
 	NInput,
-	NInputNumber,
-	NSwitch,
 	NIcon,
 	NPagination,
 	NSpin,
 	NButton,
-	NModal,
-	NForm,
-	NFormItem,
-	NUpload,
 	useMessage
 } from 'naive-ui'
-import type { FormInst, FormRules, UploadFileInfo } from 'naive-ui'
+import type { FormRules } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuth'
 import CardMesa from '@/components/CardMesa.vue'
 import ViewMesaModal from '@/components/ViewMesaModal.vue'
+import MesaFormModal from '@/components/MesaFormModal.vue'
 
 const message = useMessage()
 const auth = useAuthStore()
@@ -79,9 +72,7 @@ const initialForm = {
 }
 
 const addMesaForm = reactive({ ...initialForm })
-const addMesaFormRef = ref<FormInst | null>(null)
 const addMesaImage = ref<File | null>(null)
-const addMesaImagePreview = ref<string | null>(null)
 const mesas = ref<MesaResponse[]>([])
 const searchMesa = ref('')
 const page = ref(1)
@@ -98,8 +89,6 @@ function handleAddMesaButton() {
 
 async function handleAddMesaSubmit() {
 	try {
-		await addMesaFormRef.value?.validate()
-
 		isSubmitting.value = true
 
 		await createMesa({ ...addMesaForm, image: addMesaImage.value ?? undefined })
@@ -125,15 +114,8 @@ async function handleAddMesaSubmit() {
 }
 
 function onCloseAddMesaModal() {
-	showAddMesamodal.value = false
 	Object.assign(addMesaForm, initialForm)
-
-	if (addMesaImagePreview.value) {
-		URL.revokeObjectURL(addMesaImagePreview.value)
-	}
-
 	addMesaImage.value = null
-	addMesaImagePreview.value = null
 }
 
 function onCardClick(mesaId: number) {
@@ -169,22 +151,6 @@ async function fetchMesas() {
 	}
 }
 
-function handleImageChange({ file }: { file: UploadFileInfo }) {
-	addMesaImage.value = file.file ?? null
-
-	if (addMesaImagePreview.value) {
-		URL.revokeObjectURL(addMesaImagePreview.value)
-	}
-
-	addMesaImagePreview.value = addMesaImage.value ? URL.createObjectURL(addMesaImage.value) : null
-}
-
-onBeforeUnmount(() => {
-	if (addMesaImagePreview.value) {
-		URL.revokeObjectURL(addMesaImagePreview.value)
-	}
-})
-
 watch(page, fetchMesas)
 
 watch(searchMesa, () => {
@@ -200,85 +166,21 @@ fetchMesas()
 </script>
 
 <template>
-	<n-modal v-model:show="showAddMesamodal" :on-after-leave="onCloseAddMesaModal">
-		<div class="modal__container">
-			<div class="modal__header">
-				<h2 class="modal__title">Crie uma nova mesa</h2>
-
-				<n-button quaternary circle :focusable="false" @click="showAddMesamodal = false">
-					<template #icon>
-						<n-icon>
-							<IconClose />
-						</n-icon>
-					</template>
-				</n-button>
-			</div>
-
-			<n-form ref="addMesaFormRef" :model="addMesaForm" :rules="addMesaRules" class="modal__form" label-placement="top" @submit.prevent="handleAddMesaSubmit">
-				<div class="modal__form-body">
-					<div class="modal__image">
-						<n-upload
-							accept="image/*"
-							:show-file-list="false"
-							:default-upload="false"
-							@change="handleImageChange"
-						>
-							<div class="modal__image-preview">
-								<img v-if="addMesaImagePreview" :src="addMesaImagePreview" alt="Prévia da mesa" class="modal__image-img">
-								<div v-else class="modal__image-placeholder">
-									<n-icon size="48">
-										<IconImage />
-									</n-icon>
-									<span>Selecionar imagem</span>
-								</div>
-							</div>
-						</n-upload>
-					</div>
-
-					<div class="modal__fields">
-						<n-form-item label="Título" path="title">
-							<n-input v-model:value="addMesaForm.title" type="text" placeholder="Ex: A Torre Esquecida"></n-input>
-						</n-form-item>
-
-						<n-form-item label="Descrição" path="description">
-							<n-input
-								v-model:value="addMesaForm.description"
-								type="textarea"
-								placeholder="Do que se trata essa mesa?"
-								:autosize="{ minRows: 8, maxRows: 12 }"
-							></n-input>
-						</n-form-item>
-
-						<n-form-item label="Máximo de jogadores" path="maxPlayers">
-							<n-input-number v-model:value="addMesaForm.maxPlayers" :min="1" :max="8" class="modal__number" />
-						</n-form-item>
-
-						<div class="modal__switches">
-							<n-form-item label="Mesa privada" style="width: 50%;">
-								<n-switch v-model:value="addMesaForm.isPrivate" />
-							</n-form-item>
-
-							<n-form-item label="Permitir espectadores">
-								<n-switch v-model:value="addMesaForm.allowSpectators" />
-							</n-form-item>
-						</div>
-					</div>
-				</div>
-
-				<n-button
-					type="primary"
-					attr-type="submit"
-					block
-					strong
-					:loading="isSubmitting"
-					:disabled="isSubmitting"
-					:focusable="false"
-				>
-					Criar
-				</n-button>
-			</n-form>
-		</div>
-	</n-modal>
+	<MesaFormModal
+		v-model:show="showAddMesamodal"
+		v-model:title="addMesaForm.title"
+		v-model:description="addMesaForm.description"
+		v-model:max-players="addMesaForm.maxPlayers"
+		v-model:is-private="addMesaForm.isPrivate"
+		v-model:allow-spectators="addMesaForm.allowSpectators"
+		v-model:image="addMesaImage"
+		heading="Crie uma nova mesa"
+		submit-label="Criar"
+		:rules="addMesaRules"
+		:loading="isSubmitting"
+		@submit="handleAddMesaSubmit"
+		@after-leave="onCloseAddMesaModal"
+	/>
 
 	<ViewMesaModal
 		v-model:show="showViewMesaModal"
@@ -339,54 +241,6 @@ fetchMesas()
 </template>
 
 <style scoped>
-.modal__container {
-	width: 90vw;
-	max-width: 900px;
-	padding: var(--space-6) var(--space-5);
-	border-radius: 16px;
-	background: var(--cor-papel-elevado);
-	border: 1px solid var(--cor-linha);
-	box-shadow: var(--shadow);
-}
-
-.modal__header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	margin-bottom: var(--space-5);
-}
-
-.modal__form {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-5);
-}
-
-.modal__form-body {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-3);
-	align-items: start;
-	justify-items: center;
-}
-
-.modal__fields {
-	min-width: 0;
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-1);
-}
-
-@media (min-width: 860px) {
-	.modal__form-body {
-		display: grid;
-		grid-template-columns: 360px 1fr;
-		gap: var(--space-6);
-		justify-items: initial;
-	}
-}
-
 .toolbar {
 	display: flex;
 	align-items: center;
@@ -395,58 +249,6 @@ fetchMesas()
 
 .toolbar__search {
 	flex: 1;
-}
-
-.modal__number {
-	width: 120px;
-}
-
-.modal__switches {
-	display: flex;
-}
-
-.modal__image :deep(.n-upload),
-.modal__image :deep(.n-upload-trigger) {
-	width: 100%;
-}
-
-.modal__image {
-	width: 100%;
-}
-
-.modal__image-preview {
-	width: 100%;
-	aspect-ratio: 3 / 4;
-	border-radius: 12px;
-	overflow: hidden;
-	border: 1px solid var(--cor-linha);
-	background: var(--cor-papel);
-	cursor: pointer;
-	transition: border-color 0.2s ease;
-}
-
-.modal__image-preview:hover {
-	border-color: var(--cor-granada);
-}
-
-.modal__image-img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	display: block;
-}
-
-.modal__image-placeholder {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: var(--space-2);
-	color: var(--cor-tinta-fraca);
-	font-family: var(--font-sans);
-	font-size: 0.8rem;
 }
 
 .cards__wrapper {
