@@ -1,0 +1,25 @@
+model Post {
+    id          Int           @id @default(autoincrement())
+    userId      Int
+    author      User          @relation(fields: [userId], references: [id])
+    mesaId      Int
+    mesa        Mesa          @relation(fields: [mesaId], references: [id], onDelete: Cascade)
+    text        String        @db.Text
+    type        PostType      @default(NARRATOR)
+    characterId Int?
+    character   UserCharacter? @relation(fields: [characterId], references: [id])
+    npcName     String?
+    createdAt   DateTime      @default(now())
+    updatedAt   DateTime      @updatedAt
+
+    @@index([mesaId])
+    @@map("posts")
+}
+
+enum PostType {
+    CHARACTER
+    NARRATOR
+    NPC
+    SYSTEM
+    OOC
+}

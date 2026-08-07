@@ -1,7 +1,7 @@
 model Mesa {
     id              Int      @id @default(autoincrement())
     title           String
-    description     String
+    description     String   @db.Text
     createdBy       Int
     creator         User     @relation(fields: [createdBy], references: [id], onDelete: Cascade)
     createdAt       DateTime @default(now())
@@ -11,8 +11,9 @@ model Mesa {
     maxPlayers      Int      @default(4)
     imageUrl        String?
 
-    players       Players[]
-    solicitacoes  Solicitacao[]
+    players      Players[]
+    solicitacoes Solicitacao[]
+    posts        Post[]
 
     @@index([createdBy])
     @@map("mesas")

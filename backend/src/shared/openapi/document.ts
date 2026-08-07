@@ -5,6 +5,7 @@ import '../../modules/userCharacters/docs/userCharacters.openapi'
 import '../../modules/mesas/docs/mesas.openapi'
 import '../../modules/players/docs/players.openapi'
 import '../../modules/solicitacoes/docs/solicitacoes.openapi'
+import '../../modules/posts/docs/posts.openapi'
 import { openApiRegistry } from './registry'
 
 export function generateOpenApiDocument() {

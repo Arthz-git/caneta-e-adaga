@@ -1,21 +1,16 @@
 model Solicitacao {
-    id                  Int      @id @default(autoincrement())
-
+    id                  Int               @id @default(autoincrement())
     solicitanteId       Int
-    solicitante         User     @relation("SolicitacoesEnviadas", fields: [solicitanteId], references: [id], onDelete: Cascade)
-
+    solicitante         User              @relation("SolicitacoesEnviadas", fields: [solicitanteId], references: [id], onDelete: Cascade)
     destinoId           Int
-    destino             User     @relation("SolicitacoesRecebidas", fields: [destinoId], references: [id], onDelete: Cascade)
-
+    destino             User              @relation("SolicitacoesRecebidas", fields: [destinoId], references: [id], onDelete: Cascade)
     mesaId              Int?
-    mesa                Mesa?    @relation(fields: [mesaId], references: [id], onDelete: Cascade)
-
+    mesa                Mesa?             @relation(fields: [mesaId], references: [id], onDelete: Cascade)
     motivo              MotivoSolicitacao
     status              StatusSolicitacao @default(PENDENTE)
     respostaSolicitacao String?
-
-    createdAt           DateTime @default(now())
-    updatedAt           DateTime @updatedAt
+    createdAt           DateTime          @default(now())
+    updatedAt           DateTime          @updatedAt
 
     @@index([solicitanteId])
     @@index([destinoId])
@@ -33,5 +28,5 @@ enum StatusSolicitacao {
     PENDENTE
     ACEITA
     RECUSADA
-	CANCELADA
+    CANCELADA
 }
