@@ -36,9 +36,16 @@ export const mesaResponseRepository = z.object({
 	players: z.array(z.object({
 		id: z.number(),
 		userId: z.number(),
+		user: z.object({
+			name: z.string()
+		}).optional(),
 		mesaId: z.number(),
 		role: z.enum(['MASTER', 'PLAYER', 'SPECTATOR']),
 		userCharacterId: z.number().nullable(),
+		userCharacter: z.object({
+			name: z.string(),
+			imageUrl: z.string().nullable()
+		}).nullable().optional(),
 		joinedAt: z.date(),
 		updatedAt: z.date(),
 		isFavorite: z.boolean()

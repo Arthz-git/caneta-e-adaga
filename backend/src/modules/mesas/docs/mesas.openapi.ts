@@ -4,7 +4,7 @@ import { updateMesaSchema } from '../schemas/updateMesa.schema'
 import { deleteMesaSchema } from '../schemas/deleteMesa.schema'
 import { getMesaSchema } from '../schemas/getMesa.schema'
 import { getAllMesaByCreatorSchema } from '../schemas/getAllMesaByCreator.schema'
-import { mesaResponseSchema } from '../schemas/mesaResponse.schema'
+import { mesaResponseSchema, mesaResponseRepository } from '../schemas/mesaResponse.schema'
 import { z } from 'zod'
 
 const mesaResponseExample = {
@@ -23,6 +23,41 @@ const mesaResponseExample = {
 	},
 	countSpectators: 0,
 	countPlayers: 1
+}
+
+const mesaByIdResponseExample = {
+	id: 1,
+	title: 'A Torre Esquecida',
+	description: 'Uma antiga torre guarda segredos que poucos ousam buscar.',
+	createdBy: 1,
+	createdAt: '2026-01-10T12:00:00.000Z',
+	updatedAt: '2026-01-10T12:00:00.000Z',
+	isPrivate: false,
+	allowSpectators: true,
+	maxPlayers: 4,
+	imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/mesas/exemplo.jpg',
+	creator: {
+		name: 'Fulano'
+	},
+	players: [
+		{
+			id: 1,
+			userId: 1,
+			user: {
+				name: 'Fulano'
+			},
+			mesaId: 1,
+			role: 'MASTER',
+			userCharacterId: 1,
+			userCharacter: {
+				name: 'Aldric',
+				imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/characters/exemplo.jpg'
+			},
+			joinedAt: '2026-01-10T12:00:00.000Z',
+			updatedAt: '2026-01-10T12:00:00.000Z',
+			isFavorite: false
+		}
+	]
 }
 
 openApiRegistry.registerPath({
@@ -74,8 +109,8 @@ openApiRegistry.registerPath({
 			description: 'Mesa encontrada com sucesso',
 			content: {
 				'application/json': {
-					schema: mesaResponseSchema,
-					example: mesaResponseExample
+					schema: mesaResponseRepository,
+					example: mesaByIdResponseExample
 				}
 			}
 		},

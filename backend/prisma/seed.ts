@@ -14,46 +14,54 @@ const USERS = [
 	'Julia'
 ]
 
-const CHARACTERS: { name: string; description: string; lore: string }[] = [
+const CHARACTERS: { name: string; description: string; lore: string; imageUrl: string }[] = [
 	{
 		name: 'Thorin Barba-de-Ferro',
 		description: 'Anão guerreiro robusto, especialista em machados de guerra.',
-		lore: 'Sobrevivente da queda de sua cidadela nas montanhas, busca vingança contra o clã que a destruiu.'
+		lore: 'Sobrevivente da queda de sua cidadela nas montanhas, busca vingança contra o clã que a destruiu.',
+		imageUrl: 'https://picsum.photos/seed/thorin-barba-de-ferro/200'
 	},
 	{
 		name: 'Lyra Ventofino',
 		description: 'Elfa arqueira ágil, criada nas florestas do norte.',
-		lore: 'Guardiã de um antigo pacto entre seu povo e os espíritos da floresta, agora quebrado por forças sombrias.'
+		lore: 'Guardiã de um antigo pacto entre seu povo e os espíritos da floresta, agora quebrado por forças sombrias.',
+		imageUrl: 'https://picsum.photos/seed/lyra-ventofino/200'
 	},
 	{
 		name: 'Kael Sombraviva',
 		description: 'Feiticeiro humano com afinidade por magias das sombras.',
-		lore: 'Aprendiz fugitivo de uma ordem arcana proibida, foge enquanto busca controlar seus poderes instáveis.'
+		lore: 'Aprendiz fugitivo de uma ordem arcana proibida, foge enquanto busca controlar seus poderes instáveis.',
+		imageUrl: 'https://picsum.photos/seed/kael-sombraviva/200'
 	},
 	{
 		name: 'Roswitha Punho de Aço',
 		description: 'Guerreira meio-orc conhecida por sua força brutal em combate.',
-		lore: 'Ex-gladiadora que conquistou a liberdade na arena e agora luta por quem não pode se defender.'
+		lore: 'Ex-gladiadora que conquistou a liberdade na arena e agora luta por quem não pode se defender.',
+		imageUrl: 'https://picsum.photos/seed/roswitha-punho-de-aco/200'
 	},
 	{
 		name: 'Zenrik das Chamas',
 		description: 'Feiticeiro tiefling com poder inato sobre o fogo.',
-		lore: 'Marcado por um pacto ancestral com um senhor demoníaco que busca cobrar sua dívida.'
+		lore: 'Marcado por um pacto ancestral com um senhor demoníaco que busca cobrar sua dívida.',
+		imageUrl: 'https://picsum.photos/seed/zenrik-das-chamas/200'
 	},
 	{
 		name: 'Nessa Passo-Leve',
 		description: 'Ladina halfling especialista em furtividade e armadilhas.',
-		lore: 'Cresceu nas ruas de uma cidade portuária, sobrevivendo de pequenos furtos até se juntar a aventureiros.'
+		lore: 'Cresceu nas ruas de uma cidade portuária, sobrevivendo de pequenos furtos até se juntar a aventureiros.',
+		imageUrl: 'https://picsum.photos/seed/nessa-passo-leve/200'
 	},
 	{
 		name: 'Bardolino Voz-Dourada',
 		description: 'Bardo humano carismático que viaja coletando histórias e canções.',
-		lore: 'Busca a lenda perdida de um herói esquecido para compor a canção definitiva de sua carreira.'
+		lore: 'Busca a lenda perdida de um herói esquecido para compor a canção definitiva de sua carreira.',
+		imageUrl: 'https://picsum.photos/seed/bardolino-voz-dourada/200'
 	},
 	{
 		name: 'Sera Luz-Sagrada',
 		description: 'Clériga élfica devota de uma divindade da cura e da luz.',
-		lore: 'Enviada por seu templo para investigar sinais de corrupção se espalhando pelas terras vizinhas.'
+		lore: 'Enviada por seu templo para investigar sinais de corrupção se espalhando pelas terras vizinhas.',
+		imageUrl: 'https://picsum.photos/seed/sera-luz-sagrada/200'
 	}
 ]
 
@@ -131,11 +139,9 @@ function pick<T>(arr: T[], index: number): T {
 
 async function main() {
 	console.log('Limpando dados existentes...')
-	await prisma.players.deleteMany()
-	await prisma.userCharacter.deleteMany()
-	await prisma.mesa.deleteMany()
-	await prisma.refreshToken.deleteMany()
-	await prisma.user.deleteMany()
+	await prisma.$executeRawUnsafe(
+		'TRUNCATE TABLE "players", "characters", "solicitacoes", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
+	)
 
 	console.log('Criando usuários...')
 	const password = await hash('senha123', 8)

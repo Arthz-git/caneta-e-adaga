@@ -62,9 +62,16 @@ interface GetMesaInfoResponse {
 	players: {
 		id: number
 		userId: number
+		user: {
+			name: string
+		}
 		mesaId: number
 		role: "MASTER" | "PLAYER" | "SPECTATOR"
 		userCharacterId: number | null
+		userCharacter: {
+			name: string | null
+			imageUrl: string | null
+		}
 		joinedAt: Date
 		updatedAt: Date
 		isFavorite: boolean

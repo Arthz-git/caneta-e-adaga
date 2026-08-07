@@ -4,13 +4,16 @@ import type { GetMesaInfoResponse } from '@/types/mesaTypes'
 import {
 	useMessage,
 	NIcon,
-	NButton
+	NButton,
+	NSpin
 } from 'naive-ui'
 import { computed, ref } from 'vue'
 import {
 	ArrowBackOutline as IconBack,
 	ImageOutline as IconImage,
-	SettingsOutline as IconSettings
+	SettingsOutline as IconSettings,
+	PersonOutline as IconPerson,
+	AddOutline as IconAdd
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
@@ -32,6 +35,10 @@ const showModalConfigMesa = ref(false)
 const mesaImage = ref<File | null>(null)
 
 const isOwnerMesa = computed(() => mesa.value?.createdBy === auth.user?.id)
+const mestre = computed(() => mesa.value?.players.find(player => player.role === 'MASTER'))
+const jogadores = computed(() => mesa.value?.players.filter(player => player.role === 'PLAYER') ?? [])
+const vagasLivres = computed(() => Math.max((mesa.value?.maxPlayers ?? 0) - jogadores.value.length, 0))
+const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
 
 function backButtonClick() {
 	router.back()
@@ -62,7 +69,14 @@ getMesa()
 </script>
 
 <template>
-	<div class="main__mesa">
+	<div
+		class="main__mesa center__container"
+		v-if="isLoadingMesa"
+	>
+		<n-spin size="large" />
+	</div>
+
+	<div v-else-if="mesa" class="main__mesa">
 		<div class="header">
 			<n-button
 				circle
@@ -79,7 +93,7 @@ getMesa()
 			</n-button>
 
 			<div class="header__avatar">
-				<img v-if="mesa?.imageUrl" :src="mesa.imageUrl" :alt="mesa.title" class="header__avatar-img">
+				<img v-if="mesa.imageUrl" :src="mesa.imageUrl" :alt="mesa.title" class="header__avatar-img">
 				<n-icon v-else>
 					<IconImage />
 				</n-icon>
@@ -87,12 +101,13 @@ getMesa()
 
 			<div class="header__data">
 				<p class="header__title">
-					{{ mesa?.title }}
+					{{ mesa.title }}
 				</p>
 				<p class="header__creator">
-					Mestrado por 
+					Mestrado por
+
 					<strong>
-						{{ mesa?.creator.name }}
+						{{ mesa.creator.name }}
 					</strong>
 				</p>
 			</div>
@@ -131,9 +146,102 @@ getMesa()
 		/>
 
 		<div class="left__panel">
-			<p>
-				left-panel
+			<p class="left__panel__title mb-3">
+				Em torno da mesa
 			</p>
+
+			<div
+				class="player__card"
+			>
+				<div class="player__card-avatar">
+					<n-icon>
+						<IconPerson />
+					</n-icon>
+				</div>
+
+				<div class="player__card-info">
+					<span class="player__card-player">
+						{{ mestre?.user?.name }} como
+					</span>
+
+					<span class="player__card-char">
+						Mestre
+					</span>
+				</div>
+			</div>
+
+			<div
+				class="player__card"
+				v-for="player of jogadores"
+				:key="player.id"
+			>
+				<div class="player__card-avatar">
+					<img
+						v-if="player.userCharacter?.imageUrl"
+						:src="player.userCharacter.imageUrl"
+						:alt="player.userCharacter?.name ?? player.user.name"
+						class="player__card-avatar-img"
+					>
+					<n-icon v-else>
+						<IconPerson />
+					</n-icon>
+				</div>
+
+				<div class="player__card-info">
+					<span class="player__card-player">
+						{{ player.user.name }} como
+					</span>
+
+					<span class="player__card-char">
+						{{ player.userCharacter?.name ?? 'Personagem não definido' }}
+					</span>
+				</div>
+			</div>
+
+			<div
+				class="player__card player__card--empty"
+				v-for="n in vagasLivres"
+				:key="`vaga-${n}`"
+				role="button"
+				tabindex="0"
+			>
+				<div class="player__card-avatar player__card-avatar--empty">
+					<n-icon>
+						<IconAdd />
+					</n-icon>
+				</div>
+
+				<div class="player__card-info">
+					<span
+						class="player__card-player"
+						style="font-size: 0.75rem;"
+					>
+						Vaga livre
+					</span>
+				</div>
+			</div>
+
+			<div v-if="espectadores.length" class="spectators__section">
+				<p class="spectators__title">
+					Espectadores
+				</p>
+
+				<div
+					v-for="spectator of espectadores"
+					:key="spectator.id"
+					class="spectator__card"
+				>
+					<div class="spectator__card-avatar">
+						<n-icon>
+							<IconPerson />
+						</n-icon>
+					</div>
+
+					<span class="spectator__card-name">
+						{{ spectator.user.name }}
+					</span>
+				</div>
+			</div>
 		</div>
 
 		<div class="right__panel">
@@ -164,13 +272,19 @@ getMesa()
 		'left__panel mid__container right__panel'
 		'left__panel bottom__input right__panel'
 	;
-	grid-template-columns: 1fr 3fr 1fr;
+	grid-template-columns: 280px 1fr 280px;
 	grid-template-rows: 80px 1fr 80px;
 	height: 100%;
 
 	border-radius: 16px;
 	background: var(--cor-papel-elevado);
 	border: 1px solid var(--cor-linha);
+}
+
+.center__container {
+	display: flex;
+	justify-content: center;
+	align-items: center;
 }
 
 .header {
@@ -241,10 +355,202 @@ getMesa()
 .left__panel {
 	grid-area: left__panel;
 	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow-y: auto;
+
+	padding: var(--space-4);
+	border-right: 1px solid var(--cor-linha);
+	scrollbar-width: thin;
+	scrollbar-color: var(--cor-linha) transparent;
+}
+
+.left__panel::-webkit-scrollbar {
+	width: 6px;
+}
+
+.left__panel::-webkit-scrollbar-thumb {
+	background: var(--cor-linha);
+	border-radius: 3px;
+}
+
+.left__panel::-webkit-scrollbar-track {
+	background: transparent;
+}
+
+.left__panel__title {
+	text-transform: uppercase;
+	font-size: 0.65rem;
+	font-weight: 600;
+	color: var(--cor-tinta-fraca);
+}
+
+.player__card {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-3);
+
+	padding: var(--space-3);
+	margin-bottom: var(--space-2);
+
+	cursor: pointer;
+
+	background: var(--cor-papel);
+	border: 1px solid var(--cor-linha);
+	border-radius: 10px;
+	transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.player__card:hover {
+	border-color: var(--cor-latao);
+	transform: translateY(-1px);
+}
+
+.player__card-avatar {
+	display: flex;
 	justify-content: center;
 	align-items: center;
+	flex-shrink: 0;
 
-	/* background-color: #533DC7; */
+	height: 40px;
+	width: 40px;
+
+	background: var(--cor-papel-elevado);
+	border: 1px solid var(--cor-linha);
+	border-radius: 50%;
+	color: var(--cor-tinta-fraca);
+	font-size: 1.1rem;
+
+	overflow: hidden;
+	transition: border-color 0.15s ease;
+}
+
+.player__card:hover .player__card-avatar {
+	border-color: var(--cor-latao);
+}
+
+.player__card-avatar-img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.player__card-info {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	min-width: 0;
+}
+
+.player__card-char {
+	font-family: var(--font-serif);
+	color: var(--cor-tinta);
+	font-size: 0.95rem;
+	font-weight: 600;
+	line-height: 1.2;
+}
+
+.player__card-player {
+	font-family: var(--font-sans);
+	color: var(--cor-tinta-fraca);
+	font-size: 0.6rem;
+}
+
+.player__card--empty {
+	align-items: center;
+
+	background: transparent;
+	border: 1px dashed var(--cor-linha);
+	cursor: pointer;
+	transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.player__card--empty .player__card-player {
+	color: var(--cor-tinta-fraca);
+}
+
+.player__card--empty:hover {
+	border-color: var(--cor-latao);
+}
+
+.player__card--empty:hover .player__card-player {
+	color: var(--cor-latao);
+}
+
+.player__card-avatar--empty {
+	background: transparent;
+	border: 1px dashed var(--cor-linha);
+}
+
+.spectators__section {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+
+	margin-top: var(--space-3);
+	padding-top: var(--space-3);
+	border-top: 1px solid var(--cor-linha);
+}
+
+.spectators__title {
+	text-transform: uppercase;
+	font-size: 0.6rem;
+	color: var(--cor-tinta-fraca);
+	opacity: 0.6;
+	margin-bottom: 2px;
+}
+
+.spectator__card {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: var(--space-2);
+
+	padding: 6px var(--space-2);
+
+	border: 1px solid transparent;
+	border-radius: 8px;
+	opacity: 0.6;
+	transition: border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.spectator__card:hover {
+	border-color: var(--cor-linha);
+	background: var(--cor-papel);
+	opacity: 1;
+}
+
+.spectator__card-avatar {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-shrink: 0;
+
+	height: 24px;
+	width: 24px;
+
+	border: 1px solid var(--cor-linha);
+	border-radius: 50%;
+	color: var(--cor-tinta-fraca);
+	font-size: 0.75rem;
+
+	transition: border-color 0.15s ease;
+}
+
+.spectator__card:hover .spectator__card-avatar {
+	border-color: var(--cor-latao);
+}
+
+.spectator__card-name {
+	font-family: var(--font-sans);
+	font-size: 0.7rem;
+	color: var(--cor-tinta-fraca);
+}
+
+.player__card--empty:hover .player__card-avatar--empty {
+	border-color: var(--cor-latao);
+	color: var(--cor-latao);
 }
 
 .right__panel {
@@ -272,6 +578,15 @@ getMesa()
 	align-items: center;
 
 	/* background-color: #85CCB3; */
+}
+
+.center__container {
+	display: flex;
+	flex: 1;
+	justify-content: center;
+	align-items: center;
+
+	height: 300px;
 }
 
 </style>
