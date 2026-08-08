@@ -13,11 +13,17 @@ import {
 	ImageOutline as IconImage,
 	SettingsOutline as IconSettings,
 	PersonOutline as IconPerson,
-	AddOutline as IconAdd
+	AddOutline as IconAdd,
+	SendOutline as IconSend
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
 import MesaFormModal from '@/components/MesaFormModal.vue'
+import PostEditor from '@/components/PostEditor.vue'
+import PostsTimeline from '@/components/PostsTimeline.vue'
+import SidePanel from '@/components/SidePanel.vue'
+import { createPost } from '@/services/posts.service'
+import type { PostType } from '@/types/postTypes'
 
 // ----------------------------------------------------------------------
 
@@ -33,12 +39,24 @@ const mesa = ref<GetMesaInfoResponse | null>(null)
 const isLoadingMesa = ref(false)
 const showModalConfigMesa = ref(false)
 const mesaImage = ref<File | null>(null)
+const postMessage = ref('')
+const postMessageType = ref<PostType>('NARRATOR')
+const isSendingPost = ref(false)
+const isRightPanelCollapsed = ref(true)
+const postsTimeline = ref<InstanceType<typeof PostsTimeline> | null>(null)
+
+const isPostMessageEmpty = computed(() => !postMessage.value.replace(/<[^>]*>/g, '').trim())
 
 const isOwnerMesa = computed(() => mesa.value?.createdBy === auth.user?.id)
 const mestre = computed(() => mesa.value?.players.find(player => player.role === 'MASTER'))
 const jogadores = computed(() => mesa.value?.players.filter(player => player.role === 'PLAYER') ?? [])
-const vagasLivres = computed(() => Math.max((mesa.value?.maxPlayers ?? 0) - jogadores.value.length, 0))
+const vagasLivres = computed(() => Math.max(mesa.value!.maxPlayers - mesa.value!.players.length, 0))
 const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
+const mentionItems = computed(() => {
+	const names = mesa.value?.players.flatMap(player => [player.user.name, player.userCharacter?.name]) ?? []
+
+	return [...new Set(names.filter((name): name is string => Boolean(name)))]
+})
 
 function backButtonClick() {
 	router.back()
@@ -46,6 +64,37 @@ function backButtonClick() {
 
 function configButtonClick() {
 	showModalConfigMesa.value = true
+}
+
+async function sendPostButtonClick() {
+	if (isPostMessageEmpty.value || isSendingPost.value) return
+
+	try {
+		isSendingPost.value = true
+
+		const isMesaUpToDate = await postsTimeline.value?.isUpToDate()
+		if (isMesaUpToDate === false) {
+			message.warning('A mesa não está 100% atualizada. Novas mensagens podem ter chegado, recarregue antes de continuar.')
+			await postsTimeline.value?.reload()
+			return
+		}
+
+		await createPost({
+			mesaId: Number(props.mesaId),
+			text: postMessage.value,
+			type: postMessageType.value
+		})
+
+		postMessage.value = ''
+		await postsTimeline.value?.reload()
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível enviar a mensagem. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isSendingPost.value = false
+	}
 }
 
 async function getMesa() {
@@ -103,6 +152,7 @@ getMesa()
 				<p class="header__title">
 					{{ mesa.title }}
 				</p>
+				
 				<p class="header__creator">
 					Mestrado por
 
@@ -147,7 +197,7 @@ getMesa()
 
 		<div class="left__panel">
 			<p class="left__panel__title mb-3">
-				Em torno da mesa
+				Em torno da mesa ({{ mesa.players.length }}/{{ mesa.maxPlayers }})
 			</p>
 
 			<div
@@ -244,22 +294,37 @@ getMesa()
 			</div>
 		</div>
 
-		<div class="right__panel">
-			<p>
-				right-panel
-			</p>
-		</div>
+		<SidePanel v-model:collapsed="isRightPanelCollapsed" class="right__panel" />
 
 		<div class="mid__container">
-			<p>
-				mid-container
-			</p>
+			<PostsTimeline
+				ref="postsTimeline"
+				:mesa-id="Number(mesaId)"
+			/>
 		</div>
 		
 		<div class="bottom__input">
-			<p>
-				bottom-input
-			</p>
+			<div class="input__container">
+				<PostEditor
+					v-model="postMessage"
+					v-model:post-type="postMessageType"
+					:mention-items="mentionItems"
+				/>
+
+				<button
+					type="button"
+					class="send__btn"
+					:disabled="isPostMessageEmpty || isSendingPost"
+					aria-label="Enviar mensagem"
+					@click.prevent="sendPostButtonClick"
+				>
+					<n-icon
+						:class="{ 'send__btn-icon--loading': isSendingPost }"
+					>
+						<IconSend />
+					</n-icon>
+				</button>
+			</div>
 		</div>
 	</div>
 </template>
@@ -272,8 +337,8 @@ getMesa()
 		'left__panel mid__container right__panel'
 		'left__panel bottom__input right__panel'
 	;
-	grid-template-columns: 280px 1fr 280px;
-	grid-template-rows: 80px 1fr 80px;
+	grid-template-columns: 280px 1fr auto;
+	grid-template-rows: 80px 1fr 120px;
 	height: 100%;
 
 	border-radius: 16px;
@@ -555,29 +620,83 @@ getMesa()
 
 .right__panel {
 	grid-area: right__panel;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-
-	/* background-color: #DEC1E9; */
+	min-height: 0;
 }
 
 .mid__container {
 	grid-area: mid__container;
 	display: flex;
-	justify-content: center;
-	align-items: center;
-
-	/* background-color: #399831; */
+	min-height: 0;
+	min-width: 0;
+	overflow: hidden;
 }
 
 .bottom__input {
 	grid-area: bottom__input;
 	display: flex;
+	min-height: 0;
+	overflow: hidden;
+
+	padding: var(--space-2) var(--space-4);
+}
+
+.input__container {
+	display: flex;
+	flex-direction: row;
+	align-items: flex-end;
+	gap: var(--space-2);
+	flex: 1;
+	min-height: 0;
+}
+
+.input__container :deep(.post-editor) {
+	flex: 1;
+}
+
+.send__btn {
+	display: flex;
 	justify-content: center;
 	align-items: center;
+	flex-shrink: 0;
 
-	/* background-color: #85CCB3; */
+	width: 50px;
+	height: 100%;
+
+	background: var(--cor-granada);
+	border: none;
+	border-radius: 10px;
+	box-shadow: var(--shadow);
+	color: var(--cor-papel);
+	cursor: pointer;
+	font-size: 1.2rem;
+
+	transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+.send__btn:hover:not(:disabled) {
+	background: var(--cor-latao);
+}
+
+.send__btn:active:not(:disabled) {
+	transform: scale(0.95);
+}
+
+.send__btn:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+
+.send__btn-icon--loading {
+	animation: send-btn-spin 0.8s linear infinite;
+}
+
+@keyframes send-btn-spin {
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
 
 .center__container {
