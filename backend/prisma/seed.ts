@@ -133,6 +133,46 @@ const MESAS = [
 	}
 ]
 
+const NARRATOR_TEXTS = [
+	'A névoa se dissipa lentamente, revelando as ruínas cobertas de musgo que vocês buscavam.',
+	'Um vento gelado corta o ar enquanto a caravana se aproxima do desfiladeiro.',
+	'As tochas da taverna bruxuleiam quando a porta se abre com um estalo seco.',
+	'O silêncio da floresta é quebrado por um uivo distante, vindo de além das árvores antigas.',
+	'A torre se ergue diante de vocês, suas pedras negras absorvendo a pouca luz do entardecer.'
+]
+
+const NPC_NAMES = ['Velho Corvin', 'Guarda Ithan', 'Mercadora Yssa', 'Xamã Doreth', 'Capitão Volund']
+
+const NPC_TEXTS = [
+	'"Vocês não deveriam estar aqui... não depois do que aconteceu na última lua cheia."',
+	'"Passagem custa três moedas de prata. E cuidado com os becos depois do anoitecer."',
+	'"Tragam-me a relíquia e prometo que sua dívida será perdoada."',
+	'"Os espíritos desta terra não recebem bem forasteiros armados."',
+	'"Se querem cruzar a ponte, terão que provar seu valor primeiro."'
+]
+
+const CHARACTER_TEXTS = [
+	'Avanço com cautela, mantendo a mão próxima à empunhadura da arma.',
+	'"Algo aqui não está certo... sinto que estamos sendo observados."',
+	'Examino as marcas entalhadas na pedra, tentando reconhecer o símbolo.',
+	'"Não vamos recuar agora, chegamos longe demais para isso."',
+	'Sussurro um aviso aos outros e aponto para as sombras adiante.'
+]
+
+const OOC_TEXTS = [
+	'(Só confirmando: minha iniciativa foi 17, certo?)',
+	'(Preciso sair uns 10 minutos, podem continuar sem mim)',
+	'(Adorei essa cena, muito bem narrada!)',
+	'(Alguém lembra qual foi o resultado daquele teste de percepção?)'
+]
+
+const SYSTEM_TEXTS = [
+	'A sessão foi retomada após uma pausa.',
+	'Um novo capítulo da campanha foi iniciado.',
+	'O mestre atualizou o mapa da região.',
+	'Rolagem de iniciativa registrada para o grupo.'
+]
+
 function pick<T>(arr: T[], index: number): T {
 	return arr[index % arr.length]
 }
@@ -140,7 +180,7 @@ function pick<T>(arr: T[], index: number): T {
 async function main() {
 	console.log('Limpando dados existentes...')
 	await prisma.$executeRawUnsafe(
-		'TRUNCATE TABLE "players", "characters", "solicitacoes", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
+		'TRUNCATE TABLE "posts", "players", "characters", "solicitacoes", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
 	)
 
 	console.log('Criando usuários...')
@@ -248,8 +288,73 @@ async function main() {
 
 	await prisma.players.createMany({ data: uniquePlayersData })
 
+	console.log('Criando posts...')
+	const postsData: {
+		userId: number
+		mesaId: number
+		type: 'CHARACTER' | 'NARRATOR' | 'NPC' | 'SYSTEM' | 'OOC'
+		text: string
+		characterId?: number
+		npcName?: string
+	}[] = []
+
+	mesas.forEach((mesa, mesaIndex) => {
+		const mesaPlayers = uniquePlayersData.filter((player) => player.mesaId === mesa.id)
+		const master = mesaPlayers.find((player) => player.role === 'MASTER')!
+		const players = mesaPlayers.filter((player) => player.role === 'PLAYER')
+
+		postsData.push({
+			userId: master.userId,
+			mesaId: mesa.id,
+			type: 'NARRATOR',
+			text: pick(NARRATOR_TEXTS, mesaIndex)
+		})
+
+		postsData.push({
+			userId: master.userId,
+			mesaId: mesa.id,
+			type: 'NPC',
+			npcName: pick(NPC_NAMES, mesaIndex),
+			text: pick(NPC_TEXTS, mesaIndex)
+		})
+
+		players.forEach((player, playerIndex) => {
+			postsData.push({
+				userId: player.userId,
+				mesaId: mesa.id,
+				type: 'CHARACTER',
+				characterId: player.userCharacterId,
+				text: pick(CHARACTER_TEXTS, mesaIndex + playerIndex)
+			})
+		})
+
+		if (players.length) {
+			postsData.push({
+				userId: players[0].userId,
+				mesaId: mesa.id,
+				type: 'OOC',
+				text: pick(OOC_TEXTS, mesaIndex)
+			})
+		}
+
+		postsData.push({
+			userId: master.userId,
+			mesaId: mesa.id,
+			type: 'SYSTEM',
+			text: pick(SYSTEM_TEXTS, mesaIndex)
+		})
+	})
+
+	const postsBaseTime = Date.now() - postsData.length * 5 * 60 * 1000
+	const postsWithTimestamps = postsData.map((post, index) => ({
+		...post,
+		createdAt: new Date(postsBaseTime + index * 5 * 60 * 1000)
+	}))
+
+	await prisma.post.createMany({ data: postsWithTimestamps })
+
 	console.log(
-		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length} mesas, ${uniquePlayersData.length} vínculos de jogadores.`
+		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length} mesas, ${uniquePlayersData.length} vínculos de jogadores, ${postsWithTimestamps.length} posts.`
 	)
 }
 
