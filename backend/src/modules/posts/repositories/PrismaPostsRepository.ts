@@ -1,6 +1,6 @@
 import { prisma } from '../../../database/prisma-client'
 import type { CreatePostDTO } from '../schemas/createPost.schema'
-import type { GetAllPaginatedParams, IPostsRepository } from './IPostsRepository'
+import type { GetAllPaginatedParams, IPostsRepository, PostsViewer } from './IPostsRepository'
 
 const includeRelations = {
 	author: {
@@ -8,26 +8,56 @@ const includeRelations = {
 	},
 	character: {
 		select: { id: true, name: true, imageUrl: true }
+	},
+	visiblePlayers: {
+		select: { playerId: true }
+	}
+}
+
+function mapPost<T extends { visiblePlayers: { playerId: number }[] }>({ visiblePlayers, ...post }: T) {
+	return { ...post, visiblePlayerIds: visiblePlayers.map(visiblePlayer => visiblePlayer.playerId) }
+}
+
+function buildVisibilityWhere(mesaId: number, { playerId, isMaster }: PostsViewer) {
+	if (isMaster) return { mesaId }
+
+	return {
+		mesaId,
+		OR: [
+			{ visiblePlayers: { none: {} } },
+			{ visiblePlayers: { some: { playerId } } }
+		]
 	}
 }
 
 export class PrismaPostsRepository implements IPostsRepository {
 	async create(data: CreatePostDTO) {
-		return prisma.post.create({ data })
-	}
+		const { visiblePlayerIds, ...postData } = data
 
-	async getAllByMesaId(mesaId: number) {
-		return prisma.post.findMany({
-			where: { mesaId },
-			include: includeRelations,
-			orderBy: { createdAt: 'asc' }
+		return prisma.post.create({
+			data: {
+				...postData,
+				visiblePlayers: visiblePlayerIds
+					? { create: visiblePlayerIds.map(playerId => ({ playerId })) }
+					: undefined
+			}
 		})
 	}
 
-	async getPaginatedByMesaId(mesaId: number, { page, limit }: GetAllPaginatedParams) {
-		const where = { mesaId }
+	async getAllByMesaId(mesaId: number, viewer: PostsViewer) {
+		const posts = await prisma.post.findMany({
+			where: buildVisibilityWhere(mesaId, viewer),
+			include: includeRelations,
+			orderBy: { createdAt: 'asc' }
+		})
 
-		const [data, total] = await prisma.$transaction([
+		return posts.map(mapPost)
+	}
+
+	async getPaginatedByMesaId(mesaId: number, { page, limit }: GetAllPaginatedParams, viewer: PostsViewer) {
+		const where = buildVisibilityWhere(mesaId, viewer)
+
+		const [posts, total] = await prisma.$transaction([
 			prisma.post.findMany({
 				where,
 				include: includeRelations,
@@ -38,6 +68,6 @@ export class PrismaPostsRepository implements IPostsRepository {
 			prisma.post.count({ where })
 		])
 
-		return { data, total }
+		return { data: posts.map(mapPost), total }
 	}
 }

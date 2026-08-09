@@ -20,7 +20,8 @@ const postCreateResponseExample = {
 const postResponseExample = {
 	...postCreateResponseExample,
 	author: { id: 1, name: 'Fulano' },
-	character: { id: 1, name: 'Aldric', imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/characters/exemplo.jpg' }
+	character: { id: 1, name: 'Aldric', imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/characters/exemplo.jpg' },
+	visiblePlayerIds: []
 }
 
 openApiRegistry.registerPath({
@@ -28,7 +29,7 @@ openApiRegistry.registerPath({
 	path: '/posts',
 	tags: ['Posts'],
 	summary: 'Cria um post no log de narração de uma mesa',
-	description: 'O usuário autenticado precisa ser um jogador da mesa. O id do personagem é obrigatório quando o tipo é CHARACTER, e o nome do NPC é obrigatório quando o tipo é NPC.',
+	description: 'O usuário autenticado precisa ser um jogador da mesa. O id do personagem é obrigatório quando o tipo é CHARACTER, e o nome do NPC é obrigatório quando o tipo é NPC. Por padrão o post é visível para todos os jogadores da mesa; para restringi-lo, informe visiblePlayerIds com os ids (Players) que devem enxergá-lo — o mestre sempre vê todos os posts, e o autor sempre enxerga o próprio post.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		body: {

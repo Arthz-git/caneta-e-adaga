@@ -22,6 +22,10 @@ export const createPostSchema = z.object({
 		.trim()
 		.min(1)
 		.nullable()
+		.optional(),
+	visiblePlayerIds: z
+		.array(z.coerce.number().positive())
+		.min(1, 'Selecione ao menos um jogador')
 		.optional()
 })
 

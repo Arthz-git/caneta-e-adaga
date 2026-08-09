@@ -34,7 +34,10 @@ export const postResponseSchema = postBaseSchema.extend({
 		id: z.number(),
 		name: z.string(),
 		imageUrl: z.string().nullable()
-	}).nullable()
+	}).nullable(),
+	visiblePlayerIds: z
+		.array(z.number())
+		.describe('Ids dos jogadores com acesso ao post. Vazio significa visível para todos.')
 })
 
 export type PostCreateResponseDTO = z.infer<typeof postCreateResponseSchema>

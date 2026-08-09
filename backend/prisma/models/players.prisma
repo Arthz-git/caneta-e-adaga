@@ -11,6 +11,8 @@ model Players {
     updatedAt       DateTime       @updatedAt
     isFavorite      Boolean        @default(false)
 
+    visiblePosts    PostVisiblePlayer[]
+
     @@unique([userId, mesaId])
     @@map("players")
 }
