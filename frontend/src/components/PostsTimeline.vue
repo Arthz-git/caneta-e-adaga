@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import DOMPurify from 'dompurify'
 import { NIcon, NSpin, NButton, useMessage } from 'naive-ui'
 import {
 	PersonOutline as IconPerson,
 	PersonCircleOutline as IconNpc,
-	InformationCircleOutline as IconSystem,
-	ChevronUpOutline as IconChevronUp
+	ChevronUpOutline as IconChevronUp,
+	EyeOffOutline as IconRestricted
 } from '@vicons/ionicons5'
 import { getLastPostId, getPaginatedPosts } from '@/services/posts.service'
 import type { PostListItem } from '@/types/postTypes'
@@ -24,23 +24,20 @@ const PAGE_SIZE = 20
 const message = useMessage()
 const auth = useAuthStore()
 
-const posts = ref<PostListItem[]>([])
+const posts = defineModel<PostListItem[]>('posts', { default: () => [] })
 const currentPage = ref(1)
 const lastPostId = ref<number | null>(null)
 const isLoadingInitial = ref(false)
 const isLoadingMore = ref(false)
-const isNearTop = ref(false)
 
 const scrollEl = ref<HTMLDivElement | null>(null)
 
 const hasOlderPosts = () => currentPage.value > 1
 
+const narrativePosts = computed(() => posts.value.filter(post => post.type !== 'OOC' && post.type !== 'SYSTEM'))
+
 function sanitize(html: string) {
 	return DOMPurify.sanitize(html)
-}
-
-function formatPostTime(date: string) {
-	return formatDateIntoString(new Date(date), 'HH:mm')
 }
 
 function speakerName(post: PostListItem) {
@@ -51,6 +48,10 @@ function speakerName(post: PostListItem) {
 
 function isOwnPost(post: PostListItem) {
 	return post.userId === auth.user?.id
+}
+
+function isRestricted(post: PostListItem) {
+	return post.visiblePlayerIds.length > 0
 }
 
 async function scrollToBottom() {
@@ -72,6 +73,7 @@ async function loadInitial() {
 		currentPage.value = latest.meta.page
 		lastPostId.value = latest.data.at(-1)?.id ?? null
 
+		isLoadingInitial.value = false
 		await scrollToBottom()
 	}
 	catch (err) {
@@ -111,12 +113,6 @@ async function loadOlderPosts() {
 	}
 }
 
-function onScroll() {
-	if (!scrollEl.value) return
-
-	isNearTop.value = scrollEl.value.scrollTop < 60
-}
-
 async function isUpToDate() {
 	const remoteLastPostId = await getLastPostId(props.mesaId)
 
@@ -144,12 +140,10 @@ defineExpose({
 			v-else
 			ref="scrollEl"
 			class="posts-timeline__scroll"
-			@scroll="onScroll"
 		>
 			<div
 				v-if="hasOlderPosts()"
 				class="posts-timeline__load-more"
-				:class="{ 'posts-timeline__load-more--visible': isNearTop }"
 			>
 				<n-button
 					size="small"
@@ -168,14 +162,14 @@ defineExpose({
 			</div>
 
 			<div
-				v-if="!posts.length"
+				v-if="!narrativePosts.length"
 				class="posts-timeline__empty"
 			>
 				Nenhuma mensagem por aqui ainda. Que tal começar a história?
 			</div>
 
 			<div
-				v-for="post of posts"
+				v-for="post of narrativePosts"
 				:key="post.id"
 				class="post-row"
 				:class="[`post-row--${post.type.toLowerCase()}`, { 'post-row--own': isOwnPost(post) }]"
@@ -183,17 +177,12 @@ defineExpose({
 				<template v-if="post.type === 'NARRATOR'">
 					<div class="post-narrator">
 						<div class="post-narrator__text" v-html="sanitize(post.text)" />
-						<span class="post-narrator__time">{{ formatPostTime(post.createdAt) }}</span>
-					</div>
-				</template>
-
-				<template v-else-if="post.type === 'SYSTEM'">
-					<div class="post-system">
-						<n-icon>
-							<IconSystem />
-						</n-icon>
-						<span class="post-system__text" v-html="sanitize(post.text)" />
-						<span class="post-system__time">{{ formatPostTime(post.createdAt) }}</span>
+						<span class="post-narrator__time">
+							<n-icon v-if="isRestricted(post)" title="Mensagem restrita a alguns jogadores">
+								<IconRestricted />
+							</n-icon>
+							{{ formatDateIntoString(post.createdAt) }}
+						</span>
 					</div>
 				</template>
 
@@ -216,19 +205,25 @@ defineExpose({
 
 						<div class="post-bubble__body">
 							<div class="post-bubble__header">
-								<span class="post-bubble__speaker">{{ speakerName(post) }}</span>
+								<span class="post-bubble__speaker">
+									{{ speakerName(post) }}
+								</span>
 
 								<span v-if="post.type === 'CHARACTER'" class="post-bubble__author">
 									{{ post.author.name }}
 								</span>
+
 								<span v-else-if="post.type === 'NPC'" class="post-bubble__author">
 									NPC de {{ post.author.name }}
 								</span>
-								<span v-else class="post-bubble__author post-bubble__author--ooc">
-									OOC
-								</span>
 
-								<span class="post-bubble__time">{{ formatPostTime(post.createdAt) }}</span>
+								<n-icon v-if="isRestricted(post)" class="post-bubble__restricted" title="Mensagem restrita a alguns jogadores">
+									<IconRestricted />
+								</n-icon>
+
+								<span class="post-bubble__time">
+									{{ formatDateIntoString(post.createdAt) }}
+								</span>
 							</div>
 
 							<div class="post-bubble__text" v-html="sanitize(post.text)" />
@@ -265,8 +260,12 @@ defineExpose({
 	overflow-y: auto;
 
 	padding: var(--space-4);
+	padding-bottom: 164px;
 	scrollbar-width: thin;
 	scrollbar-color: var(--cor-linha) transparent;
+
+	-webkit-mask-image: linear-gradient(to top, transparent 0, black var(--space-6), black 100%);
+	mask-image: linear-gradient(to top, transparent 0, black var(--space-6), black 100%);
 }
 
 .posts-timeline__scroll::-webkit-scrollbar {
@@ -286,18 +285,7 @@ defineExpose({
 	display: flex;
 	justify-content: center;
 
-	height: 0;
-	margin-bottom: 0;
-	opacity: 0;
-	overflow: hidden;
-
-	transition: height 0.15s ease, opacity 0.15s ease, margin-bottom 0.15s ease;
-}
-
-.posts-timeline__load-more--visible {
-	height: 32px;
 	margin-bottom: var(--space-3);
-	opacity: 1;
 }
 
 .posts-timeline__empty {
@@ -314,26 +302,17 @@ defineExpose({
 }
 
 .post-narrator {
-	position: relative;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	gap: var(--space-1);
 
-	padding: var(--space-3) var(--space-5);
-	margin-inline: auto;
-	max-width: min(560px, 90%);
-}
+	width: 100%;
+	padding: var(--space-3) var(--space-4);
 
-.post-narrator::before,
-.post-narrator::after {
-	content: '';
-
-	width: 32px;
-	height: 1px;
-
-	background: linear-gradient(90deg, transparent, var(--cor-granada), transparent);
-	opacity: 0.5;
+	background: var(--cor-papel);
+	border: 1px solid color-mix(in srgb, var(--cor-granada) 40%, var(--cor-linha));
+	border-radius: 14px;
 }
 
 .post-narrator__text {
@@ -356,34 +335,6 @@ defineExpose({
 	opacity: 0.8;
 }
 
-.post-system {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	gap: var(--space-2);
-
-	width: fit-content;
-	margin-inline: auto;
-	padding: 5px var(--space-3);
-
-	background: var(--cor-papel-elevado);
-	border: 1px solid var(--cor-linha);
-	border-radius: 999px;
-	color: var(--cor-tinta-fraca);
-	font-family: var(--font-sans);
-	font-size: 0.7rem;
-}
-
-.post-system :deep(.n-icon) {
-	color: var(--cor-latao);
-	font-size: 0.85rem;
-}
-
-.post-system__time {
-	opacity: 0.6;
-	font-size: 0.6rem;
-}
-
 .post-bubble {
 	display: flex;
 	flex-direction: row;
@@ -395,10 +346,6 @@ defineExpose({
 .post-row--own .post-bubble {
 	flex-direction: row-reverse;
 	margin-left: auto;
-}
-
-.post-row--ooc .post-bubble {
-	opacity: 0.8;
 }
 
 .post-bubble__avatar {
@@ -414,7 +361,6 @@ defineExpose({
 	background: var(--cor-papel);
 	border: 1px solid var(--cor-linha);
 	border-radius: 50%;
-	box-shadow: var(--shadow);
 	color: var(--cor-tinta-fraca);
 	font-size: 1rem;
 
@@ -428,7 +374,7 @@ defineExpose({
 }
 
 .post-row--own .post-bubble__avatar {
-	border-color: color-mix(in srgb, var(--cor-latao) 55%, var(--cor-linha));
+	border-color: color-mix(in srgb, var(--cor-latao-suave) 55%, var(--cor-linha));
 }
 
 .post-bubble__avatar-img {
@@ -457,7 +403,7 @@ defineExpose({
 }
 
 .post-bubble__speaker {
-	color: var(--cor-tinta);
+	color: var(--cor-tinta-suave);
 	font-family: var(--font-serif);
 	font-weight: 600;
 	font-size: 0.9rem;
@@ -473,11 +419,10 @@ defineExpose({
 	font-size: 0.65rem;
 }
 
-.post-bubble__author--ooc {
-	text-transform: uppercase;
-	letter-spacing: 0.03em;
-	color: var(--cor-latao);
-	font-weight: 600;
+.post-bubble__restricted {
+	color: var(--cor-tinta-fraca);
+	font-size: 0.75rem;
+	opacity: 0.7;
 }
 
 .post-bubble__time {
@@ -499,7 +444,6 @@ defineExpose({
 	background: var(--cor-papel);
 	border: 1px solid var(--cor-linha);
 	border-radius: 4px 14px 14px 14px;
-	box-shadow: var(--shadow);
 	color: var(--cor-tinta);
 	font-family: var(--font-sans);
 	font-size: 0.85rem;
@@ -509,20 +453,14 @@ defineExpose({
 }
 
 .post-row--own .post-bubble__text {
-	background: color-mix(in srgb, var(--cor-latao) 10%, var(--cor-papel));
-	border-color: color-mix(in srgb, var(--cor-latao) 40%, var(--cor-linha));
+	background: color-mix(in srgb, var(--cor-latao-suave) 10%, var(--cor-papel));
+	border-color: color-mix(in srgb, var(--cor-latao-suave) 40%, var(--cor-linha));
 	border-radius: 14px 4px 14px 14px;
 }
 
 .post-row--npc .post-bubble__text {
 	background: color-mix(in srgb, var(--cor-granada) 6%, var(--cor-papel));
 	border-color: color-mix(in srgb, var(--cor-granada) 30%, var(--cor-linha));
-}
-
-.post-row--ooc .post-bubble__text {
-	border-style: dashed;
-	box-shadow: none;
-	font-style: italic;
 }
 
 .post-bubble__text :deep(p) {

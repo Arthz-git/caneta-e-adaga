@@ -27,10 +27,11 @@ interface PostListItem {
 	type: PostType
 	characterId: number | null
 	npcName: string | null
-	createdAt: string
-	updatedAt: string
+	createdAt: Date
+	updatedAt: Date
 	author: PostAuthor
 	character: PostCharacter | null
+	visiblePlayerIds: number[]
 }
 
 interface PostsPaginationMeta {

@@ -7,7 +7,7 @@ import {
 	NButton,
 	NSpin
 } from 'naive-ui'
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import {
 	ArrowBackOutline as IconBack,
 	ImageOutline as IconImage,
@@ -21,9 +21,12 @@ import { useAuthStore } from '@/stores/useAuth'
 import MesaFormModal from '@/components/MesaFormModal.vue'
 import PostEditor from '@/components/PostEditor.vue'
 import PostsTimeline from '@/components/PostsTimeline.vue'
+import SideChatPanel from '@/components/SideChatPanel.vue'
 import SidePanel from '@/components/SidePanel.vue'
 import { createPost } from '@/services/posts.service'
-import type { PostType } from '@/types/postTypes'
+import type { PostListItem, PostType } from '@/types/postTypes'
+
+const PLAYER_ALLOWED_POST_TYPES: PostType[] = ['CHARACTER', 'OOC']
 
 // ----------------------------------------------------------------------
 
@@ -41,17 +44,34 @@ const showModalConfigMesa = ref(false)
 const mesaImage = ref<File | null>(null)
 const postMessage = ref('')
 const postMessageType = ref<PostType>('NARRATOR')
+const postVisiblePlayerIds = ref<number[]>([])
 const isSendingPost = ref(false)
 const isRightPanelCollapsed = ref(true)
 const postsTimeline = ref<InstanceType<typeof PostsTimeline> | null>(null)
+const posts = ref<PostListItem[]>([])
 
 const isPostMessageEmpty = computed(() => !postMessage.value.replace(/<[^>]*>/g, '').trim())
 
 const isOwnerMesa = computed(() => mesa.value?.createdBy === auth.user?.id)
 const mestre = computed(() => mesa.value?.players.find(player => player.role === 'MASTER'))
 const jogadores = computed(() => mesa.value?.players.filter(player => player.role === 'PLAYER') ?? [])
+const targetablePlayers = computed(() => (
+	mesa.value?.players
+		.filter(player => player.role !== 'SPECTATOR')
+		.filter(player => player.userId !== auth.user?.id)
+		.map(player => ({
+			id: player.id,
+			name: player.role === 'MASTER' ? `${player.user.name} (Mestre)` : player.user.name
+		})) ?? []
+))
 const vagasLivres = computed(() => Math.max(mesa.value!.maxPlayers - mesa.value!.players.length, 0))
 const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
+const currentPlayer = computed(() => mesa.value?.players.find(player => player.userId === auth.user?.id))
+const canPost = computed(() => currentPlayer.value?.role !== 'SPECTATOR')
+const allowedPostTypes = computed<PostType[]>(() => (
+	currentPlayer.value?.role === 'PLAYER' ? PLAYER_ALLOWED_POST_TYPES : ['NARRATOR', 'CHARACTER', 'NPC', 'SYSTEM', 'OOC']
+))
+const sideChatPosts = computed(() => posts.value.filter(post => post.type === 'OOC' || post.type === 'SYSTEM'))
 const mentionItems = computed(() => {
 	const names = mesa.value?.players.flatMap(player => [player.user.name, player.userCharacter?.name]) ?? []
 
@@ -82,10 +102,12 @@ async function sendPostButtonClick() {
 		await createPost({
 			mesaId: Number(props.mesaId),
 			text: postMessage.value,
-			type: postMessageType.value
+			type: postMessageType.value,
+			visiblePlayerIds: postVisiblePlayerIds.value.length ? postVisiblePlayerIds.value : undefined
 		})
 
 		postMessage.value = ''
+		postVisiblePlayerIds.value = []
 		await postsTimeline.value?.reload()
 	}
 	catch (err) {
@@ -113,6 +135,12 @@ async function getMesa() {
 		isLoadingMesa.value = false
 	}
 }
+
+watch(allowedPostTypes, (types) => {
+	if (!types.includes(postMessageType.value)) {
+		postMessageType.value = types[0]
+	}
+}, { immediate: true })
 
 getMesa()
 </script>
@@ -294,21 +322,27 @@ getMesa()
 			</div>
 		</div>
 
-		<SidePanel v-model:collapsed="isRightPanelCollapsed" class="right__panel" />
+		<SidePanel v-model:collapsed="isRightPanelCollapsed" class="right__panel">
+			<SideChatPanel :posts="sideChatPosts" />
+		</SidePanel>
 
 		<div class="mid__container">
 			<PostsTimeline
 				ref="postsTimeline"
 				:mesa-id="Number(mesaId)"
+				v-model:posts="posts"
 			/>
 		</div>
 		
-		<div class="bottom__input">
+		<div class="bottom__input" v-if="canPost">
 			<div class="input__container">
 				<PostEditor
 					v-model="postMessage"
 					v-model:post-type="postMessageType"
+					v-model:visible-player-ids="postVisiblePlayerIds"
 					:mention-items="mentionItems"
+					:allowed-post-types="allowedPostTypes"
+					:players="targetablePlayers"
 				/>
 
 				<button

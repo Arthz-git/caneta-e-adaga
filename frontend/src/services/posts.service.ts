@@ -7,6 +7,7 @@ export type CreatePostParams = {
 	type: PostType
 	characterId?: number | null
 	npcName?: string | null
+	visiblePlayerIds?: number[]
 }
 
 export type PostResponse = {

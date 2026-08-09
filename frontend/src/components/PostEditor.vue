@@ -15,14 +15,23 @@ import type { PostType } from '@/types/postTypes'
 
 // ----------------------------------------------------------------------
 
+interface TargetPlayer {
+	id: number
+	name: string
+}
+
 const props = withDefaults(defineProps<{
 	mentionItems?: string[]
+	allowedPostTypes?: PostType[]
+	players?: TargetPlayer[]
 }>(), {
-	mentionItems: () => []
+	mentionItems: () => [],
+	players: () => []
 })
 
 const content = defineModel<string>({ default: '' })
 const postType = defineModel<PostType>('postType', { default: 'NARRATOR' })
+const visiblePlayerIds = defineModel<number[]>('visiblePlayerIds', { default: () => [] })
 
 const isExpanded = ref(false)
 
@@ -109,7 +118,10 @@ watch(content, (value) => {
 	<PostEditorBody
 		v-if="editor && !isExpanded"
 		:editor="editor"
+		:allowed-post-types="allowedPostTypes"
+		:players="players"
 		v-model:post-type="postType"
+		v-model:visible-player-ids="visiblePlayerIds"
 		@toggle-expand="isExpanded = true"
 	/>
 
@@ -118,8 +130,11 @@ watch(content, (value) => {
 			<PostEditorBody
 				v-if="editor && isExpanded"
 				:editor="editor"
+				:allowed-post-types="allowedPostTypes"
+				:players="players"
 				expanded
 				v-model:post-type="postType"
+				v-model:visible-player-ids="visiblePlayerIds"
 				@toggle-expand="isExpanded = false"
 			/>
 		</div>

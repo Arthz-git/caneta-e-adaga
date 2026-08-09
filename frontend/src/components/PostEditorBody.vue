@@ -1,29 +1,55 @@
 <script setup lang="ts">
-import { NIcon } from 'naive-ui'
+import { computed } from 'vue'
+import { NIcon, NPopover, NCheckbox } from 'naive-ui'
 import { EditorContent, type Editor } from '@tiptap/vue-3'
 import {
 	ListOutline as IconList,
 	CloseOutline as IconClose,
 	AtOutline as IconAt,
 	ExpandOutline as IconExpand,
-	ContractOutline as IconContract
+	ContractOutline as IconContract,
+	PeopleOutline as IconPeople
 } from '@vicons/ionicons5'
 import { POST_TYPE_LABELS, type PostType } from '@/types/postTypes'
 
 // ----------------------------------------------------------------------
 
-const props = defineProps<{
+interface TargetPlayer {
+	id: number
+	name: string
+}
+
+const props = withDefaults(defineProps<{
 	editor: Editor
 	expanded?: boolean
-}>()
+	allowedPostTypes?: PostType[]
+	players?: TargetPlayer[]
+}>(), {
+	allowedPostTypes: () => Object.keys(POST_TYPE_LABELS) as PostType[],
+	players: () => []
+})
 
 const emit = defineEmits<{
 	toggleExpand: []
 }>()
 
 const postType = defineModel<PostType>('postType', { default: 'NARRATOR' })
+const visiblePlayerIds = defineModel<number[]>('visiblePlayerIds', { default: () => [] })
 
-const postTypeOptions = Object.entries(POST_TYPE_LABELS) as [PostType, string][]
+const visibilityLabel = computed(() => (
+	visiblePlayerIds.value.length ? `Visível para ${visiblePlayerIds.value.length}` : 'Visível para todos'
+))
+
+function togglePlayer(playerId: number, checked: boolean) {
+	visiblePlayerIds.value = checked
+		? [...visiblePlayerIds.value, playerId]
+		: visiblePlayerIds.value.filter(id => id !== playerId)
+}
+
+const postTypeOptions = computed(() => (
+	(Object.entries(POST_TYPE_LABELS) as [PostType, string][])
+		.filter(([value]) => props.allowedPostTypes.includes(value))
+))
 
 function setTextColor(event: Event) {
 	const color = (event.target as HTMLInputElement).value
@@ -133,6 +159,34 @@ function insertMentionTrigger() {
 				</n-icon>
 			</button>
 
+			<n-popover v-if="players.length" trigger="click" placement="top-start">
+				<template #trigger>
+					<button
+						type="button"
+						class="post-editor__toolbar-btn post-editor__visibility-btn"
+						:class="{ 'post-editor__toolbar-btn--active': visiblePlayerIds.length }"
+						title="Definir quem pode ver esta mensagem"
+					>
+						<n-icon>
+							<IconPeople />
+						</n-icon>
+
+						<span>{{ visibilityLabel }}</span>
+					</button>
+				</template>
+
+				<div class="post-editor__visibility-list">
+					<n-checkbox
+						v-for="player of players"
+						:key="player.id"
+						:checked="visiblePlayerIds.includes(player.id)"
+						@update:checked="(checked: boolean) => togglePlayer(player.id, checked)"
+					>
+						{{ player.name }}
+					</n-checkbox>
+				</div>
+			</n-popover>
+
 			<div class="post-editor__toolbar-spacer" />
 
 			<button
@@ -236,6 +290,23 @@ function insertMentionTrigger() {
 
 .post-editor__toolbar-spacer {
 	flex: 1;
+}
+
+.post-editor__visibility-btn {
+	width: auto;
+	gap: 4px;
+	padding: 0 var(--space-2);
+	font-size: 0.7rem;
+	white-space: nowrap;
+}
+
+.post-editor__visibility-list {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+
+	max-height: 200px;
+	overflow-y: auto;
 }
 
 .post-editor__color-swatch {
