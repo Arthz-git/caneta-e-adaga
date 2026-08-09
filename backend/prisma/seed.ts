@@ -68,8 +68,7 @@ const CHARACTERS: { name: string; description: string; lore: string; imageUrl: s
 const MESAS = [
 	{
 		title: 'A Ira dos Dragões Ancestrais',
-		description:
-			'Uma campanha épica em que os heróis devem impedir o despertar de dragões adormecidos há milênios.'
+		description: 'Uma campanha épica em que os heróis devem impedir o despertar de dragões adormecidos há milênios.'
 	},
 	{
 		title: 'Segredos da Cripta Esquecida',
@@ -171,6 +170,14 @@ const SYSTEM_TEXTS = [
 	'Um novo capítulo da campanha foi iniciado.',
 	'O mestre atualizou o mapa da região.',
 	'Rolagem de iniciativa registrada para o grupo.'
+]
+
+const WHISPER_TEXTS = [
+	'Enquanto os outros não percebem, você nota um símbolo estranho gravado na parede.',
+	'Uma voz sussurra apenas em sua mente: "Não confie em todos aqui."',
+	'Você sente um frio na espinha, como se algo estivesse observando só você.',
+	'Um pedaço de papel amassado aparece em seu bolso, sem que você notasse quem o colocou lá.',
+	'Você reconhece esse lugar de um sonho recente, mas prefere não dizer nada aos outros.'
 ]
 
 function pick<T>(arr: T[], index: number): T {
@@ -286,7 +293,9 @@ async function main() {
 		new Map(playersData.map((player) => [`${player.userId}-${player.mesaId}`, player])).values()
 	)
 
-	await prisma.players.createMany({ data: uniquePlayersData })
+	const players = await Promise.all(
+		uniquePlayersData.map((player) => prisma.players.create({ data: player }))
+	)
 
 	console.log('Criando posts...')
 	const postsData: {
@@ -298,10 +307,18 @@ async function main() {
 		npcName?: string
 	}[] = []
 
+	const whisperPostsData: {
+		userId: number
+		mesaId: number
+		type: 'NARRATOR'
+		text: string
+		visiblePlayerIds: number[]
+	}[] = []
+
 	mesas.forEach((mesa, mesaIndex) => {
-		const mesaPlayers = uniquePlayersData.filter((player) => player.mesaId === mesa.id)
+		const mesaPlayers = players.filter((player) => player.mesaId === mesa.id)
 		const master = mesaPlayers.find((player) => player.role === 'MASTER')!
-		const players = mesaPlayers.filter((player) => player.role === 'PLAYER')
+		const mesaOnlyPlayers = mesaPlayers.filter((player) => player.role === 'PLAYER')
 
 		postsData.push({
 			userId: master.userId,
@@ -318,7 +335,7 @@ async function main() {
 			text: pick(NPC_TEXTS, mesaIndex)
 		})
 
-		players.forEach((player, playerIndex) => {
+		mesaOnlyPlayers.forEach((player, playerIndex) => {
 			postsData.push({
 				userId: player.userId,
 				mesaId: mesa.id,
@@ -328,9 +345,9 @@ async function main() {
 			})
 		})
 
-		if (players.length) {
+		if (mesaOnlyPlayers.length) {
 			postsData.push({
-				userId: players[0].userId,
+				userId: mesaOnlyPlayers[0].userId,
 				mesaId: mesa.id,
 				type: 'OOC',
 				text: pick(OOC_TEXTS, mesaIndex)
@@ -343,6 +360,18 @@ async function main() {
 			type: 'SYSTEM',
 			text: pick(SYSTEM_TEXTS, mesaIndex)
 		})
+
+		if (mesaOnlyPlayers.length) {
+			const whisperTargets = mesaOnlyPlayers.slice(0, Math.min(2, mesaOnlyPlayers.length)).map((player) => player.id)
+
+			whisperPostsData.push({
+				userId: master.userId,
+				mesaId: mesa.id,
+				type: 'NARRATOR',
+				text: pick(WHISPER_TEXTS, mesaIndex),
+				visiblePlayerIds: whisperTargets
+			})
+		}
 	})
 
 	const postsBaseTime = Date.now() - postsData.length * 5 * 60 * 1000
@@ -353,8 +382,73 @@ async function main() {
 
 	await prisma.post.createMany({ data: postsWithTimestamps })
 
+	console.log('Criando posts privados (visíveis apenas a jogadores selecionados)...')
+	const whisperBaseTime = postsBaseTime + postsData.length * 5 * 60 * 1000
+	await Promise.all(
+		whisperPostsData.map(({ visiblePlayerIds, ...post }, index) =>
+			prisma.post.create({
+				data: {
+					...post,
+					createdAt: new Date(whisperBaseTime + index * 5 * 60 * 1000),
+					visiblePlayers: { create: visiblePlayerIds.map((playerId) => ({ playerId })) }
+				}
+			})
+		)
+	)
+
+	console.log('Criando mesa de testes com muitos posts (paginação)...')
+	const paginationMesa = await prisma.mesa.create({
+		data: {
+			title: 'Mesa de Testes - Paginação de Posts',
+			description: 'Mesa criada apenas para testar a listagem paginada de posts, com um grande volume de mensagens.',
+			createdBy: users[0].id,
+			isPrivate: false,
+			allowSpectators: true,
+			maxPlayers: 4
+		}
+	})
+
+	const paginationMaster = await prisma.players.create({
+		data: { userId: users[0].id, mesaId: paginationMesa.id, role: 'MASTER', isFavorite: false }
+	})
+	const paginationPlayers = await Promise.all(
+		[users[1], users[2]].map((user, index) =>
+			prisma.players.create({
+				data: {
+					userId: user.id,
+					mesaId: paginationMesa.id,
+					role: 'PLAYER',
+					userCharacterId: pick(characters, index).id,
+					isFavorite: false
+				}
+			})
+		)
+	)
+
+	const PAGINATION_POSTS_COUNT = 45
+	const paginationPostsData = Array.from({ length: PAGINATION_POSTS_COUNT }, (_, index) => {
+		const author = index % 3 === 0 ? paginationMaster : pick(paginationPlayers, index)
+		const type = index % 3 === 0 ? 'NARRATOR' : 'CHARACTER'
+
+		return {
+			userId: author.userId,
+			mesaId: paginationMesa.id,
+			type: type as 'NARRATOR' | 'CHARACTER',
+			characterId: type === 'CHARACTER' ? author.userCharacterId! : undefined,
+			text: `[${index + 1}] ${pick(type === 'NARRATOR' ? NARRATOR_TEXTS : CHARACTER_TEXTS, index)}`
+		}
+	})
+
+	const paginationBaseTime = whisperBaseTime + whisperPostsData.length * 5 * 60 * 1000
+	await prisma.post.createMany({
+		data: paginationPostsData.map((post, index) => ({
+			...post,
+			createdAt: new Date(paginationBaseTime + index * 5 * 60 * 1000)
+		}))
+	})
+
 	console.log(
-		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length} mesas, ${uniquePlayersData.length} vínculos de jogadores, ${postsWithTimestamps.length} posts.`
+		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length + 1} mesas, ${players.length + 1 + paginationPlayers.length} vínculos de jogadores, ${postsWithTimestamps.length + whisperPostsData.length + paginationPostsData.length} posts (${whisperPostsData.length} privados, ${paginationPostsData.length} na mesa de testes).`
 	)
 }
 
