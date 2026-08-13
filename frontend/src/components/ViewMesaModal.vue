@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import type { MesaResponse } from '@/types/mesaTypes'
 import {
 	ImageOutline as IconImage,
@@ -11,14 +11,21 @@ import {
 	CalendarOutline as IconCalendar
 } from '@vicons/ionicons5'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
-import { NButton, NIcon, NModal, numberAnimationProps } from 'naive-ui'
+import { NButton, NIcon, NModal, useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuth'
 import { useRouter } from 'vue-router'
+import { createSolicitacaoMesa, getMySolicitacaoByMesaId } from '@/services/solicitacao.service'
 
 const router = useRouter()
 const auth = useAuthStore()
+const message = useMessage()
 
 const isMember = ref<boolean | null>(null)
+
+const pendingSolicitacao = ref({
+	espectador: false,
+	jogador: false
+})
 
 const props = defineProps<{
 	show: boolean
@@ -40,12 +47,70 @@ const needsRequest = computed(() =>
 	props.mesa.creator.id !== auth.user?.id
 )
 
-function handleButtonClick(mesaId: number) {
-	console.log(props.mesa)
-	if (needsRequest.value) { // Botão solicitar entrada
+watch(
+	() => [props.show, props.mesa?.id],
+	async ([show]) => {
+		if (!show || !props.mesa || !needsRequest.value) {
+			pendingSolicitacao.value = { espectador: false, jogador: false }
+			return
+		}
+
+		try {
+			const solicitacoes = await getMySolicitacaoByMesaId(props.mesa.id)
+
+			pendingSolicitacao.value = {
+				espectador: solicitacoes.some(s => s.motivo === 'PEDIDO_ENTRADA_MESA_ESPECTADOR' && s.status === 'PENDENTE'),
+				jogador: solicitacoes.some(s => s.motivo === 'PEDIDO_ENTRADA_MESA_JOGADOR' && s.status === 'PENDENTE')
+			}
+		}
+		catch {
+			pendingSolicitacao.value = { espectador: false, jogador: false }
+		}
 	}
-	else { // Botão entrar
-		router.push({ name: 'mesa', params: { mesaId }})
+)
+
+function handleEntrarButtonClick(mesaId: number) {
+	router.push({
+		name: 'mesa',
+		params: { mesaId }
+	})
+}
+
+async function handleSolicitarEspectador(mesaId: number) {
+	if (props.mesa) {
+		try {
+			await createSolicitacaoMesa({
+				destinoId: props.mesa.creator.id,
+				mesaId: mesaId,
+				motivo: 'PEDIDO_ENTRADA_MESA_ESPECTADOR'
+			})
+
+			message.success('Sua solicitação foi encaminhada')
+			pendingSolicitacao.value.espectador = true
+		}
+		catch (err) {
+			const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
+			message.error(errorMessage)
+		}
+	}
+}
+
+async function handleSolicitarJogador(mesaId: number) {
+	if (props.mesa) {
+		try {
+			await createSolicitacaoMesa({
+				destinoId: props.mesa.creator.id,
+				mesaId: mesaId,
+				motivo: 'PEDIDO_ENTRADA_MESA_JOGADOR'
+			})
+
+			message.success('Sua solicitação foi encaminhada')
+			pendingSolicitacao.value.jogador = true
+		}
+		catch (err) {
+			const errorMessage = err instanceof Error ? err.message : 'Não foi possível completar a operação. Tente novamente.'
+			message.error(errorMessage)
+		}
 	}
 }
 </script>
@@ -123,15 +188,58 @@ function handleButtonClick(mesaId: number) {
 					</div>
 				</div>
 
+				<div class="request-actions" v-show="needsRequest">
+					<span class="view__label">Solicitar entrada como</span>
+
+					<div class="request-actions__buttons">
+						<div class="request-actions__button">
+							<n-button
+								type="primary"
+								attr-type="submit"
+								block
+								strong
+								:disabled="pendingSolicitacao.espectador"
+								:focusable="false"
+								@click.prevent="() => handleSolicitarEspectador(props.mesa!.id)"
+							>
+								Espectador
+							</n-button>
+
+							<span class="request-actions__hint" v-if="pendingSolicitacao.espectador">
+								Solicitação pendente
+							</span>
+						</div>
+
+						<div class="request-actions__button">
+							<n-button
+								type="primary"
+								attr-type="submit"
+								block
+								strong
+								:disabled="pendingSolicitacao.jogador"
+								:focusable="false"
+								@click.prevent="() => handleSolicitarJogador(props.mesa!.id)"
+							>
+								Jogador
+							</n-button>
+
+							<span class="request-actions__hint" v-if="pendingSolicitacao.jogador">
+								Solicitação pendente
+							</span>
+						</div>
+					</div>
+				</div>
+
 				<n-button
 					type="primary"
 					attr-type="submit"
 					block
 					strong
 					:focusable="false"
-					@click.prevent="() => handleButtonClick(props.mesa!.id)"
+					@click.prevent="() => handleEntrarButtonClick(props.mesa!.id)"
+					v-show="!needsRequest"
 				>
-					{{ needsRequest ? 'Solicitar entrada' : 'Entrar' }}
+					Entrar
 				</n-button>
 			</div>
 		</div>
@@ -239,5 +347,30 @@ function handleButtonClick(mesaId: number) {
 	font-family: var(--font-sans);
 	font-size: 0.75rem;
 	color: var(--cor-tinta-fraca);
+}
+
+.request-actions {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-2);
+}
+
+.request-actions__buttons {
+	display: flex;
+	gap: var(--space-3);
+}
+
+.request-actions__button {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.request-actions__hint {
+	font-family: var(--font-sans);
+	font-size: 0.7rem;
+	color: var(--cor-tinta-fraca);
+	text-align: center;
 }
 </style>

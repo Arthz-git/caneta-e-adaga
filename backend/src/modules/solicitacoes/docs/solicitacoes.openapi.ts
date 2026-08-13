@@ -6,13 +6,13 @@ import { responderSolicitacaoSchema } from '../schemas/responderSolicitacao.sche
 import { cancelarSolicitacaoSchema } from '../schemas/cancelarSolicitacao.schema'
 import { deleteSolicitacaoSchema } from '../schemas/deleteSolicitacao.schema'
 import { getAllSolicitacaoPaginatedSchema } from '../schemas/getAllSolicitacaoPaginated.schema'
+import { getMySolicitacaoByMesaIdSchema } from '../schemas/getMySolicitacaoByMesaId.schema'
 import { solicitacaoResponseSchema } from '../schemas/solicitacaoResponse.schema'
 
 const solicitacaoResponseExample = {
 	id: 1,
 	motivo: 'CONVITE_MESA',
 	status: 'PENDENTE',
-	respostaSolicitacao: null,
 	createdAt: '2026-01-10T12:00:00.000Z',
 	updatedAt: '2026-01-10T12:00:00.000Z',
 	solicitante: { id: 1, name: 'Fulano' },
@@ -25,7 +25,7 @@ openApiRegistry.registerPath({
 	path: '/solicitacoes',
 	tags: ['Solicitações'],
 	summary: 'Cria uma nova solicitação para outro usuário',
-	description: 'O usuário autenticado é definido como solicitante. O id da mesa é obrigatório quando o motivo é CONVITE_MESA ou PEDIDO_ENTRADA_MESA.',
+	description: 'O usuário autenticado é definido como solicitante. O id da mesa é obrigatório quando o motivo é CONVITE_MESA, PEDIDO_ENTRADA_MESA_JOGADOR ou PEDIDO_ENTRADA_MESA_ESPECTADOR.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		body: {
@@ -129,6 +129,37 @@ openApiRegistry.registerPath({
 
 openApiRegistry.registerPath({
 	method: 'get',
+	path: '/solicitacoes/mesaId/{mesaId}',
+	tags: ['Solicitações'],
+	summary: 'Lista as solicitações enviadas pelo usuário autenticado para uma mesa específica',
+	security: [{ bearerAuth: [] }],
+	request: {
+		params: getMySolicitacaoByMesaIdSchema
+	},
+	responses: {
+		200: {
+			description: 'Lista de solicitações retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.array(solicitacaoResponseSchema),
+					example: [solicitacaoResponseExample]
+				}
+			}
+		},
+		400: {
+			description: 'Dados inválidos'
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
+		},
+		404: {
+			description: 'Mesa não encontrada'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
+	method: 'get',
 	path: '/solicitacoes/{id}',
 	tags: ['Solicitações'],
 	summary: 'Busca uma solicitação pelo id',
@@ -171,7 +202,7 @@ openApiRegistry.registerPath({
 		body: {
 			content: {
 				'application/json': {
-					schema: responderSolicitacaoSchema.pick({ status: true, respostaSolicitacao: true })
+					schema: responderSolicitacaoSchema.pick({ status: true })
 				}
 			}
 		}

@@ -15,7 +15,7 @@ export const getAllSolicitacaoPaginatedSchema = z.object({
 		.max(50, 'o limite máximo é 50')
 		.default(10),
 	status: z.enum(['PENDENTE', 'ACEITA', 'RECUSADA', 'CANCELADA'], 'Status inválido').optional(),
-	motivo: z.enum(['PEDIDO_AMIZADE', 'CONVITE_MESA', 'PEDIDO_ENTRADA_MESA'], 'Motivo inválido').optional()
+	motivo: z.enum(['PEDIDO_AMIZADE', 'CONVITE_MESA', 'PEDIDO_ENTRADA_MESA_JOGADOR', 'PEDIDO_ENTRADA_MESA_ESPECTADOR'], 'Motivo inválido').optional()
 })
 
 export type GetAllSolicitacaoPaginatedDTO = z.infer<typeof getAllSolicitacaoPaginatedSchema>

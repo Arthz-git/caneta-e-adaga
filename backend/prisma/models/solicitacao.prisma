@@ -8,7 +8,6 @@ model Solicitacao {
     mesa                Mesa?             @relation(fields: [mesaId], references: [id], onDelete: Cascade)
     motivo              MotivoSolicitacao
     status              StatusSolicitacao @default(PENDENTE)
-    respostaSolicitacao String?
     createdAt           DateTime          @default(now())
     updatedAt           DateTime          @updatedAt
 
@@ -21,7 +20,8 @@ model Solicitacao {
 enum MotivoSolicitacao {
     PEDIDO_AMIZADE
     CONVITE_MESA
-    PEDIDO_ENTRADA_MESA
+    PEDIDO_ENTRADA_MESA_ESPECTADOR
+	PEDIDO_ENTRADA_MESA_JOGADOR
 }
 
 enum StatusSolicitacao {

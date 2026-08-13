@@ -2,9 +2,8 @@ import { z } from 'zod'
 
 export const solicitacaoResponseSchema = z.object({
 	id: z.number(),
-	motivo: z.enum(['PEDIDO_AMIZADE', 'CONVITE_MESA', 'PEDIDO_ENTRADA_MESA']),
+	motivo: z.enum(['PEDIDO_AMIZADE', 'CONVITE_MESA', 'PEDIDO_ENTRADA_MESA_JOGADOR', 'PEDIDO_ENTRADA_MESA_ESPECTADOR']),
 	status: z.enum(['PENDENTE', 'ACEITA', 'RECUSADA', 'CANCELADA']),
-	respostaSolicitacao: z.string().nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	solicitante: z.object({

@@ -10,7 +10,7 @@ export const createSolicitacaoSchema = z.object({
 		.number('Id da mesa inválido')
 		.positive('Id da mesa inválido')
 		.optional(),
-	motivo: z.enum(['PEDIDO_AMIZADE', 'CONVITE_MESA', 'PEDIDO_ENTRADA_MESA'], 'Motivo inválido')
+	motivo: z.enum(['PEDIDO_AMIZADE', 'CONVITE_MESA', 'PEDIDO_ENTRADA_MESA_JOGADOR', 'PEDIDO_ENTRADA_MESA_ESPECTADOR'], 'Motivo inválido')
 }).refine(
 	data => data.motivo === 'PEDIDO_AMIZADE' || !!data.mesaId,
 	{ message: 'O id da mesa é obrigatório para este motivo', path: ['mesaId'] }

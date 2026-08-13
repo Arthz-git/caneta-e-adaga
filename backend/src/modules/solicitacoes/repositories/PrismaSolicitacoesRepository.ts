@@ -33,10 +33,10 @@ export class PrismaSolicitacoesRepository implements ISolicitacoesRepository {
 		})
 	}
 
-	async updateStatus(id: number, status: 'ACEITA' | 'RECUSADA' | 'CANCELADA', respostaSolicitacao?: string) {
+	async updateStatus(id: number, status: 'ACEITA' | 'RECUSADA' | 'CANCELADA') {
 		return prisma.solicitacao.update({
 			where: { id },
-			data: { status, respostaSolicitacao }
+			data: { status }
 		})
 	}
 
@@ -76,5 +76,17 @@ export class PrismaSolicitacoesRepository implements ISolicitacoesRepository {
 		])
 
 		return { data, total }
+	}
+
+	async getMySolicitacaoByMesaId(solicitanteId: number, mesaId: number) {
+		const data = await prisma.solicitacao.findMany({
+			where: {
+				solicitanteId,
+				mesaId
+			},
+			include: includeRelations
+		})
+
+		return data
 	}
 }

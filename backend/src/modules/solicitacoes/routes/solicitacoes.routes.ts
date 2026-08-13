@@ -8,6 +8,7 @@ import { CancelarSolicitacaoController } from '../controllers/cancelarSolicitaca
 import { DeleteSolicitacaoController } from '../controllers/deleteSolicitacaoController'
 import { GetAllSolicitacaoRecebidasController } from '../controllers/getAllSolicitacaoRecebidasController'
 import { GetAllSolicitacaoEnviadasController } from '../controllers/getAllSolicitacaoEnviadasController'
+import { GetMySolicitacaoByMesaIdController } from '../controllers/getMySolicitacaoByMesaIdController'
 
 const solicitacaoRoutes = Router()
 
@@ -18,6 +19,7 @@ const cancelarSolicitacaoController = new CancelarSolicitacaoController()
 const deleteSolicitacaoController = new DeleteSolicitacaoController()
 const getAllSolicitacaoRecebidasController = new GetAllSolicitacaoRecebidasController()
 const getAllSolicitacaoEnviadasController = new GetAllSolicitacaoEnviadasController()
+const getMySolicitacaoByMesaIdController = new GetMySolicitacaoByMesaIdController()
 
 solicitacaoRoutes.get('/recebidas', ensureAuthenticated, (req, res) => getAllSolicitacaoRecebidasController.handle(req, res))
 solicitacaoRoutes.get('/enviadas', ensureAuthenticated, (req, res) => getAllSolicitacaoEnviadasController.handle(req, res))
@@ -26,5 +28,6 @@ solicitacaoRoutes.post('/', ensureAuthenticated, (req, res) => createSolicitacao
 solicitacaoRoutes.patch('/:id/responder', ensureAuthenticated, (req, res) => responderSolicitacaoController.handle(req, res))
 solicitacaoRoutes.patch('/:id/cancelar', ensureAuthenticated, (req, res) => cancelarSolicitacaoController.handle(req, res))
 solicitacaoRoutes.delete('/:id', ensureAuthenticated, (req, res) => deleteSolicitacaoController.handle(req, res))
+solicitacaoRoutes.get('/mesaId/:mesaId', ensureAuthenticated, (req, res) => getMySolicitacaoByMesaIdController.handle(req, res))
 
 export { solicitacaoRoutes }
