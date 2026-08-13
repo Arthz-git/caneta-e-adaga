@@ -1,6 +1,7 @@
 
 import type {
 	CreateMesaParams,
+	UpdateMesaParams,
 	GetAllMesaPaginatedParams,
 	GetMesaInfoResponse,
 	MesaResponse,
@@ -26,6 +27,18 @@ async function createMesa(newMesa: CreateMesaParams) {
 	return mesa.data
 }
 
+async function updateMesa(updatedMesa: UpdateMesaParams) {
+	const { id, image, ...data } = updatedMesa
+
+	const formData = new FormData()
+	Object.entries(data).forEach(([key, value]) => formData.append(key, String(value)))
+	if (image) formData.append('image', image)
+
+	const mesa = await api.put<MesaResponse>(`/mesas/${id}`, formData)
+
+	return mesa.data
+}
+
 async function getAllMesaPaginated(params: GetAllMesaPaginatedParams = {}) {
 	const mesas = await api.get<PaginatedMesaResponse>('/mesas/paginated', { params })
 
@@ -42,5 +55,6 @@ export {
 	getAllMesa,
 	getAllMesaPaginated,
 	createMesa,
+	updateMesa,
 	getMesaInfo
 }

@@ -15,6 +15,12 @@ async function getMyCharacters(id: number) {
 	return chars.data
 }
 
+async function getCharacterById(id: number) {
+	const char = await api.get<CharactersResponse>(`/characters/${id}`)
+
+	return char.data
+}
+
 async function createMyCharacter(newCharacter: CreateCharacterParams) {
 	const { image, ...data } = newCharacter
 
@@ -43,6 +49,7 @@ async function deleteMyCharacter(charId: number) {
 
 export {
 	getMyCharacters,
+	getCharacterById,
 	createMyCharacter,
 	updateMyCharacter,
 	deleteMyCharacter

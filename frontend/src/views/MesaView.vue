@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { getMesaInfo } from '@/services/mesas.service'
+import { getMesaInfo, updateMesa } from '@/services/mesas.service'
+import { getCharacterById } from '@/services/characters.service'
 import type { GetMesaInfoResponse } from '@/types/mesaTypes'
+import type { CharactersResponse } from '@/types/charactersTypes'
 import {
 	useMessage,
 	NIcon,
 	NButton,
 	NSpin
 } from 'naive-ui'
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import {
 	ArrowBackOutline as IconBack,
 	ImageOutline as IconImage,
@@ -18,6 +20,7 @@ import {
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
+import CharacterSummaryModal from '@/components/CharacterSummaryModal.vue'
 import MesaFormModal from '@/components/MesaFormModal.vue'
 import PostEditor from '@/components/PostEditor.vue'
 import PostsTimeline from '@/components/PostsTimeline.vue'
@@ -27,6 +30,7 @@ import { createPost } from '@/services/posts.service'
 import type { PostListItem, PostType } from '@/types/postTypes'
 
 const PLAYER_ALLOWED_POST_TYPES: PostType[] = ['CHARACTER', 'OOC']
+const SPECTATOR_ALLOWED_POST_TYPES: PostType[] = ['OOC']
 
 // ----------------------------------------------------------------------
 
@@ -41,7 +45,15 @@ const auth = useAuthStore()
 const mesa = ref<GetMesaInfoResponse | null>(null)
 const isLoadingMesa = ref(false)
 const showModalConfigMesa = ref(false)
+const isSavingMesaConfig = ref(false)
 const mesaImage = ref<File | null>(null)
+const mesaConfigForm = reactive({
+	title: '',
+	description: '',
+	maxPlayers: 1,
+	isPrivate: false,
+	allowSpectators: true
+})
 const postMessage = ref('')
 const postMessageType = ref<PostType>('NARRATOR')
 const postVisiblePlayerIds = ref<number[]>([])
@@ -49,7 +61,11 @@ const isSendingPost = ref(false)
 const isRightPanelCollapsed = ref(true)
 const postsTimeline = ref<InstanceType<typeof PostsTimeline> | null>(null)
 const posts = ref<PostListItem[]>([])
+const showCharacterModal = ref(false)
+const isLoadingCharacter = ref(false)
+const selectedCharacter = ref<CharactersResponse | null>(null)
 
+// #region computeds
 const isPostMessageEmpty = computed(() => !postMessage.value.replace(/<[^>]*>/g, '').trim())
 
 const isOwnerMesa = computed(() => mesa.value?.createdBy === auth.user?.id)
@@ -66,24 +82,81 @@ const targetablePlayers = computed(() => (
 ))
 const vagasLivres = computed(() => Math.max(mesa.value!.maxPlayers - mesa.value!.players.length, 0))
 const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
+const occupiedPlayerSlots = computed(() => mesa.value?.players.filter(player => player.role !== 'SPECTATOR').length ?? 1)
 const currentPlayer = computed(() => mesa.value?.players.find(player => player.userId === auth.user?.id))
-const canPost = computed(() => currentPlayer.value?.role !== 'SPECTATOR')
-const allowedPostTypes = computed<PostType[]>(() => (
-	currentPlayer.value?.role === 'PLAYER' ? PLAYER_ALLOWED_POST_TYPES : ['NARRATOR', 'CHARACTER', 'NPC', 'SYSTEM', 'OOC']
-))
+const allowedPostTypes = computed<PostType[]>(() => {
+	if (currentPlayer.value?.role === 'PLAYER') return PLAYER_ALLOWED_POST_TYPES
+	if (currentPlayer.value?.role === 'SPECTATOR') return SPECTATOR_ALLOWED_POST_TYPES
+	return ['NARRATOR', 'CHARACTER', 'NPC', 'SYSTEM', 'OOC']
+})
 const sideChatPosts = computed(() => posts.value.filter(post => post.type === 'OOC' || post.type === 'SYSTEM'))
 const mentionItems = computed(() => {
 	const names = mesa.value?.players.flatMap(player => [player.user.name, player.userCharacter?.name]) ?? []
 
 	return [...new Set(names.filter((name): name is string => Boolean(name)))]
 })
+//#endregion
 
 function backButtonClick() {
 	router.back()
 }
 
 function configButtonClick() {
+	if (!mesa.value) return
+
+	mesaConfigForm.title = mesa.value.title
+	mesaConfigForm.description = mesa.value.description
+	mesaConfigForm.maxPlayers = mesa.value.maxPlayers
+	mesaConfigForm.isPrivate = mesa.value.isPrivate
+	mesaConfigForm.allowSpectators = mesa.value.allowSpectators
+	mesaImage.value = null
+
 	showModalConfigMesa.value = true
+}
+
+async function playerCardClick(userCharacterId: number | null) {
+	if (!userCharacterId) return
+
+	try {
+		showCharacterModal.value = true
+		isLoadingCharacter.value = true
+
+		selectedCharacter.value = await getCharacterById(userCharacterId)
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar o personagem. Tente novamente.'
+		message.error(errorMessage)
+		showCharacterModal.value = false
+	}
+	finally {
+		isLoadingCharacter.value = false
+	}
+}
+
+async function mesaConfigSubmit() {
+	if (!mesa.value || isSavingMesaConfig.value) return
+
+	try {
+		isSavingMesaConfig.value = true
+
+		const updatedMesa = await updateMesa({
+			id: mesa.value.id,
+			...mesaConfigForm,
+			image: mesaImage.value ?? undefined
+		})
+
+		mesa.value = { ...mesa.value, ...updatedMesa }
+		showModalConfigMesa.value = false
+
+		message.success('Mesa alterada com sucesso')
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível salvar as alterações. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isSavingMesaConfig.value = false
+	}
 }
 
 async function sendPostButtonClick() {
@@ -210,17 +283,27 @@ getMesa()
 		<MesaFormModal
 			v-if="mesa"
 			v-model:show="showModalConfigMesa"
-			v-model:title="mesa.title"
-			v-model:description="mesa.description"
-			v-model:max-players="mesa.maxPlayers"
-			v-model:is-private="mesa.isPrivate"
-			v-model:allow-spectators="mesa.allowSpectators"
+			v-model:title="mesaConfigForm.title"
+			v-model:description="mesaConfigForm.description"
+			v-model:max-players="mesaConfigForm.maxPlayers"
+			v-model:is-private="mesaConfigForm.isPrivate"
+			v-model:allow-spectators="mesaConfigForm.allowSpectators"
 			v-model:image="mesaImage"
 			heading="Configurações da mesa"
 			submit-label="Salvar alterações"
 			:image-url="mesa.imageUrl"
 			:disabled="!isOwnerMesa"
 			:show-submit-button="isOwnerMesa"
+			:loading="isSavingMesaConfig"
+			:min-players="occupiedPlayerSlots"
+			:spectators-toggle-disabled="espectadores.length > 0"
+			@submit="mesaConfigSubmit"
+		/>
+
+		<CharacterSummaryModal
+			v-model:show="showCharacterModal"
+			:character="selectedCharacter"
+			:loading="isLoadingCharacter"
 		/>
 
 		<div class="left__panel">
@@ -252,6 +335,9 @@ getMesa()
 				class="player__card"
 				v-for="player of jogadores"
 				:key="player.id"
+				:role="player.userCharacterId ? 'button' : undefined"
+				:tabindex="player.userCharacterId ? 0 : undefined"
+				@click="playerCardClick(player.userCharacterId)"
 			>
 				<div class="player__card-avatar">
 					<img
@@ -334,7 +420,7 @@ getMesa()
 			/>
 		</div>
 		
-		<div class="bottom__input" v-if="canPost">
+		<div class="bottom__input">
 			<div class="input__container">
 				<PostEditor
 					v-model="postMessage"

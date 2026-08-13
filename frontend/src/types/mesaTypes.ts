@@ -39,6 +39,16 @@ interface CreateMesaParams {
 	image?: File
 }
 
+interface UpdateMesaParams {
+	id: number
+	title: string
+	description: string
+	isPrivate: boolean
+	allowSpectators: boolean
+	maxPlayers: number
+	image?: File
+}
+
 interface GetAllMesaPaginatedParams {
 	page?: number
 	limit?: number
@@ -83,6 +93,7 @@ export type {
 	PaginationMeta,
 	PaginatedMesaResponse,
 	CreateMesaParams,
+	UpdateMesaParams,
 	GetAllMesaPaginatedParams,
 	GetMesaInfoResponse
 }

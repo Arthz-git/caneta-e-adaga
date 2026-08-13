@@ -25,13 +25,17 @@ withDefaults(defineProps<{
 	loading?: boolean
 	showSubmitButton?: boolean
 	submitLabel?: string
+	minPlayers?: number
+	spectatorsToggleDisabled?: boolean
 }>(), {
 	imageUrl: null,
 	rules: undefined,
 	disabled: false,
 	loading: false,
 	showSubmitButton: true,
-	submitLabel: 'Salvar'
+	submitLabel: 'Salvar',
+	minPlayers: 1,
+	spectatorsToggleDisabled: false
 })
 
 const emit = defineEmits<{
@@ -151,7 +155,7 @@ onBeforeUnmount(resetImage)
 						</n-form-item>
 
 						<n-form-item label="Máximo de jogadores" path="maxPlayers">
-							<n-input-number v-model:value="maxPlayers" :min="1" :max="8" class="modal__number" />
+							<n-input-number v-model:value="maxPlayers" :min="minPlayers" :max="8" class="modal__number" />
 						</n-form-item>
 
 						<div class="modal__switches">
@@ -159,8 +163,11 @@ onBeforeUnmount(resetImage)
 								<n-switch v-model:value="isPrivate" />
 							</n-form-item>
 
-							<n-form-item label="Permitir espectadores">
-								<n-switch v-model:value="allowSpectators" />
+							<n-form-item
+								label="Permitir espectadores"
+								:feedback="spectatorsToggleDisabled ? 'Não é possível desativar com espectadores na mesa' : undefined"
+							>
+								<n-switch v-model:value="allowSpectators" :disabled="disabled || spectatorsToggleDisabled" />
 							</n-form-item>
 						</div>
 					</div>

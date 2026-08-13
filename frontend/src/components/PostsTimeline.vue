@@ -243,6 +243,8 @@ defineExpose({
 	min-height: 0;
 	width: 100%;
 	height: 100%;
+
+	padding-right: var(--space-4);
 }
 
 .posts-timeline__center {
@@ -260,7 +262,7 @@ defineExpose({
 	overflow-y: auto;
 
 	padding: var(--space-4);
-	padding-bottom: 164px;
+	padding-bottom: 100px;
 	scrollbar-width: thin;
 	scrollbar-color: var(--cor-linha) transparent;
 
