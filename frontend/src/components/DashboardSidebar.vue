@@ -41,9 +41,9 @@ const selectedKey = computed(() => route.name as string)
 
 <template>
 	<aside class="dashboard-sidebar">
-		<div class="dashboard-sidebar__brand">
+		<RouterLink :to="{ name: 'home' }" class="dashboard-sidebar__brand">
 			<span class="dashboard-sidebar__brand-text">Caneta <span class="dashboard-sidebar__brand-amp">&amp;</span> Adaga</span>
-		</div>
+		</RouterLink>
 
 		<n-menu
 			:value="selectedKey"
@@ -70,6 +70,12 @@ const selectedKey = computed(() => route.name as string)
 	height: 64px;
 	padding: 0 var(--space-4);
 	border-bottom: 1px solid var(--cor-linha);
+	text-decoration: none;
+	transition: background-color 0.15s ease;
+}
+
+.dashboard-sidebar__brand:hover {
+	background: var(--cor-linha);
 }
 
 .dashboard-sidebar__brand-text {
