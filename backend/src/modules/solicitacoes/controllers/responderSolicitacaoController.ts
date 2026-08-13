@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
+import { PrismaNotificacoesRepository } from '../../notificacoes/repositories/PrismaNotificacoesRepository'
 import { PrismaSolicitacoesRepository } from '../repositories/PrismaSolicitacoesRepository'
 import { responderSolicitacaoSchema } from '../schemas/responderSolicitacao.schema'
 import { ResponderSolicitacaoService } from '../services/ResponderSolicitacaoService'
@@ -11,7 +12,8 @@ export class ResponderSolicitacaoController {
 			const data = responderSolicitacaoSchema.parse({ ...req.body, id: req.params.id })
 
 			const solicitacoesRepository = new PrismaSolicitacoesRepository()
-			const responderSolicitacaoService = new ResponderSolicitacaoService(solicitacoesRepository)
+			const notificacoesRepository = new PrismaNotificacoesRepository()
+			const responderSolicitacaoService = new ResponderSolicitacaoService(solicitacoesRepository, notificacoesRepository)
 
 			const solicitacao = await responderSolicitacaoService.execute(data, req.user!.id)
 

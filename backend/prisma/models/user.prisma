@@ -13,6 +13,8 @@ model User {
     players               Players[]
     solicitacoesEnviadas  Solicitacao[]   @relation("SolicitacoesEnviadas")
     solicitacoesRecebidas Solicitacao[]   @relation("SolicitacoesRecebidas")
+    notificacoesRecebidas Notificacao[]   @relation("NotificacoesRecebidas")
+    notificacoesEnviadas  Notificacao[]   @relation("NotificacoesEnviadas")
 
     @@map("users")
 }

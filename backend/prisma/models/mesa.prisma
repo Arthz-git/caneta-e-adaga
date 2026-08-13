@@ -14,6 +14,7 @@ model Mesa {
     players      Players[]
     solicitacoes Solicitacao[]
     posts        Post[]
+    notificacoes Notificacao[]
 
     @@index([createdBy])
     @@map("mesas")

@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
 import { createSolicitacaoSchema } from '../schemas/createSolicitacao.schema'
 import type { CreateSolicitacaoDTO } from '../schemas/createSolicitacao.schema'
+import { PrismaNotificacoesRepository } from '../../notificacoes/repositories/PrismaNotificacoesRepository'
 import { PrismaSolicitacoesRepository } from '../repositories/PrismaSolicitacoesRepository'
 import { CreateSolicitacaoService } from '../services/CreateSolicitacaoService'
 
@@ -13,7 +14,8 @@ export class CreateSolicitacaoController {
 			const data: CreateSolicitacaoDTO = { ...input, solicitanteId: req.user!.id }
 
 			const solicitacoesRepository = new PrismaSolicitacoesRepository()
-			const createSolicitacaoService = new CreateSolicitacaoService(solicitacoesRepository)
+			const notificacoesRepository = new PrismaNotificacoesRepository()
+			const createSolicitacaoService = new CreateSolicitacaoService(solicitacoesRepository, notificacoesRepository)
 
 			const solicitacao = await createSolicitacaoService.execute(data)
 

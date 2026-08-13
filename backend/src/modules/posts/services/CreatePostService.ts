@@ -1,5 +1,6 @@
 import { AppError } from '../../../shared/errors/AppError'
 import type { IMesasRepository } from '../../mesas/repositories/IMesasRepository'
+import type { INotificacoesRepository } from '../../notificacoes/repositories/INotificacoesRepository'
 import type { IPlayersRepository } from '../../players/repositories/IPlayersRepository'
 import type { IUserCharactersRepository } from '../../userCharacters/repositories/IUserCharactersRepository'
 import type { IPostsRepository } from '../repositories/IPostsRepository'
@@ -10,7 +11,8 @@ export class CreatePostService {
 		private postsRepository: IPostsRepository,
 		private mesasRepository: IMesasRepository,
 		private playersRepository: IPlayersRepository,
-		private userCharactersRepository: IUserCharactersRepository
+		private userCharactersRepository: IUserCharactersRepository,
+		private notificacoesRepository: INotificacoesRepository
 	) { }
 
 	async execute(data: CreatePostDTO) {
@@ -25,8 +27,8 @@ export class CreatePostService {
 			throw new AppError('Você não tem permissão para postar nessa mesa', 403)
 		}
 
-		if (player.role === 'SPECTATOR') {
-			throw new AppError('Espectadores não podem enviar mensagens nessa mesa', 403)
+		if (player.role === 'SPECTATOR' && data.type !== 'OOC') {
+			throw new AppError('Espectadores só podem enviar mensagens do tipo OOC', 403)
 		}
 
 		if (player.role === 'PLAYER' && data.type !== 'OOC' && data.type !== 'CHARACTER') {
@@ -52,11 +54,17 @@ export class CreatePostService {
 			throw new AppError('Nome do NPC é obrigatório para posts do tipo NPC', 400)
 		}
 
+		const mesaPlayers = await this.playersRepository.getPlayersByMesaId(data.mesaId)
+
 		if (!data.visiblePlayerIds) {
-			return this.postsRepository.create(data)
+			const post = await this.postsRepository.create(data)
+
+			const recipients = mesaPlayers.filter(mesaPlayer => mesaPlayer.userId !== data.userId)
+			await this.notifyRecipients('NOVO_POST_MESA', `Nova mensagem na mesa "${mesa.title}"`, post.id, mesa.id, data.userId, recipients)
+
+			return post
 		}
 
-		const mesaPlayers = await this.playersRepository.getPlayersByMesaId(data.mesaId)
 		const mesaPlayerIds = new Set(mesaPlayers.map(mesaPlayer => mesaPlayer.id))
 
 		const invalidPlayerId = data.visiblePlayerIds.find(playerId => !mesaPlayerIds.has(playerId))
@@ -69,6 +77,29 @@ export class CreatePostService {
 			visiblePlayerIds.add(player.id)
 		}
 
-		return this.postsRepository.create({ ...data, visiblePlayerIds: [...visiblePlayerIds] })
+		const post = await this.postsRepository.create({ ...data, visiblePlayerIds: [...visiblePlayerIds] })
+
+		const recipients = mesaPlayers.filter(mesaPlayer => visiblePlayerIds.has(mesaPlayer.id) && mesaPlayer.userId !== data.userId)
+		await this.notifyRecipients('POST_PRIVADO', `Você recebeu uma mensagem privada na mesa "${mesa.title}"`, post.id, mesa.id, data.userId, recipients)
+
+		return post
+	}
+
+	private async notifyRecipients(
+		tipo: 'NOVO_POST_MESA' | 'POST_PRIVADO',
+		message: string,
+		postId: number,
+		mesaId: number,
+		remetenteId: number,
+		recipients: { userId: number }[]
+	) {
+		await Promise.all(recipients.map(recipient => this.notificacoesRepository.create({
+			destinoId: recipient.userId,
+			remetenteId,
+			tipo,
+			message,
+			mesaId,
+			postId
+		})))
 	}
 }

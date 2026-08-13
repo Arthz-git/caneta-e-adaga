@@ -13,6 +13,7 @@ model Post {
     updatedAt   DateTime      @updatedAt
 
     visiblePlayers PostVisiblePlayer[]
+    notificacoes   Notificacao[]
 
     @@index([mesaId])
     @@map("posts")

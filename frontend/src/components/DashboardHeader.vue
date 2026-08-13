@@ -3,6 +3,7 @@ import { NIcon } from 'naive-ui'
 import { MenuOutline as IconMenu } from '@vicons/ionicons5'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 import DashboardUserMenu from '@/components/DashboardUserMenu.vue'
+import NotificacoesMenu from '@/components/NotificacoesMenu.vue'
 
 defineEmits<{
 	'toggle-sidebar': []
@@ -26,6 +27,7 @@ defineEmits<{
 
 		<div class="dashboard-header__actions">
 			<ThemeToggle />
+			<NotificacoesMenu />
 			<span class="dashboard-header__divider" />
 			<DashboardUserMenu />
 		</div>

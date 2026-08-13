@@ -5,6 +5,7 @@ import { PrismaPlayersRepository } from '../repositories/PrismaPlayersRepository
 import { deletePlayerSchema } from '../schemas/deletePlayer.schema'
 import { DeletePlayerService } from '../services/DeletePlayerService'
 import { PrismaMesasRepository } from '../../mesas/repositories/PrismaMesasRepository'
+import { PrismaNotificacoesRepository } from '../../notificacoes/repositories/PrismaNotificacoesRepository'
 
 export class DeletePlayerController {
 	async handle(req: Request, res: Response) {
@@ -13,7 +14,8 @@ export class DeletePlayerController {
 
 			const mesaRepository = new PrismaMesasRepository()
 			const playerRepository = new PrismaPlayersRepository()
-			const deletePlayerService = new DeletePlayerService(playerRepository, mesaRepository)
+			const notificacoesRepository = new PrismaNotificacoesRepository()
+			const deletePlayerService = new DeletePlayerService(playerRepository, mesaRepository, notificacoesRepository)
 
 			await deletePlayerService.execute(data, req.user!.id)
 

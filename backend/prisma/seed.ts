@@ -187,7 +187,7 @@ function pick<T>(arr: T[], index: number): T {
 async function main() {
 	console.log('Limpando dados existentes...')
 	await prisma.$executeRawUnsafe(
-		'TRUNCATE TABLE "posts", "players", "characters", "solicitacoes", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
+		'TRUNCATE TABLE "posts", "players", "characters", "solicitacoes", "notificacoes", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
 	)
 
 	console.log('Criando usuários...')
@@ -384,7 +384,7 @@ async function main() {
 
 	console.log('Criando posts privados (visíveis apenas a jogadores selecionados)...')
 	const whisperBaseTime = postsBaseTime + postsData.length * 5 * 60 * 1000
-	await Promise.all(
+	const whisperPosts = await Promise.all(
 		whisperPostsData.map(({ visiblePlayerIds, ...post }, index) =>
 			prisma.post.create({
 				data: {
@@ -392,9 +392,129 @@ async function main() {
 					createdAt: new Date(whisperBaseTime + index * 5 * 60 * 1000),
 					visiblePlayers: { create: visiblePlayerIds.map((playerId) => ({ playerId })) }
 				}
-			})
+			}).then((created) => ({ post: created, visiblePlayerIds }))
 		)
 	)
+
+	console.log('Criando solicitações...')
+	const solicitacoesSeed: {
+		solicitanteId: number
+		destinoId: number
+		mesaId?: number
+		motivo: 'PEDIDO_AMIZADE' | 'CONVITE_MESA' | 'PEDIDO_ENTRADA_MESA_JOGADOR' | 'PEDIDO_ENTRADA_MESA_ESPECTADOR'
+		status: 'PENDENTE' | 'ACEITA' | 'RECUSADA'
+	}[] = [
+		{ solicitanteId: users[1].id, destinoId: users[0].id, motivo: 'PEDIDO_AMIZADE', status: 'PENDENTE' },
+		{ solicitanteId: users[3].id, destinoId: users[2].id, motivo: 'PEDIDO_AMIZADE', status: 'ACEITA' },
+		{ solicitanteId: mesas[0].createdBy, destinoId: users[5].id, mesaId: mesas[0].id, motivo: 'CONVITE_MESA', status: 'PENDENTE' },
+		{ solicitanteId: users[6].id, destinoId: mesas[1].createdBy, mesaId: mesas[1].id, motivo: 'PEDIDO_ENTRADA_MESA_JOGADOR', status: 'PENDENTE' },
+		{ solicitanteId: users[7].id, destinoId: mesas[2].createdBy, mesaId: mesas[2].id, motivo: 'PEDIDO_ENTRADA_MESA_ESPECTADOR', status: 'RECUSADA' }
+	]
+
+	const solicitacoes = await Promise.all(
+		solicitacoesSeed.map((solicitacao) => prisma.solicitacao.create({ data: solicitacao }))
+	)
+
+	console.log('Criando notificações...')
+	const motivoMessages: Record<string, string> = {
+		PEDIDO_AMIZADE: 'Você recebeu um pedido de amizade',
+		CONVITE_MESA: 'Você recebeu um convite para uma mesa',
+		PEDIDO_ENTRADA_MESA_JOGADOR: 'Você recebeu um pedido de entrada como jogador',
+		PEDIDO_ENTRADA_MESA_ESPECTADOR: 'Você recebeu um pedido de entrada como espectador'
+	}
+
+	type NotificacaoTipo =
+		'SOLICITACAO_RECEBIDA' | 'SOLICITACAO_ACEITA' | 'SOLICITACAO_RECUSADA' |
+		'NOVO_POST_MESA' | 'POST_PRIVADO' | 'JOGADOR_REMOVIDO_MESA' | 'MESA_EXCLUIDA'
+
+	const notificacoesData: {
+		destinoId: number
+		remetenteId?: number
+		tipo: NotificacaoTipo
+		message: string
+		solicitacaoId?: number
+		mesaId?: number
+		postId?: number
+		readAt?: Date
+	}[] = []
+
+	solicitacoes.forEach((solicitacao) => {
+		notificacoesData.push({
+			destinoId: solicitacao.destinoId,
+			remetenteId: solicitacao.solicitanteId,
+			tipo: 'SOLICITACAO_RECEBIDA',
+			message: motivoMessages[solicitacao.motivo],
+			solicitacaoId: solicitacao.id,
+			mesaId: solicitacao.mesaId ?? undefined,
+			readAt: solicitacao.status === 'PENDENTE' ? undefined : new Date()
+		})
+
+		if (solicitacao.status === 'ACEITA' || solicitacao.status === 'RECUSADA') {
+			notificacoesData.push({
+				destinoId: solicitacao.solicitanteId,
+				remetenteId: solicitacao.destinoId,
+				tipo: solicitacao.status === 'ACEITA' ? 'SOLICITACAO_ACEITA' : 'SOLICITACAO_RECUSADA',
+				message: solicitacao.status === 'ACEITA' ? 'Sua solicitação foi aceita' : 'Sua solicitação foi recusada',
+				solicitacaoId: solicitacao.id,
+				mesaId: solicitacao.mesaId ?? undefined
+			})
+		}
+	})
+
+	whisperPosts.forEach(({ post, visiblePlayerIds }) => {
+		const mesa = mesas.find((mesa) => mesa.id === post.mesaId)!
+		const targets = players.filter((player) => visiblePlayerIds.includes(player.id) && player.userId !== post.userId)
+
+		targets.forEach((target) => {
+			notificacoesData.push({
+				destinoId: target.userId,
+				remetenteId: post.userId,
+				tipo: 'POST_PRIVADO',
+				message: `Você recebeu uma mensagem privada na mesa "${mesa.title}"`,
+				mesaId: mesa.id,
+				postId: post.id
+			})
+		})
+	})
+
+	mesas.forEach((mesa) => {
+		const mesaPlayers = players.filter((player) => player.mesaId === mesa.id)
+		const master = mesaPlayers.find((player) => player.role === 'MASTER')!
+		const recipients = mesaPlayers.filter((player) => player.userId !== master.userId)
+
+		recipients.forEach((recipient) => {
+			notificacoesData.push({
+				destinoId: recipient.userId,
+				remetenteId: master.userId,
+				tipo: 'NOVO_POST_MESA',
+				message: `Nova mensagem na mesa "${mesa.title}"`,
+				mesaId: mesa.id,
+				readAt: new Date()
+			})
+		})
+	})
+
+	const jogadorRemovidoMesa = mesas[0]
+	const jogadorRemovidoAlvo = users.find(
+		(user) => !players.some((player) => player.mesaId === jogadorRemovidoMesa.id && player.userId === user.id)
+	)!
+
+	notificacoesData.push({
+		destinoId: jogadorRemovidoAlvo.id,
+		remetenteId: jogadorRemovidoMesa.createdBy,
+		tipo: 'JOGADOR_REMOVIDO_MESA',
+		message: `Você foi removido da mesa "${jogadorRemovidoMesa.title}"`,
+		mesaId: jogadorRemovidoMesa.id
+	})
+
+	notificacoesData.push({
+		destinoId: users[8].id,
+		remetenteId: users[9].id,
+		tipo: 'MESA_EXCLUIDA',
+		message: 'A mesa "Campanha Piloto Cancelada" foi excluída'
+	})
+
+	await prisma.notificacao.createMany({ data: notificacoesData })
 
 	console.log('Criando mesa de testes com muitos posts (paginação)...')
 	const paginationMesa = await prisma.mesa.create({
@@ -448,7 +568,7 @@ async function main() {
 	})
 
 	console.log(
-		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length + 1} mesas, ${players.length + 1 + paginationPlayers.length} vínculos de jogadores, ${postsWithTimestamps.length + whisperPostsData.length + paginationPostsData.length} posts (${whisperPostsData.length} privados, ${paginationPostsData.length} na mesa de testes).`
+		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length + 1} mesas, ${players.length + 1 + paginationPlayers.length} vínculos de jogadores, ${postsWithTimestamps.length + whisperPostsData.length + paginationPostsData.length} posts (${whisperPostsData.length} privados, ${paginationPostsData.length} na mesa de testes), ${solicitacoes.length} solicitações, ${notificacoesData.length} notificações.`
 	)
 }
 

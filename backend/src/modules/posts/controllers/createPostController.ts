@@ -2,6 +2,7 @@ import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
 import { PrismaMesasRepository } from '../../mesas/repositories/PrismaMesasRepository'
+import { PrismaNotificacoesRepository } from '../../notificacoes/repositories/PrismaNotificacoesRepository'
 import { PrismaPlayersRepository } from '../../players/repositories/PrismaPlayersRepository'
 import { PrismaUserCharactersRepository } from '../../userCharacters/repositories/PrismaUserCharactersRepository'
 import { PrismaPostsRepository } from '../repositories/PrismaPostsRepository'
@@ -17,12 +18,14 @@ export class CreatePostController {
 			const mesasRepository = new PrismaMesasRepository()
 			const playersRepository = new PrismaPlayersRepository()
 			const userCharactersRepository = new PrismaUserCharactersRepository()
+			const notificacoesRepository = new PrismaNotificacoesRepository()
 
 			const createPostService = new CreatePostService(
 				postsRepository,
 				mesasRepository,
 				playersRepository,
-				userCharactersRepository
+				userCharactersRepository,
+				notificacoesRepository
 			)
 
 			const post = await createPostService.execute({ ...data, userId: req.user!.id })

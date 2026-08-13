@@ -1,12 +1,14 @@
 import { AppError } from '../../../shared/errors/AppError'
 import type { IMesasRepository } from '../../mesas/repositories/IMesasRepository'
+import type { INotificacoesRepository } from '../../notificacoes/repositories/INotificacoesRepository'
 import type { IPlayersRepository } from '../repositories/IPlayersRepository'
 import type { DeletePlayerDTO } from '../schemas/deletePlayer.schema'
 
 export class DeletePlayerService {
 	constructor(
 		private playersRepository: IPlayersRepository,
-		private mesasRepository: IMesasRepository
+		private mesasRepository: IMesasRepository,
+		private notificacoesRepository: INotificacoesRepository
 	) { }
 
 	async execute(data: DeletePlayerDTO, userId: number) {
@@ -30,6 +32,16 @@ export class DeletePlayerService {
 		}
 
 		await this.playersRepository.delete(data.id)
+
+		if (player.userId !== userId) {
+			await this.notificacoesRepository.create({
+				destinoId: player.userId,
+				remetenteId: userId,
+				tipo: 'JOGADOR_REMOVIDO_MESA',
+				message: `Você foi removido da mesa "${mesa.title}"`,
+				mesaId: mesa.id
+			})
+		}
 
 		const playersFromThisMesa = await this.playersRepository.getPlayersByMesaId(mesa.id)
 		if (playersFromThisMesa.length === 0) {

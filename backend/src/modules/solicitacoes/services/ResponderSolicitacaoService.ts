@@ -1,9 +1,13 @@
 import { AppError } from '../../../shared/errors/AppError'
+import type { INotificacoesRepository } from '../../notificacoes/repositories/INotificacoesRepository'
 import type { ISolicitacoesRepository } from '../repositories/ISolicitacoesRepository'
 import type { ResponderSolicitacaoDTO } from '../schemas/responderSolicitacao.schema'
 
 export class ResponderSolicitacaoService {
-	constructor(private solicitacoesRepository: ISolicitacoesRepository) { }
+	constructor(
+		private solicitacoesRepository: ISolicitacoesRepository,
+		private notificacoesRepository: INotificacoesRepository
+	) { }
 
 	async execute(data: ResponderSolicitacaoDTO, userId: number) {
 		const solicitacao = await this.solicitacoesRepository.get(data.id)
@@ -20,6 +24,17 @@ export class ResponderSolicitacaoService {
 			throw new AppError('Esta solicitação já foi respondida ou cancelada', 400)
 		}
 
-		return await this.solicitacoesRepository.updateStatus(data.id, data.status, data.respostaSolicitacao)
+		const atualizada = await this.solicitacoesRepository.updateStatus(data.id, data.status)
+
+		await this.notificacoesRepository.create({
+			destinoId: solicitacao.solicitante.id,
+			remetenteId: userId,
+			tipo: data.status === 'ACEITA' ? 'SOLICITACAO_ACEITA' : 'SOLICITACAO_RECUSADA',
+			message: data.status === 'ACEITA' ? 'Sua solicitação foi aceita' : 'Sua solicitação foi recusada',
+			solicitacaoId: solicitacao.id,
+			mesaId: solicitacao.mesa?.id
+		})
+
+		return atualizada
 	}
 }

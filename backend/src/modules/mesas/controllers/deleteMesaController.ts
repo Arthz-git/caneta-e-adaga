@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
+import { PrismaNotificacoesRepository } from '../../notificacoes/repositories/PrismaNotificacoesRepository'
+import { PrismaPlayersRepository } from '../../players/repositories/PrismaPlayersRepository'
 import { PrismaMesasRepository } from '../repositories/PrismaMesasRepository'
 import { deleteMesaSchema } from '../schemas/deleteMesa.schema'
 import { DeleteMesaService } from '../services/DeleteMesaService'
@@ -11,7 +13,9 @@ export class DeleteMesaController {
 			const data = deleteMesaSchema.parse(req.params)
 
 			const mesaRepository = new PrismaMesasRepository()
-			const deleteMesaService = new DeleteMesaService(mesaRepository)
+			const playersRepository = new PrismaPlayersRepository()
+			const notificacoesRepository = new PrismaNotificacoesRepository()
+			const deleteMesaService = new DeleteMesaService(mesaRepository, playersRepository, notificacoesRepository)
 
 			await deleteMesaService.execute(data, req.user!.id)
 
