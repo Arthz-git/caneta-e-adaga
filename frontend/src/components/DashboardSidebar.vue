@@ -6,7 +6,8 @@ import { useRoute, useRouter, RouterLink } from 'vue-router'
 import {
 	HomeOutline as IconHome,
 	PeopleOutline as IconUsers,
-	GridOutline as IconTable
+	GridOutline as IconTable,
+	MailOutline as IconMail
 } from '@vicons/ionicons5'
 
 const route = useRoute()
@@ -27,6 +28,11 @@ const menuOptions: MenuOption[] = [
 		label: () => h(RouterLink, { to: { name: 'mesas' } }, { default: () => 'Mesas' }),
 		key: 'mesas',
 		icon: () => h(NIcon, null, { default: () => h(IconTable) })
+	},
+	{
+		label: () => h(RouterLink, { to: { name: 'solicitacoes' } }, { default: () => 'Solicitações' }),
+		key: 'solicitacoes',
+		icon: () => h(NIcon, null, { default: () => h(IconMail) })
 	}
 ]
 

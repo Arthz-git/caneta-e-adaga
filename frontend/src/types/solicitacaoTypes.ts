@@ -33,8 +33,30 @@ interface SolicitacaoResponse {
 	} | null
 }
 
+interface PaginationMeta {
+	total: number
+	page: number
+	limit: number
+	totalPages: number
+}
+
+interface PaginatedSolicitacaoResponse {
+	data: SolicitacaoResponse[]
+	meta: PaginationMeta
+}
+
+interface GetAllSolicitacaoParams {
+	page?: number
+	limit?: number
+	status?: Status
+	motivo?: Motivos
+}
+
 export type {
 	CreateSolicitacaoParams,
 	Motivos,
-	SolicitacaoResponse
+	Status,
+	SolicitacaoResponse,
+	PaginatedSolicitacaoResponse,
+	GetAllSolicitacaoParams
 }

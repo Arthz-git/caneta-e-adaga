@@ -6,6 +6,7 @@ import LoginView from '@/views/LoginView.vue'
 import { useAuthStore } from '@/stores/useAuth'
 import CharactersView from '@/views/CharactersView.vue'
 import MesasView from '@/views/MesasView.vue'
+import SolicitacoesView from '@/views/SolicitacoesView.vue'
 
 declare module 'vue-router' {
 	interface RouteMeta {
@@ -37,6 +38,12 @@ const router = createRouter({
 					path: '/mesas',
 					name: 'mesas',
 					component: MesasView,
+					meta: { requiresAuth: true }
+				},
+				{
+					path: '/solicitacoes',
+					name: 'solicitacoes',
+					component: SolicitacoesView,
 					meta: { requiresAuth: true }
 				},
 				{
