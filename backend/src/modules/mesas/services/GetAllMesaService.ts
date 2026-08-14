@@ -9,7 +9,7 @@ export class GetAllMesaService {
 		const mesas = await this.mesasRepository.getAll()
 
 		if (mesas.length === 0) {
-			return new AppError('Nenhuma mesa encontrada', 404)
+			throw new AppError('Nenhuma mesa encontrada', 404)
 		}
 
 		return TransformMesa(mesas)

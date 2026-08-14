@@ -1,3 +1,4 @@
+import { TransformMesa } from '../../../shared/composables/transformMesa'
 import { AppError } from '../../../shared/errors/AppError'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 import type { UpdateMesaDTO } from '../schemas/updateMesa.schema'
@@ -26,6 +27,8 @@ export class UpdateMesaService {
 			throw new AppError('Não é possível desativar espectadores enquanto houver espectadores na mesa', 400)
 		}
 
-		return await this.mesasRepository.update(data)
+		const updated = await this.mesasRepository.update(data)
+
+		return TransformMesa([{ ...updated, creator: mesa.creator, players: mesa.players }], userId)[0]
 	}
 }

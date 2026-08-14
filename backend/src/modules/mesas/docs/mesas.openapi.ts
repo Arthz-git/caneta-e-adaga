@@ -4,6 +4,7 @@ import { updateMesaSchema } from '../schemas/updateMesa.schema'
 import { deleteMesaSchema } from '../schemas/deleteMesa.schema'
 import { getMesaSchema } from '../schemas/getMesa.schema'
 import { getAllMesaByCreatorSchema } from '../schemas/getAllMesaByCreator.schema'
+import { getAllMesaPaginatedSchema } from '../schemas/getAllMesaPaginated.schema'
 import { mesaResponseSchema, mesaResponseRepository } from '../schemas/mesaResponse.schema'
 import { z } from 'zod'
 
@@ -22,7 +23,8 @@ const mesaResponseExample = {
 		name: 'Fulano'
 	},
 	countSpectators: 0,
-	countPlayers: 1
+	countPlayers: 1,
+	isMember: true
 }
 
 const mesaByIdResponseExample = {
@@ -100,6 +102,7 @@ openApiRegistry.registerPath({
 	path: '/mesas/{id}',
 	tags: ['Mesas'],
 	summary: 'Busca uma mesa pelo id',
+	description: 'Mesas privadas só podem ser visualizadas pelo criador ou por jogadores/espectadores já vinculados a ela.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		params: getMesaSchema
@@ -120,8 +123,51 @@ openApiRegistry.registerPath({
 		401: {
 			description: 'Token não informado, mal formatado ou inválido'
 		},
+		403: {
+			description: 'Mesa é privada e o usuário autenticado não é um jogador dela'
+		},
 		404: {
 			description: 'Mesa não encontrada'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
+	method: 'get',
+	path: '/mesas/paginated',
+	tags: ['Mesas'],
+	summary: 'Lista paginada de mesas',
+	description: 'Suporta busca por título/descrição e filtro para retornar apenas as mesas em que o usuário autenticado é o criador ou um jogador/espectador (parâmetro "mine").',
+	security: [{ bearerAuth: [] }],
+	request: {
+		query: getAllMesaPaginatedSchema
+	},
+	responses: {
+		200: {
+			description: 'Lista de mesas retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.object({
+						data: z.array(mesaResponseSchema),
+						meta: z.object({
+							total: z.number(),
+							page: z.number(),
+							limit: z.number(),
+							totalPages: z.number()
+						})
+					}),
+					example: {
+						data: [mesaResponseExample],
+						meta: { total: 1, page: 1, limit: 9, totalPages: 1 }
+					}
+				}
+			}
+		},
+		400: {
+			description: 'Dados inválidos'
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
 		}
 	}
 })

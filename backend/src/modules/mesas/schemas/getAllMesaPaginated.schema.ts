@@ -18,6 +18,10 @@ export const getAllMesaPaginatedSchema = z.object({
 		.string()
 		.trim()
 		.min(1)
+		.optional(),
+	mine: z
+		.coerce
+		.boolean()
 		.optional()
 })
 

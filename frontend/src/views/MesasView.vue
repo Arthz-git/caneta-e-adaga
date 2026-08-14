@@ -75,6 +75,7 @@ const addMesaForm = reactive({ ...initialForm })
 const addMesaImage = ref<File | null>(null)
 const mesas = ref<MesaResponse[]>([])
 const searchMesa = ref('')
+const mineOnly = ref(false)
 const page = ref(1)
 const totalPages = ref(1)
 const isLoading = ref(false)
@@ -136,7 +137,8 @@ async function fetchMesas() {
 		const mesasResponse = await getAllMesaPaginated({
 			page: page.value,
 			limit: LIMIT,
-			search: searchMesa.value || undefined
+			search: searchMesa.value || undefined,
+			mine: mineOnly.value || undefined
 		})
 
 		mesas.value = mesasResponse.data
@@ -152,6 +154,11 @@ async function fetchMesas() {
 }
 
 watch(page, fetchMesas)
+
+watch(mineOnly, () => {
+	page.value = 1
+	fetchMesas()
+})
 
 watch(searchMesa, () => {
 	clearTimeout(searchTimeout)
@@ -196,6 +203,16 @@ fetchMesas()
 			</n-input>
 
 			<n-button
+				:type="mineOnly ? 'primary' : 'default'"
+				:secondary="!mineOnly"
+				strong
+				@click.prevent="mineOnly = !mineOnly"
+				:focusable="true"
+			>
+				Minhas mesas
+			</n-button>
+
+			<n-button
 				type="primary"
 				strong
 				@click.prevent="handleAddMesaButton"
@@ -235,7 +252,12 @@ fetchMesas()
 				/>
 			</div>
 
-			<n-pagination v-if="totalPages > 1" v-model:page="page" :page-count="totalPages" class="pagination" />
+			<n-pagination
+				v-if="totalPages > 1"
+				v-model:page="page"
+				:page-count="totalPages"
+				class="pagination"
+			/>
 		</div>
 	</div>
 </template>

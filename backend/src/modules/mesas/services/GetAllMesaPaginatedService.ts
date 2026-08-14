@@ -5,8 +5,8 @@ import type { GetAllMesaPaginatedDTO } from '../schemas/getAllMesaPaginated.sche
 export class GetAllMesaPaginatedService {
 	constructor(private mesasRepository: IMesasRepository) { }
 
-	async execute({ page, limit, search }: GetAllMesaPaginatedDTO, userId: number) {
-		const { data, total } = await this.mesasRepository.getAllPaginated({ page, limit, search })
+	async execute({ page, limit, search, mine }: GetAllMesaPaginatedDTO, userId: number) {
+		const { data, total } = await this.mesasRepository.getAllPaginated({ page, limit, search, mine, userId })
 
 		return {
 			data: TransformMesa(data, userId),

@@ -7,6 +7,8 @@ export interface GetAllPaginatedParams {
 	page: number
 	limit: number
 	search?: string
+	mine?: boolean
+	userId?: number
 }
 
 export interface GetAllPaginatedResult {

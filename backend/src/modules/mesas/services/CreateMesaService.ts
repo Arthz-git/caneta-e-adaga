@@ -1,3 +1,5 @@
+import { TransformMesa } from '../../../shared/composables/transformMesa'
+import { AppError } from '../../../shared/errors/AppError'
 import { IPlayersRepository } from '../../players/repositories/IPlayersRepository'
 import type { IMesasRepository } from '../repositories/IMesasRepository'
 import type { CreateMesaDTO } from '../schemas/createMesa.schema'
@@ -18,6 +20,12 @@ export class CreateMesaService {
 			userCharacterId: null
 		})
 
-		return created
+		const mesa = await this.mesasRepository.get(created.id)
+
+		if (!mesa) {
+			throw new AppError('Mesa não encontrada', 404)
+		}
+
+		return TransformMesa([mesa], data.createdBy)[0]
 	}
 }

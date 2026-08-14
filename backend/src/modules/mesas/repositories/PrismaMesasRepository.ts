@@ -81,8 +81,8 @@ export class PrismaMesasRepository implements IMesasRepository {
 		})
 	}
 
-	async getAllPaginated({ page, limit, search }: GetAllPaginatedParams) {
-		const where = search
+	async getAllPaginated({ page, limit, search, mine, userId }: GetAllPaginatedParams) {
+		const searchFilter = search
 			? {
 				OR: [
 					{ title: { contains: search } },
@@ -90,6 +90,17 @@ export class PrismaMesasRepository implements IMesasRepository {
 				]
 			}
 			: {}
+
+		const mineFilter = mine && userId
+			? {
+				OR: [
+					{ createdBy: userId },
+					{ players: { some: { userId } } }
+				]
+			}
+			: {}
+
+		const where = { AND: [searchFilter, mineFilter] }
 
 		const [data, total] = await prisma.$transaction([
 			prisma.mesa.findMany({

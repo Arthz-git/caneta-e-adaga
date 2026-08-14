@@ -53,6 +53,7 @@ interface GetAllMesaPaginatedParams {
 	page?: number
 	limit?: number
 	search?: string
+	mine?: boolean
 }
 
 interface GetMesaInfoResponse {
