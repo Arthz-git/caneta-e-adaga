@@ -24,8 +24,9 @@ axiosInstance.interceptors.response.use(
 	async (error: AxiosError<{ message?: string, issues?: { message?: string }[] }>) => {
 		const originalRequest = error.config as RetriableConfig | undefined
 		const isRefreshCall = originalRequest?.url?.includes('/auth/refresh')
+		const isLoginCall = originalRequest?.url?.includes('/auth/login')
 
-		if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshCall && authHandlers) {
+		if (error.response?.status === 401 && originalRequest && !originalRequest._retry && !isRefreshCall && !isLoginCall && authHandlers) {
 			originalRequest._retry = true
 
 			try {
