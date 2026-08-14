@@ -6,7 +6,8 @@ import {
 	PersonOutline as IconPerson,
 	PersonCircleOutline as IconNpc,
 	ChevronUpOutline as IconChevronUp,
-	EyeOffOutline as IconRestricted
+	EyeOffOutline as IconRestricted,
+	LockClosedOutline as IconHidden
 } from '@vicons/ionicons5'
 import { getLastPostId, getPaginatedPosts } from '@/services/posts.service'
 import type { PostListItem } from '@/types/postTypes'
@@ -17,6 +18,8 @@ import { useAuthStore } from '@/stores/useAuth'
 
 const props = defineProps<{
 	mesaId: number
+	isMaster?: boolean
+	currentPlayerId?: number
 }>()
 
 const PAGE_SIZE = 20
@@ -53,6 +56,19 @@ function isOwnPost(post: PostListItem) {
 function isRestricted(post: PostListItem) {
 	return post.visiblePlayerIds.length > 0
 }
+
+function canViewRestrictedContent(post: PostListItem) {
+	if (!isRestricted(post)) return true
+	if (props.isMaster || isOwnPost(post)) return true
+
+	return props.currentPlayerId != null && post.visiblePlayerIds.includes(props.currentPlayerId)
+}
+
+const restrictedTitle = computed(() => (
+	props.isMaster
+		? 'Mensagem restrita a jogadores selecionados'
+		: 'Mensagem restrita — visível apenas para você'
+))
 
 async function scrollToBottom() {
 	await nextTick()
@@ -174,13 +190,39 @@ defineExpose({
 				class="post-row"
 				:class="[`post-row--${post.type.toLowerCase()}`, { 'post-row--own': isOwnPost(post) }]"
 			>
-				<template v-if="post.type === 'NARRATOR'">
+				<template v-if="!canViewRestrictedContent(post)">
+					<div class="post-hidden">
+						<n-icon class="post-hidden__icon">
+							<IconHidden />
+						</n-icon>
+
+						<span class="post-hidden__text">Uma mensagem oculta foi enviada aqui</span>
+
+						<span class="post-hidden__time">
+							{{ formatDateIntoString(post.createdAt) }}
+						</span>
+					</div>
+				</template>
+
+				<template v-else-if="post.type === 'NARRATOR'">
 					<div class="post-narrator">
-						<div class="post-narrator__text" v-html="sanitize(post.text)" />
-						<span class="post-narrator__time">
-							<n-icon v-if="isRestricted(post)" title="Mensagem restrita a alguns jogadores">
+						<span
+							v-if="isRestricted(post)"
+							class="restricted-badge restricted-badge--narrator"
+							:title="restrictedTitle"
+						>
+							<n-icon>
 								<IconRestricted />
 							</n-icon>
+
+							<span class="restricted-badge__label">
+								Mensagem restrita
+							</span>
+						</span>
+						
+						<div class="post-narrator__text" v-html="sanitize(post.text)" />
+
+						<span class="post-narrator__time">
 							{{ formatDateIntoString(post.createdAt) }}
 						</span>
 					</div>
@@ -198,8 +240,17 @@ defineExpose({
 							<n-icon v-else-if="post.type === 'NPC'">
 								<IconNpc />
 							</n-icon>
+
 							<n-icon v-else>
 								<IconPerson />
+							</n-icon>
+
+							<n-icon
+								v-if="isRestricted(post)"
+								class="restricted-badge"
+								:title="restrictedTitle"
+							>
+								<IconRestricted />
 							</n-icon>
 						</div>
 
@@ -217,9 +268,13 @@ defineExpose({
 									NPC de {{ post.author.name }}
 								</span>
 
-								<n-icon v-if="isRestricted(post)" class="post-bubble__restricted" title="Mensagem restrita a alguns jogadores">
-									<IconRestricted />
-								</n-icon>
+								<span
+									v-if="isRestricted(post)"
+									class="restricted-badge__label restricted-badge__label--inline"
+									:title="restrictedTitle"
+								>
+									Mensagem restrita
+								</span>
 
 								<span class="post-bubble__time">
 									{{ formatDateIntoString(post.createdAt) }}
@@ -304,6 +359,8 @@ defineExpose({
 }
 
 .post-narrator {
+	position: relative;
+
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -337,6 +394,41 @@ defineExpose({
 	opacity: 0.8;
 }
 
+.post-hidden {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+
+	width: 100%;
+	padding: var(--space-2) var(--space-4);
+
+	background: color-mix(in srgb, var(--cor-tinta-fraca) 6%, transparent);
+	border: 1px dashed color-mix(in srgb, var(--cor-tinta-fraca) 35%, transparent);
+	border-radius: 14px;
+}
+
+.post-hidden__icon {
+	color: var(--cor-tinta-fraca);
+	font-size: 0.9rem;
+	opacity: 0.7;
+}
+
+.post-hidden__text {
+	color: var(--cor-tinta-fraca);
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	font-style: italic;
+	opacity: 0.8;
+}
+
+.post-hidden__time {
+	color: var(--cor-tinta-fraca);
+	font-family: var(--font-sans);
+	font-size: 0.6rem;
+	opacity: 0.6;
+}
+
 .post-bubble {
 	display: flex;
 	flex-direction: row;
@@ -351,6 +443,8 @@ defineExpose({
 }
 
 .post-bubble__avatar {
+	position: relative;
+
 	display: flex;
 	justify-content: center;
 	align-items: center;
@@ -421,10 +515,54 @@ defineExpose({
 	font-size: 0.65rem;
 }
 
-.post-bubble__restricted {
-	color: var(--cor-tinta-fraca);
-	font-size: 0.75rem;
-	opacity: 0.7;
+.restricted-badge {
+	position: absolute;
+	top: -5px;
+	right: -5px;
+	z-index: 1;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	height: 24px;
+	width: 24px;
+
+	background: var(--cor-papel);
+	border: 1px solid color-mix(in srgb, var(--cor-granada) 55%, transparent);
+	border-radius: 50%;
+	color: var(--cor-granada);
+	font-size: 0.85rem;
+}
+
+.restricted-badge--narrator {
+	position: static;
+
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-1);
+
+	height: auto;
+	width: auto;
+	padding: 2px var(--space-2);
+
+	border-radius: 999px;
+}
+
+.restricted-badge__label {
+	color: var(--cor-granada);
+	font-family: var(--font-sans);
+	font-size: 0.65rem;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.restricted-badge__label--inline {
+	padding: 1px var(--space-2);
+
+	background: var(--cor-papel);
+	border: 1px solid color-mix(in srgb, var(--cor-granada) 55%, transparent);
+	border-radius: 999px;
 }
 
 .post-bubble__time {

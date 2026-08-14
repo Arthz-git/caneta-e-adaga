@@ -23,7 +23,7 @@ export class GetPaginatedPostsByMesaIdService {
 			throw new AppError('Você não tem permissão para acessar este recurso', 403)
 		}
 
-		const { data, total } = await this.postsRepository.getPaginatedByMesaId(mesaId, { page, limit }, { playerId: player.id, isMaster: player.role === 'MASTER' })
+		const { data, total } = await this.postsRepository.getPaginatedByMesaId(mesaId, { page, limit })
 
 		return {
 			data,

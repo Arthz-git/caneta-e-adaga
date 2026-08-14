@@ -23,6 +23,6 @@ export class GetAllPostsByMesaIdService {
 			throw new AppError('Você não tem permissão para acessar este recurso', 403)
 		}
 
-		return this.postsRepository.getAllByMesaId(data.mesaId, { playerId: player.id, isMaster: player.role === 'MASTER' })
+		return this.postsRepository.getAllByMesaId(data.mesaId)
 	}
 }

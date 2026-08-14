@@ -1,6 +1,6 @@
 import { prisma } from '../../../database/prisma-client'
 import type { CreatePostDTO } from '../schemas/createPost.schema'
-import type { GetAllPaginatedParams, IPostsRepository, PostsViewer } from './IPostsRepository'
+import type { GetAllPaginatedParams, IPostsRepository } from './IPostsRepository'
 
 const includeRelations = {
 	author: {
@@ -18,18 +18,6 @@ function mapPost<T extends { visiblePlayers: { playerId: number }[] }>({ visible
 	return { ...post, visiblePlayerIds: visiblePlayers.map(visiblePlayer => visiblePlayer.playerId) }
 }
 
-function buildVisibilityWhere(mesaId: number, { playerId, isMaster }: PostsViewer) {
-	if (isMaster) return { mesaId }
-
-	return {
-		mesaId,
-		OR: [
-			{ visiblePlayers: { none: {} } },
-			{ visiblePlayers: { some: { playerId } } }
-		]
-	}
-}
-
 export class PrismaPostsRepository implements IPostsRepository {
 	async create(data: CreatePostDTO) {
 		const { visiblePlayerIds, ...postData } = data
@@ -44,9 +32,9 @@ export class PrismaPostsRepository implements IPostsRepository {
 		})
 	}
 
-	async getAllByMesaId(mesaId: number, viewer: PostsViewer) {
+	async getAllByMesaId(mesaId: number) {
 		const posts = await prisma.post.findMany({
-			where: buildVisibilityWhere(mesaId, viewer),
+			where: { mesaId },
 			include: includeRelations,
 			orderBy: { createdAt: 'asc' }
 		})
@@ -54,8 +42,8 @@ export class PrismaPostsRepository implements IPostsRepository {
 		return posts.map(mapPost)
 	}
 
-	async getPaginatedByMesaId(mesaId: number, { page, limit }: GetAllPaginatedParams, viewer: PostsViewer) {
-		const where = buildVisibilityWhere(mesaId, viewer)
+	async getPaginatedByMesaId(mesaId: number, { page, limit }: GetAllPaginatedParams) {
+		const where = { mesaId }
 
 		const [posts, total] = await prisma.$transaction([
 			prisma.post.findMany({

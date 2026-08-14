@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import DOMPurify from 'dompurify'
 import { NIcon } from 'naive-ui'
-import { InformationCircleOutline as IconSystem, EyeOffOutline as IconRestricted } from '@vicons/ionicons5'
+import { InformationCircleOutline as IconSystem, EyeOffOutline as IconRestricted, LockClosedOutline as IconHidden } from '@vicons/ionicons5'
 import type { PostListItem } from '@/types/postTypes'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
+import { useAuthStore } from '@/stores/useAuth'
 
 // ----------------------------------------------------------------------
 
-defineProps<{
+const props = defineProps<{
 	posts: PostListItem[]
+	isMaster?: boolean
+	currentPlayerId?: number
 }>()
+
+const auth = useAuthStore()
 
 function sanitize(html: string) {
 	return DOMPurify.sanitize(html)
@@ -17,6 +22,13 @@ function sanitize(html: string) {
 
 function isRestricted(post: PostListItem) {
 	return post.visiblePlayerIds.length > 0
+}
+
+function canViewRestrictedContent(post: PostListItem) {
+	if (!isRestricted(post)) return true
+	if (props.isMaster || post.userId === auth.user?.id) return true
+
+	return props.currentPlayerId != null && post.visiblePlayerIds.includes(props.currentPlayerId)
 }
 </script>
 
@@ -39,7 +51,17 @@ function isRestricted(post: PostListItem) {
 			class="side-chat__row"
 			:class="`side-chat__row--${post.type.toLowerCase()}`"
 		>
-			<template v-if="post.type === 'SYSTEM'">
+			<template v-if="!canViewRestrictedContent(post)">
+				<div class="side-chat__bubble side-chat__bubble--hidden">
+					<n-icon>
+						<IconHidden />
+					</n-icon>
+
+					<span>Mensagem oculta</span>
+				</div>
+			</template>
+
+			<template v-else-if="post.type === 'SYSTEM'">
 				<div class="side-chat__bubble side-chat__bubble--system">
 					<n-icon>
 						<IconSystem />
@@ -138,6 +160,18 @@ function isRestricted(post: PostListItem) {
 
 	color: var(--cor-latao-suave);
 	font-size: 0.85rem;
+}
+
+.side-chat__bubble--hidden {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+
+	background: color-mix(in srgb, var(--cor-tinta-fraca) 6%, transparent);
+	border-style: dashed;
+	color: var(--cor-tinta-fraca);
+	font-style: italic;
+	opacity: 0.85;
 }
 
 .side-chat__header {

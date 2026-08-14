@@ -12,13 +12,8 @@ export interface GetAllPaginatedResult {
 	total: number
 }
 
-export interface PostsViewer {
-	playerId: number
-	isMaster: boolean
-}
-
 export interface IPostsRepository {
 	create(data: CreatePostDTO): Promise<PostModel>
-	getAllByMesaId(mesaId: number, viewer: PostsViewer): Promise<PostResponseRepository[]>
-	getPaginatedByMesaId(mesaId: number, params: GetAllPaginatedParams, viewer: PostsViewer): Promise<GetAllPaginatedResult>
+	getAllByMesaId(mesaId: number): Promise<PostResponseRepository[]>
+	getPaginatedByMesaId(mesaId: number, params: GetAllPaginatedParams): Promise<GetAllPaginatedResult>
 }

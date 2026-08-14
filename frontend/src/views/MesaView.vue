@@ -409,13 +409,19 @@ getMesa()
 		</div>
 
 		<SidePanel v-model:collapsed="isRightPanelCollapsed" class="right__panel">
-			<SideChatPanel :posts="sideChatPosts" />
+			<SideChatPanel
+				:posts="sideChatPosts"
+				:is-master="currentPlayer?.role === 'MASTER'"
+				:current-player-id="currentPlayer?.id"
+			/>
 		</SidePanel>
 
 		<div class="mid__container">
 			<PostsTimeline
 				ref="postsTimeline"
 				:mesa-id="Number(mesaId)"
+				:is-master="currentPlayer?.role === 'MASTER'"
+				:current-player-id="currentPlayer?.id"
 				v-model:posts="posts"
 			/>
 		</div>
