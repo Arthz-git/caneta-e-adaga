@@ -9,18 +9,20 @@ import {
 	NButton,
 	NSpin
 } from 'naive-ui'
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import {
 	ArrowBackOutline as IconBack,
 	ImageOutline as IconImage,
 	SettingsOutline as IconSettings,
 	PersonOutline as IconPerson,
 	AddOutline as IconAdd,
-	SendOutline as IconSend
+	SendOutline as IconSend,
+	RefreshOutline as IconRefresh
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
 import CharacterSummaryModal from '@/components/CharacterSummaryModal.vue'
+import InviteModal from '@/components/InviteModal.vue'
 import MesaFormModal from '@/components/MesaFormModal.vue'
 import PostEditor from '@/components/PostEditor.vue'
 import PostsTimeline from '@/components/PostsTimeline.vue'
@@ -28,9 +30,11 @@ import SideChatPanel from '@/components/SideChatPanel.vue'
 import SidePanel from '@/components/SidePanel.vue'
 import { createPost } from '@/services/posts.service'
 import type { PostListItem, PostType } from '@/types/postTypes'
+import { formatDateIntoString } from '@/composables/transformDateIntoString'
 
 const PLAYER_ALLOWED_POST_TYPES: PostType[] = ['CHARACTER', 'OOC']
 const SPECTATOR_ALLOWED_POST_TYPES: PostType[] = ['OOC']
+const AUTO_REFRESH_INTERVAL_MS = 60_000
 
 // ----------------------------------------------------------------------
 
@@ -64,6 +68,9 @@ const posts = ref<PostListItem[]>([])
 const showCharacterModal = ref(false)
 const isLoadingCharacter = ref(false)
 const selectedCharacter = ref<CharactersResponse | null>(null)
+const showInviteFriendModal = ref(false)
+const lastUpdatedAt = ref(new Date())
+let autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null
 
 // #region computeds
 const isPostMessageEmpty = computed(() => !postMessage.value.replace(/<[^>]*>/g, '').trim())
@@ -81,6 +88,7 @@ const targetablePlayers = computed(() => (
 		})) ?? []
 ))
 const vagasLivres = computed(() => Math.max(mesa.value!.maxPlayers - mesa.value!.players.length, 0))
+const mesaMemberUserIds = computed(() => mesa.value?.players.map(player => player.userId) ?? [])
 const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
 const occupiedPlayerSlots = computed(() => mesa.value?.players.filter(player => player.role !== 'SPECTATOR').length ?? 1)
 const currentPlayer = computed(() => mesa.value?.players.find(player => player.userId === auth.user?.id))
@@ -99,6 +107,10 @@ const mentionItems = computed(() => {
 
 function backButtonClick() {
 	router.back()
+}
+
+function vagaLivreClick() {
+	showInviteFriendModal.value = true
 }
 
 function configButtonClick() {
@@ -209,11 +221,42 @@ async function getMesa() {
 	}
 }
 
+async function refreshMesaData() {
+	await postsTimeline.value?.reload()
+	lastUpdatedAt.value = new Date()
+}
+
+function startAutoRefresh() {
+	if (autoRefreshIntervalId) return
+	autoRefreshIntervalId = setInterval(refreshMesaData, AUTO_REFRESH_INTERVAL_MS)
+}
+
+function stopAutoRefresh() {
+	if (!autoRefreshIntervalId) return
+	clearInterval(autoRefreshIntervalId)
+	autoRefreshIntervalId = null
+}
+
+function handleVisibilityChange() {
+	if (document.hidden) stopAutoRefresh()
+	else startAutoRefresh()
+}
+
 watch(allowedPostTypes, (types) => {
 	if (!types.includes(postMessageType.value)) {
 		postMessageType.value = types[0]
 	}
 }, { immediate: true })
+
+onMounted(() => {
+	document.addEventListener('visibilitychange', handleVisibilityChange)
+	if (!document.hidden) startAutoRefresh()
+})
+
+onUnmounted(() => {
+	document.removeEventListener('visibilitychange', handleVisibilityChange)
+	stopAutoRefresh()
+})
 
 getMesa()
 </script>
@@ -265,6 +308,21 @@ getMesa()
 
 			<div class="header__spacer" />
 
+			<span
+				class="header__last-update"
+				role="button"
+				tabindex="0"
+				title="Clique para atualizar agora"
+				@click="refreshMesaData"
+				@keydown.enter="refreshMesaData"
+			>
+				<n-icon class="header__last-update-icon">
+					<IconRefresh />
+				</n-icon>
+
+				Atualizado às {{ formatDateIntoString(lastUpdatedAt, 'HH:mm:ss') }}
+			</span>
+
 			<n-button
 				circle
 				quaternary
@@ -304,6 +362,12 @@ getMesa()
 			v-model:show="showCharacterModal"
 			:character="selectedCharacter"
 			:loading="isLoadingCharacter"
+		/>
+
+		<InviteModal
+			v-model:show="showInviteFriendModal"
+			:mesa-id="Number(mesaId)"
+			:excluded-user-ids="mesaMemberUserIds"
 		/>
 
 		<div class="left__panel">
@@ -368,6 +432,7 @@ getMesa()
 				:key="`vaga-${n}`"
 				role="button"
 				tabindex="0"
+				@click="vagaLivreClick"
 			>
 				<div class="player__card-avatar player__card-avatar--empty">
 					<n-icon>
@@ -541,6 +606,33 @@ getMesa()
 
 .header__spacer {
 	flex: 1;
+}
+
+.header__last-update {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex-shrink: 0;
+
+	color: var(--cor-tinta-fraca);
+	font-family: var(--font-sans);
+	font-size: 0.7rem;
+
+	cursor: pointer;
+	transition: color 0.15s ease;
+}
+
+.header__last-update:hover .header__last-update-icon {
+	transform: rotate(180deg);
+}
+
+.header__last-update-icon {
+	font-size: 0.9rem;
+	transition: transform 0.3s ease;
+}
+
+.header__last-update:hover {
+	color: var(--cor-latao);
 }
 
 .left__panel {
