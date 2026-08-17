@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { NButton, NEmpty, NIcon, NPagination, NSpin, useDialog, useMessage } from 'naive-ui'
+import { NAvatar, NButton, NEmpty, NIcon, NPagination, NSpin, useDialog, useMessage } from 'naive-ui'
 import { PersonAddOutline as IconAdd, PersonRemoveOutline as IconRemove } from '@vicons/ionicons5'
 import { deleteAmizade, getAllAmizades } from '@/services/amizade.service'
 import type { AmizadeResponse } from '@/types/amizadeTypes'
@@ -23,6 +23,15 @@ const showAddModal = ref(false)
 
 function amigo(amizade: AmizadeResponse) {
 	return amizade.userA.id === auth.user?.id ? amizade.userB : amizade.userA
+}
+
+function iniciais(nome: string) {
+	return nome
+		.trim()
+		.split(/\s+/)
+		.slice(0, 2)
+		.map(parte => parte[0]?.toUpperCase())
+		.join('')
 }
 
 async function fetchAmizades() {
@@ -80,7 +89,7 @@ fetchAmizades()
 <template>
 	<div>
 		<div class="toolbar">
-			<n-button type="primary" secondary :focusable="false" @click="showAddModal = true">
+			<n-button type="primary" :focusable="false" @click="showAddModal = true">
 				<template #icon>
 					<n-icon>
 						<IconAdd />
@@ -105,8 +114,14 @@ fetchAmizades()
 		<div v-else class="list">
 			<div v-for="amizade of amizades" :key="amizade.id" class="amizade-row">
 				<div class="amizade-row__info">
-					<span class="amizade-row__pessoa">{{ amigo(amizade).name }}</span>
-					<span class="amizade-row__time">Amigos desde {{ formatDateIntoString(amizade.createdAt) }}</span>
+					<n-avatar round size="small" class="amizade-row__avatar">
+						{{ iniciais(amigo(amizade).name) }}
+					</n-avatar>
+
+					<div class="amizade-row__textos">
+						<span class="amizade-row__pessoa">{{ amigo(amizade).name }}</span>
+						<span class="amizade-row__time">Amigos desde {{ formatDateIntoString(amizade.createdAt) }}</span>
+					</div>
 				</div>
 
 				<div class="amizade-row__actions">
@@ -159,6 +174,22 @@ fetchAmizades()
 }
 
 .amizade-row__info {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-width: 0;
+}
+
+.amizade-row__avatar {
+	flex-shrink: 0;
+	background: var(--cor-granada);
+	color: var(--cor-papel);
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: 0.8rem;
+}
+
+.amizade-row__textos {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;

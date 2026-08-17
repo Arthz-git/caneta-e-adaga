@@ -80,7 +80,7 @@ onMounted(loadDashboard)
 		<header class="header">
 			<div>
 				<p class="header__eyebrow">Seu diário de campanhas</p>
-				<h1 class="header__title">Bem-vindo de volta <em>{{ auth.user?.username }}</em>.</h1>
+				<h1 class="header__title">Bem-vindo de volta, <em>{{ auth.user?.username }}</em>.</h1>
 			</div>
 			<div class="header__actions">
 				<button class="btn btn--ghost" type="button" @click="router.push({ name: 'characters' })">
@@ -209,7 +209,7 @@ onMounted(loadDashboard)
 
 .header__title em {
 	color: var(--cor-granada);
-	font-style: italic;
+	font-style: normal;
 }
 
 .header__actions {

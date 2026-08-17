@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
-import { NButton, NEmpty, NIcon, NPagination, NSelect, NSpin, NTabs, NTabPane, NTag, useDialog, useMessage } from 'naive-ui'
+import { NAvatar, NButton, NEmpty, NIcon, NPagination, NSelect, NSpin, NTabs, NTabPane, NTag, useDialog, useMessage } from 'naive-ui'
 import type { SelectOption } from 'naive-ui'
 import {
 	CheckmarkOutline as IconAccept,
@@ -71,6 +71,15 @@ const isRecebidas = computed(() => tab.value === 'recebidas')
 
 function outroParticipante(solicitacao: SolicitacaoResponse) {
 	return isRecebidas.value ? solicitacao.solicitante : solicitacao.destino
+}
+
+function iniciais(nome: string) {
+	return nome
+		.trim()
+		.split(/\s+/)
+		.slice(0, 2)
+		.map(parte => parte[0]?.toUpperCase())
+		.join('')
 }
 
 async function fetchSolicitacoes() {
@@ -226,18 +235,24 @@ fetchSolicitacoes()
 		<div v-else class="list">
 			<div v-for="solicitacao of solicitacoes" :key="solicitacao.id" class="solicitacao-row">
 				<div class="solicitacao-row__info">
-					<div class="solicitacao-row__header">
-						<span class="solicitacao-row__pessoa">{{ outroParticipante(solicitacao).name }}</span>
-						<n-tag :type="statusTagType[solicitacao.status]" size="small" round>
-							{{ statusLabels[solicitacao.status] }}
-						</n-tag>
+					<n-avatar round size="small" class="solicitacao-row__avatar">
+						{{ iniciais(outroParticipante(solicitacao).name) }}
+					</n-avatar>
+
+					<div class="solicitacao-row__textos">
+						<div class="solicitacao-row__header">
+							<span class="solicitacao-row__pessoa">{{ outroParticipante(solicitacao).name }}</span>
+							<n-tag :type="statusTagType[solicitacao.status]" size="small" round>
+								{{ statusLabels[solicitacao.status] }}
+							</n-tag>
+						</div>
+
+						<span class="solicitacao-row__motivo">{{ motivoLabels[solicitacao.motivo] }}</span>
+
+						<span v-if="solicitacao.mesa" class="solicitacao-row__mesa">Mesa: {{ solicitacao.mesa.title }}</span>
+
+						<span class="solicitacao-row__time">{{ formatDateIntoString(solicitacao.createdAt) }}</span>
 					</div>
-
-					<span class="solicitacao-row__motivo">{{ motivoLabels[solicitacao.motivo] }}</span>
-
-					<span v-if="solicitacao.mesa" class="solicitacao-row__mesa">Mesa: {{ solicitacao.mesa.title }}</span>
-
-					<span class="solicitacao-row__time">{{ formatDateIntoString(solicitacao.createdAt) }}</span>
 				</div>
 
 				<div class="solicitacao-row__actions">
@@ -345,6 +360,22 @@ fetchSolicitacoes()
 }
 
 .solicitacao-row__info {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-width: 0;
+}
+
+.solicitacao-row__avatar {
+	flex-shrink: 0;
+	background: var(--cor-granada);
+	color: var(--cor-papel);
+	font-family: var(--font-sans);
+	font-weight: 600;
+	font-size: 0.8rem;
+}
+
+.solicitacao-row__textos {
 	display: flex;
 	flex-direction: column;
 	gap: 2px;

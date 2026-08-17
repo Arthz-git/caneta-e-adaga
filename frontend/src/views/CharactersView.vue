@@ -2,24 +2,24 @@
 import { createMyCharacter, deleteMyCharacter, getMyCharacters, updateMyCharacter } from '@/services/characters.service'
 import { useAuthStore } from '@/stores/useAuth'
 import { useDialog, useMessage } from 'naive-ui'
-import { ref, reactive, computed, onBeforeUnmount } from 'vue'
+import { ref, reactive } from 'vue'
 import type { CharactersResponse } from '@/types/charactersTypes'
-import { NButton, NIcon, NSpin, NModal, NForm, NFormItem, NInput, NUpload } from 'naive-ui'
-import type { FormInst, FormRules, UploadFileInfo } from 'naive-ui'
-import { Add as IconAdd, ImageOutline as IconImage, CloseOutline as IconClose } from '@vicons/ionicons5'
+import { NButton, NIcon, NSpin } from 'naive-ui'
+import type { FormRules } from 'naive-ui'
+import { Add as IconAdd } from '@vicons/ionicons5'
 import CardPersonagem from '@/components/CardPersonagem.vue'
+import CharacterFormModal from '@/components/CharacterFormModal.vue'
 
 const dialog = useDialog()
 const message = useMessage()
 const auth = useAuthStore()
 
-const formRef = ref<FormInst | null>(null)
-
 const chars = ref<CharactersResponse[]>([])
 const isLoading = ref(false)
+const isSubmitting = ref(false)
 const showModal = ref(false)
 
-const editId = ref(0) // 0 = false, number = id do usuário para editar
+const editId = ref(0) // 0 = false, number = id do personagem para editar
 
 const initialStateForm = {
 	name: '',
@@ -27,12 +27,9 @@ const initialStateForm = {
 	lore: ''
 }
 
-const characterForm = reactive({ ... initialStateForm })
+const characterForm = reactive({ ...initialStateForm })
 const characterImage = ref<File | null>(null)
 const existingImageUrl = ref<string | null>(null)
-const characterImagePreview = ref<string | null>(null)
-
-const displayedImageUrl = computed(() => characterImagePreview.value ?? existingImageUrl.value)
 
 const rules: FormRules = {
 	name: {
@@ -52,37 +49,28 @@ const rules: FormRules = {
 	}
 }
 
-function handleImageChange({ file }: { file: UploadFileInfo }) {
-	characterImage.value = file.file ?? null
-
-	if (characterImagePreview.value) {
-		URL.revokeObjectURL(characterImagePreview.value)
-	}
-
-	characterImagePreview.value = characterImage.value ? URL.createObjectURL(characterImage.value) : null
-}
-
-onBeforeUnmount(() => {
-	if (characterImagePreview.value) {
-		URL.revokeObjectURL(characterImagePreview.value)
-	}
-})
-
 function handleAddCharButton() {
 	showModal.value = true
 }
 
+async function handleFormSubmit() {
+	if (editId.value === 0) {
+		await handleAddCharSubmit()
+	}
+	else {
+		await handleEditCharSubmit()
+	}
+}
+
 async function handleAddCharSubmit() {
 	try {
-		await formRef.value?.validate()
-
-		isLoading.value = true
+		isSubmitting.value = true
 
 		await createMyCharacter({ ...characterForm, image: characterImage.value ?? undefined })
 
 		message.success('Personagem criado com sucesso')
 
-		onCloseModal()
+		showModal.value = false
 		await fetchMyCharacters()
 	}
 	catch (err) {
@@ -90,7 +78,7 @@ async function handleAddCharSubmit() {
 		message.error(errorMessage)
 	}
 	finally {
-		isLoading.value = false
+		isSubmitting.value = false
 	}
 }
 
@@ -110,9 +98,7 @@ function handleEditChar(charId: number) {
 
 async function handleEditCharSubmit() {
 	try {
-		await formRef.value?.validate()
-
-		isLoading.value = true
+		isSubmitting.value = true
 
 		const payload = {
 			id: editId.value,
@@ -124,7 +110,7 @@ async function handleEditCharSubmit() {
 
 		message.success('Personagem atualizado com sucesso')
 
-		onCloseModal()
+		showModal.value = false
 		await fetchMyCharacters()
 	}
 	catch (err) {
@@ -132,7 +118,7 @@ async function handleEditCharSubmit() {
 		message.error(errorMessage)
 	}
 	finally {
-		isLoading.value = false
+		isSubmitting.value = false
 	}
 }
 
@@ -168,15 +154,9 @@ async function handleDeleteCharSubmit(charId: number) {
 }
 
 function onCloseModal() {
-	showModal.value = false
 	Object.assign(characterForm, initialStateForm)
 
-	if (characterImagePreview.value) {
-		URL.revokeObjectURL(characterImagePreview.value)
-	}
-
 	characterImage.value = null
-	characterImagePreview.value = null
 	existingImageUrl.value = null
 	editId.value = 0
 }
@@ -202,115 +182,40 @@ fetchMyCharacters()
 </script>
 
 <template>
-	<n-modal v-model:show="showModal" :on-after-leave="onCloseModal">
-		<div class="modal__container">
-			<div class="modal__header">
-				<h2 class="modal__title">Novo personagem</h2>
-
-				<n-button quaternary circle :focusable="false" @click="showModal = false">
-					<template #icon>
-						<n-icon>
-							<IconClose />
-						</n-icon>
-					</template>
-				</n-button>
-			</div>
-
-			<n-form ref="formRef" :model="characterForm" :rules="rules" class="modal__form" label-placement="top" @submit.prevent="handleAddCharSubmit">
-				<div class="modal__form-body">
-					<div class="modal__image">
-						<n-upload
-							accept="image/*"
-							:show-file-list="false"
-							:default-upload="false"
-							@change="handleImageChange"
-						>
-							<div class="modal__image-preview">
-								<img v-if="displayedImageUrl" :src="displayedImageUrl" alt="Prévia do personagem" class="modal__image-img">
-								<div v-else class="modal__image-placeholder">
-									<n-icon size="48">
-										<IconImage />
-									</n-icon>
-									<span>Selecionar imagem</span>
-								</div>
-							</div>
-						</n-upload>
-					</div>
-
-					<div class="modal__fields">
-						<n-form-item label="Nome" path="name">
-							<n-input v-model:value="characterForm.name" type="text" placeholder="Ex: Elyndra Corvain"></n-input>
-						</n-form-item>
-
-						<n-form-item
-							label="Descrição"
-							path="description"
-						>
-							<n-input
-								v-model:value="characterForm.description"
-								type="textarea"
-								placeholder="Aparência, personalidade, trejeitos... como alguém reconheceria seu personagem em um relance?"
-								:autosize="{ minRows: 4, maxRows: 8 }"
-							></n-input>
-						</n-form-item>
-
-						<n-form-item label="História" path="lore">
-							<n-input
-								v-model:value="characterForm.lore"
-								type="textarea" placeholder="De onde ele veio, o que já viveu, o que carrega consigo até aqui..."
-								:autosize="{ minRows: 8, maxRows: 12 }"
-							></n-input>
-						</n-form-item>
-					</div>
-				</div>
-
-				<n-button
-					type="primary"
-					attr-type="submit"
-					block
-					strong
-					:focusable="false"
-					v-if="editId === 0"
-				>
-					Criar
-				</n-button>
-
-				<n-button
-					type="primary"
-					attr-type="submit"
-					block
-					strong
-					:focusable="false"
-					v-else
-					@click.prevent="handleEditCharSubmit"
-				>
-					Editar
-				</n-button>
-			</n-form>
-		</div>
-	</n-modal>
+	<CharacterFormModal
+		v-model:show="showModal"
+		v-model:name="characterForm.name"
+		v-model:description="characterForm.description"
+		v-model:lore="characterForm.lore"
+		v-model:image="characterImage"
+		:image-url="existingImageUrl"
+		:heading="editId === 0 ? 'Novo personagem' : 'Editar personagem'"
+		:submit-label="editId === 0 ? 'Criar' : 'Editar'"
+		:rules="rules"
+		:loading="isSubmitting"
+		@submit="handleFormSubmit"
+		@after-leave="onCloseModal"
+	/>
 
 	<div>
-		<div class="mb-5">
+		<div class="toolbar">
 			<n-button
-				class="add__button"
 				type="primary"
-				size="large"
 				strong
-				@click.prevent="handleAddCharButton"
 				:focusable="false"
+				@click.prevent="handleAddCharButton"
 			>
 				<template #icon>
-					<NIcon>
+					<n-icon>
 						<IconAdd />
-					</NIcon>
+					</n-icon>
 				</template>
 
 				Crie um novo personagem
 			</n-button>
 		</div>
 
-		<div class="empty__card center__container" v-if="chars.length === 0 ? true : false">
+		<div class="empty__card" v-if="chars.length === 0 && !isLoading">
 			<p>
 				Você ainda não tem um personagem cadastrado
 			</p>
@@ -320,113 +225,23 @@ fetchMyCharacters()
 			<n-spin size="large" />
 		</div>
 
-		<div v-else>
-			<div class="cards__wrapper">
-				<CardPersonagem
-					v-for="char in chars"
-					:key="char.id"
-					:char="char"
-					@edit="handleEditChar"
-					@delete="handleDeleteChar"
-				/>
-			</div>
+		<div v-else class="cards__wrapper">
+			<CardPersonagem
+				v-for="char in chars"
+				:key="char.id"
+				:char="char"
+				@edit="handleEditChar"
+				@delete="handleDeleteChar"
+			/>
 		</div>
 	</div>
 </template>
 
 <style scoped>
-.modal__container {
-	width: 90vw;
-	max-width: 900px;
-	padding: var(--space-6) var(--space-5);
-	border-radius: 16px;
-	background: var(--cor-papel-elevado);
-	border: 1px solid var(--cor-linha);
-	box-shadow: var(--shadow);
-}
-
-.modal__header {
+.toolbar {
 	display: flex;
-	align-items: center;
-	justify-content: space-between;
+	justify-content: flex-end;
 	margin-bottom: var(--space-5);
-}
-
-.modal__form {
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-5);
-}
-
-.modal__form-body {
-	display: flex;
-	grid-template-columns: 1fr;
-	gap: var(--space-3);
-	align-items: start;
-	justify-items: center;
-}
-
-.modal__fields {
-	min-width: 0;
-	width: 100%;
-	display: flex;
-	flex-direction: column;
-	gap: var(--space-1);
-}
-
-.modal__image {
-	width: 100%;
-}
-
-.modal__image :deep(.n-upload) {
-	width: 100%;
-}
-
-.modal__image :deep(.n-upload-trigger) {
-	width: 100%;
-}
-
-.modal__image-preview {
-	width: 100%;
-	aspect-ratio: 3 / 4;
-	border-radius: 12px;
-	overflow: hidden;
-	border: 1px solid var(--cor-linha);
-	background: var(--cor-papel);
-	cursor: pointer;
-	transition: border-color 0.2s ease;
-}
-
-.modal__image-preview:hover {
-	border-color: var(--cor-granada);
-}
-
-.modal__image-img {
-	width: 100%;
-	height: 100%;
-	object-fit: cover;
-	display: block;
-}
-
-.modal__image-placeholder {
-	width: 100%;
-	height: 100%;
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: var(--space-2);
-	color: var(--cor-tinta-fraca);
-	font-family: var(--font-sans);
-	font-size: 0.8rem;
-}
-
-@media (min-width: 860px) {
-	.modal__form-body {
-		grid-template-columns: 320px 1fr;
-		gap: var(--space-6);
-		justify-items: initial;
-	}
 }
 
 .center__container {
@@ -435,29 +250,31 @@ fetchMyCharacters()
 	justify-content: center;
 	align-items: center;
 
-	height: 100px;
+	height: 300px;
 }
 
 .empty__card {
+	display: flex;
+	flex: 1;
+	justify-content: center;
+	align-items: center;
+
+	height: 100px;
+
 	border-radius: 8px;
 	background: var(--cor-papel-elevado);
 	border: 1px solid var(--cor-linha);
 }
 
-.empty__card>p {
+.empty__card > p {
 	font-family: var(--font-sans);
 	font-size: 0.85rem;
 	color: var(--cor-granada);
 }
 
-.add__button {
-	border-radius: 10px;
-	box-shadow: var(--shadow);
-}
-
 .cards__wrapper {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(440px, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
 	gap: var(--space-5);
 }
 </style>
