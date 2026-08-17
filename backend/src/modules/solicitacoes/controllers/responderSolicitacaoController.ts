@@ -1,7 +1,10 @@
 import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
+import { PrismaAmizadesRepository } from '../../amizades/repositories/PrismaAmizadesRepository'
+import { PrismaMesasRepository } from '../../mesas/repositories/PrismaMesasRepository'
 import { PrismaNotificacoesRepository } from '../../notificacoes/repositories/PrismaNotificacoesRepository'
+import { PrismaPlayersRepository } from '../../players/repositories/PrismaPlayersRepository'
 import { PrismaSolicitacoesRepository } from '../repositories/PrismaSolicitacoesRepository'
 import { responderSolicitacaoSchema } from '../schemas/responderSolicitacao.schema'
 import { ResponderSolicitacaoService } from '../services/ResponderSolicitacaoService'
@@ -13,7 +16,16 @@ export class ResponderSolicitacaoController {
 
 			const solicitacoesRepository = new PrismaSolicitacoesRepository()
 			const notificacoesRepository = new PrismaNotificacoesRepository()
-			const responderSolicitacaoService = new ResponderSolicitacaoService(solicitacoesRepository, notificacoesRepository)
+			const amizadesRepository = new PrismaAmizadesRepository()
+			const playersRepository = new PrismaPlayersRepository()
+			const mesasRepository = new PrismaMesasRepository()
+			const responderSolicitacaoService = new ResponderSolicitacaoService(
+				solicitacoesRepository,
+				notificacoesRepository,
+				amizadesRepository,
+				playersRepository,
+				mesasRepository
+			)
 
 			const solicitacao = await responderSolicitacaoService.execute(data, req.user!.id)
 

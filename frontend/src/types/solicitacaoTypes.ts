@@ -1,6 +1,6 @@
 
 interface CreateSolicitacaoParams {
-	mesaId: number
+	mesaId?: number
 	destinoId: number
 	motivo: Motivos
 }
