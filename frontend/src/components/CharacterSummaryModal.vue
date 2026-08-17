@@ -1,14 +1,34 @@
 <script setup lang="ts">
-import { NModal, NButton, NIcon, NSpin } from 'naive-ui'
-import { ImageOutline as IconImage, CloseOutline as IconClose } from '@vicons/ionicons5'
+import { NModal, NButton, NIcon, NSpin, useDialog } from 'naive-ui'
+import { ImageOutline as IconImage, CloseOutline as IconClose, PersonRemoveOutline as IconExpel } from '@vicons/ionicons5'
 import type { CharactersResponse } from '@/types/charactersTypes'
 
-defineProps<{
+const props = defineProps<{
 	character: CharactersResponse | null
 	loading?: boolean
+	canExpel?: boolean
+	expelling?: boolean
 }>()
 
+const emit = defineEmits<{
+	expel: []
+}>()
+
+const dialog = useDialog()
+
 const show = defineModel<boolean>('show', { required: true })
+
+function expelButtonClick() {
+	dialog.warning({
+		title: 'Expulsar jogador',
+		content: `Tem certeza que deseja expulsar ${props.character?.name ?? 'este jogador'} da mesa?`,
+		positiveText: 'Expulsar',
+		negativeText: 'Cancelar',
+		onPositiveClick: () => {
+			emit('expel')
+		}
+	})
+}
 </script>
 
 <template>
@@ -59,6 +79,23 @@ const show = defineModel<boolean>('show', { required: true })
 						</p>
 					</div>
 				</div>
+
+				<div v-if="canExpel" class="modal__actions">
+					<n-button
+						type="error"
+						ghost
+						:loading="expelling"
+						:focusable="false"
+						@click="expelButtonClick"
+					>
+						<template #icon>
+							<n-icon>
+								<IconExpel />
+							</n-icon>
+						</template>
+						Expulsar jogador
+					</n-button>
+				</div>
 			</div>
 		</div>
 	</n-modal>
@@ -98,6 +135,14 @@ const show = defineModel<boolean>('show', { required: true })
 	flex-direction: column;
 	gap: var(--space-5);
 	align-items: start;
+}
+
+.modal__actions {
+	width: 100%;
+	display: flex;
+	justify-content: flex-end;
+	padding-top: var(--space-4);
+	border-top: 1px solid var(--cor-linha);
 }
 
 .modal__fields {
@@ -168,6 +213,10 @@ const show = defineModel<boolean>('show', { required: true })
 		grid-template-columns: 320px 1fr;
 		gap: var(--space-6);
 		justify-items: initial;
+	}
+
+	.modal__actions {
+		grid-column: 1 / -1;
 	}
 }
 </style>

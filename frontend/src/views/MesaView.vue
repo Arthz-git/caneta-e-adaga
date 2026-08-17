@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { getMesaInfo, updateMesa } from '@/services/mesas.service'
 import { getCharacterById } from '@/services/characters.service'
+import { deletePlayer } from '@/services/players.service'
 import type { GetMesaInfoResponse } from '@/types/mesaTypes'
 import type { CharactersResponse } from '@/types/charactersTypes'
 import {
@@ -68,6 +69,8 @@ const posts = ref<PostListItem[]>([])
 const showCharacterModal = ref(false)
 const isLoadingCharacter = ref(false)
 const selectedCharacter = ref<CharactersResponse | null>(null)
+const selectedPlayerId = ref<number | null>(null)
+const isExpellingPlayer = ref(false)
 const showInviteFriendModal = ref(false)
 const lastUpdatedAt = ref(new Date())
 let autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null
@@ -92,6 +95,10 @@ const mesaMemberUserIds = computed(() => mesa.value?.players.map(player => playe
 const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
 const occupiedPlayerSlots = computed(() => mesa.value?.players.filter(player => player.role !== 'SPECTATOR').length ?? 1)
 const currentPlayer = computed(() => mesa.value?.players.find(player => player.userId === auth.user?.id))
+const selectedPlayer = computed(() => mesa.value?.players.find(player => player.id === selectedPlayerId.value))
+const canExpelSelectedPlayer = computed(() => (
+	isOwnerMesa.value && !!selectedPlayer.value && selectedPlayer.value.userId !== auth.user?.id
+))
 const allowedPostTypes = computed<PostType[]>(() => {
 	if (currentPlayer.value?.role === 'PLAYER') return PLAYER_ALLOWED_POST_TYPES
 	if (currentPlayer.value?.role === 'SPECTATOR') return SPECTATOR_ALLOWED_POST_TYPES
@@ -126,10 +133,11 @@ function configButtonClick() {
 	showModalConfigMesa.value = true
 }
 
-async function playerCardClick(userCharacterId: number | null) {
+async function playerCardClick(playerId: number, userCharacterId: number | null) {
 	if (!userCharacterId) return
 
 	try {
+		selectedPlayerId.value = playerId
 		showCharacterModal.value = true
 		isLoadingCharacter.value = true
 
@@ -142,6 +150,27 @@ async function playerCardClick(userCharacterId: number | null) {
 	}
 	finally {
 		isLoadingCharacter.value = false
+	}
+}
+
+async function expelSelectedPlayer() {
+	if (!selectedPlayerId.value || isExpellingPlayer.value) return
+
+	try {
+		isExpellingPlayer.value = true
+
+		await deletePlayer(selectedPlayerId.value)
+
+		message.success('Jogador expulso da mesa com sucesso')
+		showCharacterModal.value = false
+		await getMesa()
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível expulsar o jogador. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isExpellingPlayer.value = false
 	}
 }
 
@@ -362,6 +391,9 @@ getMesa()
 			v-model:show="showCharacterModal"
 			:character="selectedCharacter"
 			:loading="isLoadingCharacter"
+			:can-expel="canExpelSelectedPlayer"
+			:expelling="isExpellingPlayer"
+			@expel="expelSelectedPlayer"
 		/>
 
 		<InviteModal
@@ -401,7 +433,7 @@ getMesa()
 				:key="player.id"
 				:role="player.userCharacterId ? 'button' : undefined"
 				:tabindex="player.userCharacterId ? 0 : undefined"
-				@click="playerCardClick(player.userCharacterId)"
+				@click="playerCardClick(player.id, player.userCharacterId)"
 			>
 				<div class="player__card-avatar">
 					<img
