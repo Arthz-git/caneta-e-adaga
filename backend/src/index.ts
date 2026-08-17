@@ -14,6 +14,7 @@ import { playerRoutes } from './modules/players/routes/players.routes'
 import { solicitacaoRoutes } from './modules/solicitacoes/routes/solicitacoes.routes'
 import { postRoutes } from './modules/posts/routes/posts.routes'
 import { notificacaoRoutes } from './modules/notificacoes/routes/notificacoes.routes'
+import { amizadeRoutes } from './modules/amizades/routes/amizades.routes'
 
 const app = express()
 
@@ -39,6 +40,7 @@ app.use('/players', playerRoutes)
 app.use('/solicitacoes', solicitacaoRoutes)
 app.use('/posts', postRoutes)
 app.use('/notificacoes', notificacaoRoutes)
+app.use('/amizades', amizadeRoutes)
 
 const openApiDocument = generateOpenApiDocument()
 

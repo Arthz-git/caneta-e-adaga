@@ -7,6 +7,7 @@ import '../../modules/players/docs/players.openapi'
 import '../../modules/solicitacoes/docs/solicitacoes.openapi'
 import '../../modules/posts/docs/posts.openapi'
 import '../../modules/notificacoes/docs/notificacoes.openapi'
+import '../../modules/amizades/docs/amizades.openapi'
 import { openApiRegistry } from './registry'
 
 export function generateOpenApiDocument() {

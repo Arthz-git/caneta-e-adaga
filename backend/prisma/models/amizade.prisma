@@ -1,0 +1,12 @@
+model Amizade {
+    id        Int      @id @default(autoincrement())
+    userAId   Int
+    userA     User     @relation("AmizadeA", fields: [userAId], references: [id], onDelete: Cascade)
+    userBId   Int
+    userB     User     @relation("AmizadeB", fields: [userBId], references: [id], onDelete: Cascade)
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+
+    @@unique([userAId, userBId])
+    @@map("amizades")
+}

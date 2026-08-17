@@ -2,16 +2,16 @@ import { hash } from 'bcryptjs'
 import { prisma } from '../src/database/prisma-client'
 
 const USERS = [
-	'Arthur',
-	'Beatriz',
-	'Carlos',
-	'Duda',
-	'Eduardo',
-	'Fernanda',
-	'Gabriel',
-	'Helena',
-	'Igor',
-	'Julia'
+	'Xuxu',
+	'X12',
+	'Duduka',
+	'pedrinhodk',
+	'Abzu',
+	'CAiXA',
+	'Mewmew',
+	'Cl3',
+	'JohnGreen',
+	'Spy'
 ]
 
 const CHARACTERS: { name: string; description: string; lore: string; imageUrl: string }[] = [
@@ -187,7 +187,7 @@ function pick<T>(arr: T[], index: number): T {
 async function main() {
 	console.log('Limpando dados existentes...')
 	await prisma.$executeRawUnsafe(
-		'TRUNCATE TABLE "posts", "players", "characters", "solicitacoes", "notificacoes", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
+		'TRUNCATE TABLE "posts", "players", "characters", "solicitacoes", "notificacoes", "amizades", "refresh_tokens", "mesas", "users" RESTART IDENTITY CASCADE'
 	)
 
 	console.log('Criando usuários...')
@@ -340,7 +340,7 @@ async function main() {
 				userId: player.userId,
 				mesaId: mesa.id,
 				type: 'CHARACTER',
-				characterId: player.userCharacterId,
+				characterId: player.userCharacterId!,
 				text: pick(CHARACTER_TEXTS, mesaIndex + playerIndex)
 			})
 		})
@@ -413,6 +413,19 @@ async function main() {
 
 	const solicitacoes = await Promise.all(
 		solicitacoesSeed.map((solicitacao) => prisma.solicitacao.create({ data: solicitacao }))
+	)
+
+	console.log('Criando amizades...')
+	const amizadesSeed: { userAId: number; userBId: number }[] = [
+		// amizade originada da solicitação de PEDIDO_AMIZADE aceita entre users[3] e users[2]
+		{ userAId: users[2].id, userBId: users[3].id },
+		{ userAId: users[0].id, userBId: users[4].id },
+		{ userAId: users[0].id, userBId: users[5].id },
+		{ userAId: users[1].id, userBId: users[6].id }
+	]
+
+	const amizades = await Promise.all(
+		amizadesSeed.map((amizade) => prisma.amizade.create({ data: amizade }))
 	)
 
 	console.log('Criando notificações...')
@@ -568,7 +581,7 @@ async function main() {
 	})
 
 	console.log(
-		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length + 1} mesas, ${players.length + 1 + paginationPlayers.length} vínculos de jogadores, ${postsWithTimestamps.length + whisperPostsData.length + paginationPostsData.length} posts (${whisperPostsData.length} privados, ${paginationPostsData.length} na mesa de testes), ${solicitacoes.length} solicitações, ${notificacoesData.length} notificações.`
+		`Seed concluído: ${users.length} usuários, ${characters.length} personagens, ${mesas.length + 1} mesas, ${players.length + 1 + paginationPlayers.length} vínculos de jogadores, ${postsWithTimestamps.length + whisperPostsData.length + paginationPostsData.length} posts (${whisperPostsData.length} privados, ${paginationPostsData.length} na mesa de testes), ${solicitacoes.length} solicitações, ${amizades.length} amizades, ${notificacoesData.length} notificações.`
 	)
 }
 
