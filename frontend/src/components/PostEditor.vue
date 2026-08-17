@@ -6,6 +6,7 @@ import StarterKit from '@tiptap/starter-kit'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import Highlight from '@tiptap/extension-highlight'
+import Image from '@tiptap/extension-image'
 import Mention from '@tiptap/extension-mention'
 import type { SuggestionProps, SuggestionKeyDownProps } from '@tiptap/suggestion'
 import tippy, { type Instance as TippyInstance } from 'tippy.js'
@@ -42,6 +43,7 @@ const editor = useEditor({
 		TextStyle,
 		Color,
 		Highlight.configure({ multicolor: true }),
+		Image.configure({ HTMLAttributes: { class: 'post-editor__image' } }),
 		Mention.configure({
 			HTMLAttributes: { class: 'post-editor__mention' },
 			suggestion: {

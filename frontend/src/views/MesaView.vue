@@ -251,7 +251,11 @@ async function getMesa() {
 }
 
 async function refreshMesaData() {
-	await postsTimeline.value?.reload()
+	const isMesaUpToDate = await postsTimeline.value?.isUpToDate()
+	if (isMesaUpToDate === false) {
+		await postsTimeline.value?.reload()
+	}
+
 	lastUpdatedAt.value = new Date()
 }
 

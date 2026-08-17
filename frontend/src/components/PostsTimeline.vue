@@ -34,8 +34,20 @@ const isLoadingInitial = ref(false)
 const isLoadingMore = ref(false)
 
 const scrollEl = ref<HTMLDivElement | null>(null)
+const lightboxSrc = ref<string | null>(null)
 
 const hasOlderPosts = () => currentPage.value > 1
+
+function handleContentClick(event: MouseEvent) {
+	const target = event.target as HTMLElement
+	if (target.tagName === 'IMG') {
+		lightboxSrc.value = (target as HTMLImageElement).src
+	}
+}
+
+function closeLightbox() {
+	lightboxSrc.value = null
+}
 
 const narrativePosts = computed(() => posts.value.filter(post => post.type !== 'OOC' && post.type !== 'SYSTEM'))
 
@@ -156,6 +168,7 @@ defineExpose({
 			v-else
 			ref="scrollEl"
 			class="posts-timeline__scroll"
+			@click="handleContentClick"
 		>
 			<div
 				v-if="hasOlderPosts()"
@@ -287,6 +300,16 @@ defineExpose({
 				</template>
 			</div>
 		</div>
+
+		<Teleport to="body">
+			<div
+				v-if="lightboxSrc"
+				class="posts-lightbox"
+				@click="closeLightbox"
+			>
+				<img :src="lightboxSrc" class="posts-lightbox__img" @click.stop>
+			</div>
+		</Teleport>
 	</div>
 </template>
 
@@ -385,6 +408,39 @@ defineExpose({
 
 .post-narrator__text :deep(p) {
 	margin: 0;
+}
+
+.post-narrator__text :deep(img),
+.post-bubble__text :deep(img) {
+	max-width: 100%;
+	max-height: 320px;
+	border-radius: 8px;
+	margin-top: var(--space-1);
+	cursor: zoom-in;
+}
+
+.posts-lightbox {
+	position: fixed;
+	inset: 0;
+	z-index: 1000;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	padding: var(--space-6);
+
+	background: rgba(0, 0, 0, 0.75);
+	cursor: zoom-out;
+}
+
+.posts-lightbox__img {
+	max-width: 100%;
+	max-height: 100%;
+
+	border-radius: 8px;
+	box-shadow: var(--shadow);
+	cursor: default;
 }
 
 .post-narrator__time {

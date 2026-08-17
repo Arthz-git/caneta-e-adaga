@@ -38,6 +38,15 @@ async function getPaginatedPosts(mesaId: number, params: GetPaginatedPostsParams
 	return posts.data
 }
 
+async function uploadPostImage(image: File) {
+	const formData = new FormData()
+	formData.append('image', image)
+
+	const response = await api.post<{ url: string }>('/posts/image', formData)
+
+	return response.data.url
+}
+
 async function getLastPostId(mesaId: number) {
 	const { meta } = await getPaginatedPosts(mesaId, { page: 1, limit: 1 })
 	if (meta.total === 0) return null
@@ -50,5 +59,6 @@ async function getLastPostId(mesaId: number) {
 export {
 	createPost,
 	getPaginatedPosts,
-	getLastPostId
+	getLastPostId,
+	uploadPostImage
 }

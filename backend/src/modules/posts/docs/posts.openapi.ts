@@ -66,6 +66,43 @@ openApiRegistry.registerPath({
 })
 
 openApiRegistry.registerPath({
+	method: 'post',
+	path: '/posts/image',
+	tags: ['Posts'],
+	summary: 'Faz upload de uma imagem para inserir no conteúdo de um post',
+	description: 'Recebe um arquivo de imagem (campo "image") via multipart/form-data e retorna a URL pública para ser embutida no texto do post.',
+	security: [{ bearerAuth: [] }],
+	request: {
+		body: {
+			content: {
+				'multipart/form-data': {
+					schema: z.object({
+						image: z.string().openapi({ type: 'string', format: 'binary' })
+					})
+				}
+			}
+		}
+	},
+	responses: {
+		201: {
+			description: 'Imagem enviada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.object({ url: z.string() }),
+					example: { url: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/posts/exemplo.jpg' }
+				}
+			}
+		},
+		400: {
+			description: 'Nenhuma imagem enviada ou arquivo inválido'
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
 	method: 'get',
 	path: '/posts/mesaId/{mesaId}',
 	tags: ['Posts'],

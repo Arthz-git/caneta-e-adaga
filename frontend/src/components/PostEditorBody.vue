@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { NIcon, NPopover, NCheckbox } from 'naive-ui'
+import { computed, ref } from 'vue'
+import { NIcon, NPopover, NCheckbox, useMessage } from 'naive-ui'
 import { EditorContent, type Editor } from '@tiptap/vue-3'
 import {
 	ListOutline as IconList,
@@ -8,9 +8,11 @@ import {
 	AtOutline as IconAt,
 	ExpandOutline as IconExpand,
 	ContractOutline as IconContract,
-	PeopleOutline as IconPeople
+	PeopleOutline as IconPeople,
+	ImageOutline as IconImage
 } from '@vicons/ionicons5'
 import { POST_TYPE_LABELS, type PostType } from '@/types/postTypes'
+import { uploadPostImage } from '@/services/posts.service'
 
 // ----------------------------------------------------------------------
 
@@ -63,6 +65,36 @@ function setHighlightColor(event: Event) {
 
 function insertMentionTrigger() {
 	props.editor.chain().focus().insertContent('@').run()
+}
+
+const message = useMessage()
+const imageInput = ref<HTMLInputElement | null>(null)
+const isUploadingImage = ref(false)
+
+function triggerImageUpload() {
+	imageInput.value?.click()
+}
+
+async function handleImageSelected(event: Event) {
+	const input = event.target as HTMLInputElement
+	const file = input.files?.[0]
+	input.value = ''
+
+	if (!file) return
+
+	try {
+		isUploadingImage.value = true
+
+		const url = await uploadPostImage(file)
+		props.editor.chain().focus().setImage({ src: url }).run()
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível enviar a imagem. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isUploadingImage.value = false
+	}
 }
 </script>
 
@@ -124,6 +156,26 @@ function insertMentionTrigger() {
 					<IconAt />
 				</n-icon>
 			</button>
+
+			<button
+				type="button"
+				class="post-editor__toolbar-btn"
+				title="Inserir imagem"
+				:disabled="isUploadingImage"
+				@click="triggerImageUpload"
+			>
+				<n-icon>
+					<IconImage />
+				</n-icon>
+			</button>
+
+			<input
+				ref="imageInput"
+				type="file"
+				accept="image/*"
+				class="post-editor__image-input"
+				@change="handleImageSelected"
+			>
 
 			<div class="post-editor__toolbar-divider" />
 
@@ -260,6 +312,15 @@ function insertMentionTrigger() {
 	color: var(--cor-latao);
 }
 
+.post-editor__toolbar-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+.post-editor__image-input {
+	display: none;
+}
+
 .post-editor__type-select {
 	height: 28px;
 	padding: 0 var(--space-2);
@@ -367,6 +428,13 @@ function insertMentionTrigger() {
 
 .post-editor :deep(.post-editor__content p) {
 	margin: 0;
+}
+
+.post-editor :deep(.post-editor__image) {
+	max-width: 100%;
+	max-height: 320px;
+	border-radius: 8px;
+	margin-top: var(--space-2);
 }
 
 .post-editor :deep(.post-editor__mention) {
