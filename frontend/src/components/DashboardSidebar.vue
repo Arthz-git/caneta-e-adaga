@@ -7,7 +7,8 @@ import {
 	HomeOutline as IconHome,
 	PeopleOutline as IconUsers,
 	GridOutline as IconTable,
-	MailOutline as IconMail
+	MailOutline as IconMail,
+	PersonOutline as IconFriends
 } from '@vicons/ionicons5'
 
 const route = useRoute()
@@ -33,6 +34,11 @@ const menuOptions: MenuOption[] = [
 		label: () => h(RouterLink, { to: { name: 'solicitacoes' } }, { default: () => 'Solicitações' }),
 		key: 'solicitacoes',
 		icon: () => h(NIcon, null, { default: () => h(IconMail) })
+	},
+	{
+		label: () => h(RouterLink, { to: { name: 'amizades' } }, { default: () => 'Amigos' }),
+		key: 'amizades',
+		icon: () => h(NIcon, null, { default: () => h(IconFriends) })
 	}
 ]
 
