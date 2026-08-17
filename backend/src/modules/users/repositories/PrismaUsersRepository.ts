@@ -14,4 +14,13 @@ export class PrismaUsersRepository implements IUsersRepository {
 	async get(id: number) {
 		return prisma.user.findUnique({ where: { id } })
 	}
+
+	async searchByName(name: string) {
+		return prisma.user.findMany({
+			where: { name: { contains: name, mode: 'insensitive' } },
+			select: { id: true, name: true },
+			orderBy: { name: 'asc' },
+			take: 10
+		})
+	}
 }

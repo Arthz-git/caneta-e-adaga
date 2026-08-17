@@ -1,7 +1,10 @@
+import { z } from 'zod'
 import { openApiRegistry } from '../../../shared/openapi/registry'
 import { createUserSchema } from '../schemas/createUser.schema'
 import { getUserByEmailSchema } from '../schemas/getUserByEmail.schema'
 import { getUserByIdSchema } from '../schemas/getUserById.schema'
+import { searchUsersByNameSchema } from '../schemas/searchUsersByName.schema'
+import { userSearchResultSchema } from '../schemas/userSearchResult.schema'
 import { userResponseSchema } from '../schemas/userResponse.schema'
 
 const userResponseExample = {
@@ -76,6 +79,35 @@ openApiRegistry.registerPath({
 		},
 		404: {
 			description: 'Usuário não encontrado'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
+	method: 'get',
+	path: '/users/search',
+	tags: ['Users'],
+	summary: 'Busca usuários pelo nome (correspondência parcial)',
+	description: 'Retorna até 10 usuários cujo nome contenha o termo pesquisado.',
+	security: [{ bearerAuth: [] }],
+	request: {
+		query: searchUsersByNameSchema
+	},
+	responses: {
+		200: {
+			description: 'Lista de usuários retornada com sucesso',
+			content: {
+				'application/json': {
+					schema: z.array(userSearchResultSchema),
+					example: [{ id: 1, name: 'Fulano de Tal' }]
+				}
+			}
+		},
+		400: {
+			description: 'Dados inválidos'
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
 		}
 	}
 })
