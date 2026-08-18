@@ -58,4 +58,11 @@ export class PrismaPostsRepository implements IPostsRepository {
 
 		return { data: posts.map(mapPost), total }
 	}
+
+	async getLastByMesaId(mesaId: number) {
+		return prisma.post.findFirst({
+			where: { mesaId },
+			orderBy: { createdAt: 'desc' }
+		})
+	}
 }

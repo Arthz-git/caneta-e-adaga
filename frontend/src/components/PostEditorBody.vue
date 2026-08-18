@@ -265,15 +265,18 @@ async function handleImageSelected(event: Event) {
 .post-editor {
 	display: flex;
 	flex-direction: column;
-	flex: 1;
-	min-height: 0;
 	width: 100%;
-	height: 100%;
 
 	background: var(--cor-papel);
 	border: 1px solid var(--cor-linha);
 	border-radius: 10px;
 	overflow: hidden;
+}
+
+.post-editor--expanded {
+	flex: 1;
+	min-height: 0;
+	height: 100%;
 }
 
 .post-editor__toolbar {
@@ -406,13 +409,18 @@ async function handleImageSelected(event: Event) {
 }
 
 .post-editor__scroll {
-	flex: 1;
-	min-height: 0;
+	max-height: 160px;
 	overflow-y: auto;
 }
 
+.post-editor--expanded .post-editor__scroll {
+	flex: 1;
+	min-height: 0;
+	max-height: none;
+}
+
 .post-editor :deep(.post-editor__content) {
-	height: 100%;
+	min-height: 1.5em;
 	padding: var(--space-3);
 
 	font-family: var(--font-sans);
@@ -422,6 +430,7 @@ async function handleImageSelected(event: Event) {
 }
 
 .post-editor--expanded :deep(.post-editor__content) {
+	height: 100%;
 	font-size: 0.75rem;
 	padding: var(--space-5);
 }

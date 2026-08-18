@@ -1,3 +1,4 @@
+import { differenceInHours } from 'date-fns'
 import { AppError } from '../../../shared/errors/AppError'
 import type { IMesasRepository } from '../../mesas/repositories/IMesasRepository'
 import type { INotificacoesRepository } from '../../notificacoes/repositories/INotificacoesRepository'
@@ -56,15 +57,22 @@ export class CreatePostService {
 
 		const mesaPlayers = await this.playersRepository.getPlayersByMesaId(data.mesaId)
 
+		const lastPost = await this.postsRepository.getLastByMesaId(data.mesaId)
+		const shouldNotify = !lastPost || differenceInHours(new Date(), lastPost.createdAt) > 12
+
+		// O post é visível para todos
 		if (!data.visiblePlayerIds) {
 			const post = await this.postsRepository.create(data)
 
-			const recipients = mesaPlayers.filter(mesaPlayer => mesaPlayer.userId !== data.userId)
-			await this.notifyRecipients('NOVO_POST_MESA', `Nova mensagem na mesa "${mesa.title}"`, post.id, mesa.id, data.userId, recipients)
+			if (shouldNotify) {
+				const recipients = mesaPlayers.filter(mesaPlayer => mesaPlayer.userId !== data.userId)
+				await this.notifyRecipients('NOVO_POST_MESA', `Nova mensagem na mesa "${mesa.title}"`, post.id, mesa.id, data.userId, recipients)
+			}
 
 			return post
 		}
 
+		// A partir daqui, o post é secreto
 		const mesaPlayerIds = new Set(mesaPlayers.map(mesaPlayer => mesaPlayer.id))
 
 		const invalidPlayerId = data.visiblePlayerIds.find(playerId => !mesaPlayerIds.has(playerId))
@@ -79,8 +87,10 @@ export class CreatePostService {
 
 		const post = await this.postsRepository.create({ ...data, visiblePlayerIds: [...visiblePlayerIds] })
 
-		const recipients = mesaPlayers.filter(mesaPlayer => visiblePlayerIds.has(mesaPlayer.id) && mesaPlayer.userId !== data.userId)
-		await this.notifyRecipients('POST_PRIVADO', `Você recebeu uma mensagem privada na mesa "${mesa.title}"`, post.id, mesa.id, data.userId, recipients)
+		if (shouldNotify) {
+			const recipients = mesaPlayers.filter(mesaPlayer => visiblePlayerIds.has(mesaPlayer.id) && mesaPlayer.userId !== data.userId)
+			await this.notifyRecipients('POST_PRIVADO', `Você recebeu uma mensagem privada na mesa "${mesa.title}"`, post.id, mesa.id, data.userId, recipients)
+		}
 
 		return post
 	}

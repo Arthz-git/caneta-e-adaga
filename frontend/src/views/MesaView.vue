@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { getMesaInfo, updateMesa } from '@/services/mesas.service'
 import { getCharacterById } from '@/services/characters.service'
-import { deletePlayer } from '@/services/players.service'
+import { createPlayer, deletePlayer } from '@/services/players.service'
 import type { GetMesaInfoResponse } from '@/types/mesaTypes'
 import type { CharactersResponse } from '@/types/charactersTypes'
 import {
 	useMessage,
+	useDialog,
 	NIcon,
 	NButton,
 	NSpin
@@ -18,7 +19,9 @@ import {
 	PersonOutline as IconPerson,
 	AddOutline as IconAdd,
 	SendOutline as IconSend,
-	RefreshOutline as IconRefresh
+	RefreshOutline as IconRefresh,
+	EyeOutline as IconEye,
+	PersonRemoveOutline as IconExpel
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
@@ -45,6 +48,7 @@ const props = defineProps<{
 
 const router = useRouter()
 const message = useMessage()
+const dialog = useDialog()
 const auth = useAuthStore()
 
 const mesa = ref<GetMesaInfoResponse | null>(null)
@@ -71,6 +75,8 @@ const isLoadingCharacter = ref(false)
 const selectedCharacter = ref<CharactersResponse | null>(null)
 const selectedPlayerId = ref<number | null>(null)
 const isExpellingPlayer = ref(false)
+const isJoiningAsSpectator = ref(false)
+const expellingSpectatorId = ref<number | null>(null)
 const showInviteFriendModal = ref(false)
 const lastUpdatedAt = ref(new Date())
 let autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null
@@ -90,11 +96,13 @@ const targetablePlayers = computed(() => (
 			name: player.role === 'MASTER' ? `${player.user.name} (Mestre)` : player.user.name
 		})) ?? []
 ))
-const vagasLivres = computed(() => Math.max(mesa.value!.maxPlayers - mesa.value!.players.length, 0))
+const vagasLivres = computed(() => Math.max(mesa.value!.maxPlayers - occupiedPlayerSlots.value, 0))
 const mesaMemberUserIds = computed(() => mesa.value?.players.map(player => player.userId) ?? [])
 const espectadores = computed(() => mesa.value?.players.filter(player => player.role === 'SPECTATOR') ?? [])
 const occupiedPlayerSlots = computed(() => mesa.value?.players.filter(player => player.role !== 'SPECTATOR').length ?? 1)
 const currentPlayer = computed(() => mesa.value?.players.find(player => player.userId === auth.user?.id))
+const isMesaMember = computed(() => !!currentPlayer.value)
+const canJoinAsSpectator = computed(() => !isMesaMember.value && !!mesa.value?.allowSpectators)
 const selectedPlayer = computed(() => mesa.value?.players.find(player => player.id === selectedPlayerId.value))
 const canExpelSelectedPlayer = computed(() => (
 	isOwnerMesa.value && !!selectedPlayer.value && selectedPlayer.value.userId !== auth.user?.id
@@ -171,6 +179,59 @@ async function expelSelectedPlayer() {
 	}
 	finally {
 		isExpellingPlayer.value = false
+	}
+}
+
+function expelSpectatorClick(spectatorId: number, spectatorName: string) {
+	if (expellingSpectatorId.value) return
+
+	dialog.warning({
+		title: 'Expulsar espectador',
+		content: `Tem certeza que deseja expulsar ${spectatorName} da mesa?`,
+		positiveText: 'Expulsar',
+		negativeText: 'Cancelar',
+		onPositiveClick: async () => {
+			try {
+				expellingSpectatorId.value = spectatorId
+
+				await deletePlayer(spectatorId)
+
+				message.success('Espectador expulso da mesa com sucesso')
+				await getMesa()
+			}
+			catch (err) {
+				const errorMessage = err instanceof Error ? err.message : 'Não foi possível expulsar o espectador. Tente novamente.'
+				message.error(errorMessage)
+			}
+			finally {
+				expellingSpectatorId.value = null
+			}
+		}
+	})
+}
+
+async function joinAsSpectatorClick() {
+	if (!mesa.value || !auth.user || isJoiningAsSpectator.value) return
+
+	try {
+		isJoiningAsSpectator.value = true
+
+		await createPlayer({
+			userId: auth.user.id,
+			mesaId: mesa.value.id,
+			role: 'SPECTATOR',
+			userCharacterId: null
+		})
+
+		message.success('Você entrou na mesa como espectador')
+		await getMesa()
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível entrar como espectador. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isJoiningAsSpectator.value = false
 	}
 }
 
@@ -408,7 +469,7 @@ getMesa()
 
 		<div class="left__panel">
 			<p class="left__panel__title mb-3">
-				Em torno da mesa ({{ mesa.players.length }}/{{ mesa.maxPlayers }})
+				Em torno da mesa ({{ occupiedPlayerSlots }}/{{ mesa.maxPlayers }})
 			</p>
 
 			<div
@@ -486,7 +547,7 @@ getMesa()
 				</div>
 			</div>
 
-			<div v-if="espectadores.length" class="spectators__section">
+			<div v-if="espectadores.length || canJoinAsSpectator" class="spectators__section">
 				<p class="spectators__title">
 					Espectadores
 				</p>
@@ -505,7 +566,44 @@ getMesa()
 					<span class="spectator__card-name">
 						{{ spectator.user.name }}
 					</span>
+
+					<n-button
+						v-if="isOwnerMesa"
+						class="spectator__card-expel"
+						:class="{ 'spectator__card-expel--loading': expellingSpectatorId === spectator.id }"
+						quaternary
+						circle
+						size="tiny"
+						:focusable="false"
+						:loading="expellingSpectatorId === spectator.id"
+						aria-label="Expulsar espectador"
+						@click.stop="expelSpectatorClick(spectator.id, spectator.user.name)"
+					>
+						<template #icon>
+							<n-icon>
+								<IconExpel />
+							</n-icon>
+						</template>
+					</n-button>
 				</div>
+
+				<button
+					v-if="canJoinAsSpectator"
+					type="button"
+					class="spectator__card spectator__card--join"
+					:disabled="isJoiningAsSpectator"
+					@click.prevent="joinAsSpectatorClick"
+				>
+					<div class="spectator__card-avatar spectator__card-avatar--join">
+						<n-icon>
+							<IconEye />
+						</n-icon>
+					</div>
+
+					<span class="spectator__card-name">
+						{{ isJoiningAsSpectator ? 'Entrando...' : 'Entrar como espectador' }}
+					</span>
+				</button>
 			</div>
 		</div>
 
@@ -565,7 +663,7 @@ getMesa()
 		'left__panel bottom__input right__panel'
 	;
 	grid-template-columns: 280px 1fr auto;
-	grid-template-rows: 80px 1fr 120px;
+	grid-template-rows: 80px 1fr auto;
 	height: 100%;
 
 	border-radius: 16px;
@@ -862,9 +960,62 @@ getMesa()
 }
 
 .spectator__card-name {
+	flex: 1;
+	min-width: 0;
+
 	font-family: var(--font-sans);
 	font-size: 0.7rem;
 	color: var(--cor-tinta-fraca);
+
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.spectator__card-expel {
+	flex-shrink: 0;
+
+	opacity: 0;
+	color: var(--cor-tinta-fraca);
+	transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.spectator__card:hover .spectator__card-expel,
+.spectator__card-expel--loading {
+	opacity: 1;
+}
+
+.spectator__card-expel:hover {
+	color: var(--cor-granada);
+}
+
+.spectator__card--join {
+	width: 100%;
+
+	background: transparent;
+	border: 1px dashed var(--cor-linha);
+	cursor: pointer;
+	opacity: 1;
+}
+
+.spectator__card--join:hover:not(:disabled) {
+	border-color: var(--cor-latao);
+	background: var(--cor-papel);
+}
+
+.spectator__card--join:hover:not(:disabled) .spectator__card-avatar--join,
+.spectator__card--join:hover:not(:disabled) .spectator__card-name {
+	border-color: var(--cor-latao);
+	color: var(--cor-latao);
+}
+
+.spectator__card--join:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}
+
+.spectator__card-avatar--join {
+	border-style: dashed;
 }
 
 .player__card--empty:hover .player__card-avatar--empty {
@@ -888,7 +1039,7 @@ getMesa()
 .bottom__input {
 	grid-area: bottom__input;
 	display: flex;
-	min-height: 0;
+	min-height: 120px;
 	overflow: hidden;
 
 	padding: var(--space-2) var(--space-4);

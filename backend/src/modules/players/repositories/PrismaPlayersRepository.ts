@@ -60,7 +60,7 @@ export class PrismaPlayersRepository implements IPlayersRepository {
 		})
 	}
 
-	async updateRoleWithMasterCheck({ id, ...data }: UpdateRolePlayerDTO, mesaId: number) {
+	async updateRoleWithMasterCheck({ id, ...data }: UpdateRolePlayerDTO, mesaId: number, maxPlayers: number) {
 		return prisma.$transaction(async tx => {
 			// trava a linha da mesa até o fim da transação, serializando trocas de role concorrentes
 			await tx.$queryRaw`SELECT id FROM mesas WHERE id = ${mesaId} FOR UPDATE`
@@ -72,6 +72,16 @@ export class PrismaPlayersRepository implements IPlayersRepository {
 
 				if (existingMaster) {
 					throw new AppError('Esta mesa já possui um mestre', 403)
+				}
+			}
+
+			if (data.role !== 'SPECTATOR') {
+				const countOtherOccupiedSlots = await tx.players.count({
+					where: { mesaId, role: { not: 'SPECTATOR' }, id: { not: id } }
+				})
+
+				if (countOtherOccupiedSlots >= maxPlayers) {
+					throw new AppError('Esta mesa está lotada', 403)
 				}
 			}
 

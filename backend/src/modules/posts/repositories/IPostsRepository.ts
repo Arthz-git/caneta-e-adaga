@@ -16,4 +16,5 @@ export interface IPostsRepository {
 	create(data: CreatePostDTO): Promise<PostModel>
 	getAllByMesaId(mesaId: number): Promise<PostResponseRepository[]>
 	getPaginatedByMesaId(mesaId: number, params: GetAllPaginatedParams): Promise<GetAllPaginatedResult>
+	getLastByMesaId(mesaId: number): Promise<PostModel | null>
 }

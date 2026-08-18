@@ -11,7 +11,7 @@ export interface IPlayersRepository {
 	get(id: number): Promise<PlayersModel | null>
 	getByUserAndMesa(userId: number, mesaId: number): Promise<PlayersModel | null>
 	updateRole(data: UpdateRolePlayerDTO): Promise<PlayersModel>
-	updateRoleWithMasterCheck(data: UpdateRolePlayerDTO, mesaId: number): Promise<PlayersModel>
+	updateRoleWithMasterCheck(data: UpdateRolePlayerDTO, mesaId: number, maxPlayers: number): Promise<PlayersModel>
 	updateCharacter(data: UpdateCharacterPlayerDTO): Promise<PlayersModel>
 	getPlayersByMesaId(mesaId: number): Promise<PlayersModel[]>
 	updateFavorite(data: UpdateFavoritePlayerDTO): Promise<PlayersModel>
