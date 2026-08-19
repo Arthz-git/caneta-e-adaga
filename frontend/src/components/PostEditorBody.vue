@@ -9,10 +9,12 @@ import {
 	ExpandOutline as IconExpand,
 	ContractOutline as IconContract,
 	PeopleOutline as IconPeople,
-	ImageOutline as IconImage
+	ImageOutline as IconImage,
+	DiceOutline as IconDice
 } from '@vicons/ionicons5'
 import { POST_TYPE_LABELS, type PostType } from '@/types/postTypes'
 import { uploadPostImage } from '@/services/posts.service'
+import DiceRollModal from './DiceRollModal.vue'
 
 // ----------------------------------------------------------------------
 
@@ -65,6 +67,13 @@ function setHighlightColor(event: Event) {
 
 function insertMentionTrigger() {
 	props.editor.chain().focus().insertContent('@').run()
+}
+
+const showDiceModal = ref(false)
+
+function insertDiceRoll(text: string) {
+	props.editor.chain().focus().insertContent(text).run()
+	postType.value = 'SYSTEM'
 }
 
 const message = useMessage()
@@ -177,6 +186,17 @@ async function handleImageSelected(event: Event) {
 				@change="handleImageSelected"
 			>
 
+			<button
+				type="button"
+				class="post-editor__toolbar-btn"
+				title="Jogar dado"
+				@click="showDiceModal = true"
+			>
+				<n-icon>
+					<IconDice />
+				</n-icon>
+			</button>
+
 			<div class="post-editor__toolbar-divider" />
 
 			<label class="post-editor__toolbar-btn post-editor__color-swatch" title="Cor da letra">
@@ -257,6 +277,11 @@ async function handleImageSelected(event: Event) {
 		<EditorContent
 			:editor="editor"
 			class="post-editor__scroll"
+		/>
+
+		<DiceRollModal
+			v-model:show="showDiceModal"
+			@roll="insertDiceRoll"
 		/>
 	</div>
 </template>
