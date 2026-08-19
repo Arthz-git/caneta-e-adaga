@@ -7,6 +7,7 @@ import { UpdateRolePlayerController } from '../controllers/updateRolePlayerServi
 import { UpdateCharacterPlayerController } from '../controllers/updateCharacterPlayerController'
 import { GetPlayersByMesaIdController } from '../controllers/getPlayersByMesaIdController'
 import { UpdateFavoritePlayerController } from '../controllers/UpdateFavoritePlayerController'
+import { NotifyPlayerController } from '../controllers/notifyPlayerController'
 
 const playerRoutes = Router()
 
@@ -16,8 +17,10 @@ const updateRolePlayerController = new UpdateRolePlayerController()
 const updateCharacterPlayerController = new UpdateCharacterPlayerController()
 const getPlayersByMesaIdController = new GetPlayersByMesaIdController()
 const updateFavoritePlayerController = new UpdateFavoritePlayerController()
+const notifyPlayerController = new NotifyPlayerController()
 
 playerRoutes.post('/', ensureAuthenticated, (req, res) => createPlayerController.handle(req, res))
+playerRoutes.post('/notify/:id', ensureAuthenticated, (req, res) => notifyPlayerController.handle(req, res))
 playerRoutes.delete('/:id', ensureAuthenticated, (req, res) => deletePlayerController.handle(req, res))
 playerRoutes.patch('/role/:id', ensureAuthenticated, (req, res) => updateRolePlayerController.handle(req, res))
 playerRoutes.patch('/character/:id', ensureAuthenticated, (req, res) => updateCharacterPlayerController.handle(req, res))

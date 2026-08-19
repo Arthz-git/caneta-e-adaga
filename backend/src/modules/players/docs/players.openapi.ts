@@ -225,6 +225,35 @@ openApiRegistry.registerPath({
 })
 
 openApiRegistry.registerPath({
+	method: 'post',
+	path: '/players/notify/{id}',
+	tags: ['Players'],
+	summary: 'Notifica um jogador de que a mesa depende da sua jogada',
+	description: 'Apenas o criador da mesa (mestre) pode notificar um jogador.',
+	security: [{ bearerAuth: [] }],
+	request: {
+		params: deletePlayerSchema
+	},
+	responses: {
+		204: {
+			description: 'Jogador notificado com sucesso'
+		},
+		400: {
+			description: 'Dados inválidos, ou o usuário tentou notificar a si mesmo'
+		},
+		401: {
+			description: 'Token não informado, mal formatado ou inválido'
+		},
+		403: {
+			description: 'Usuário autenticado não é o criador da mesa'
+		},
+		404: {
+			description: 'Jogador ou mesa não encontrados'
+		}
+	}
+})
+
+openApiRegistry.registerPath({
 	method: 'delete',
 	path: '/players/{id}',
 	tags: ['Players'],

@@ -32,4 +32,5 @@ enum TipoNotificacao {
     POST_PRIVADO
     JOGADOR_REMOVIDO_MESA
     MESA_EXCLUIDA
+    LEMBRETE_JOGADA
 }

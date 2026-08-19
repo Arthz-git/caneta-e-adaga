@@ -2,7 +2,7 @@ import { z } from 'zod'
 
 export const notificacaoResponseSchema = z.object({
 	id: z.number(),
-	tipo: z.enum(['SOLICITACAO_RECEBIDA', 'SOLICITACAO_ACEITA', 'SOLICITACAO_RECUSADA', 'NOVO_POST_MESA', 'POST_PRIVADO', 'JOGADOR_REMOVIDO_MESA', 'MESA_EXCLUIDA']),
+	tipo: z.enum(['SOLICITACAO_RECEBIDA', 'SOLICITACAO_ACEITA', 'SOLICITACAO_RECUSADA', 'NOVO_POST_MESA', 'POST_PRIVADO', 'JOGADOR_REMOVIDO_MESA', 'MESA_EXCLUIDA', 'LEMBRETE_JOGADA']),
 	message: z.string(),
 	createdAt: z.date(),
 	updatedAt: z.date(),

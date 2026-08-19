@@ -6,7 +6,8 @@ type TipoNotificacao =
 	'NOVO_POST_MESA' |
 	'POST_PRIVADO' |
 	'JOGADOR_REMOVIDO_MESA' |
-	'MESA_EXCLUIDA'
+	'MESA_EXCLUIDA' |
+	'LEMBRETE_JOGADA'
 
 interface NotificacaoResponse {
 	id: number

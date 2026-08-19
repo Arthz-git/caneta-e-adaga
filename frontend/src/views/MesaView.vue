@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getMesaInfo, updateMesa } from '@/services/mesas.service'
 import { getCharacterById } from '@/services/characters.service'
-import { createPlayer, deletePlayer } from '@/services/players.service'
+import { createPlayer, deletePlayer, notifyPlayer } from '@/services/players.service'
 import type { GetMesaInfoResponse } from '@/types/mesaTypes'
 import type { CharactersResponse } from '@/types/charactersTypes'
 import {
@@ -77,6 +77,7 @@ const selectedPlayerId = ref<number | null>(null)
 const isExpellingPlayer = ref(false)
 const isJoiningAsSpectator = ref(false)
 const expellingSpectatorId = ref<number | null>(null)
+const isNotifyingPlayer = ref(false)
 const showInviteFriendModal = ref(false)
 const lastUpdatedAt = ref(new Date())
 let autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null
@@ -104,7 +105,7 @@ const currentPlayer = computed(() => mesa.value?.players.find(player => player.u
 const isMesaMember = computed(() => !!currentPlayer.value)
 const canJoinAsSpectator = computed(() => !isMesaMember.value && !!mesa.value?.allowSpectators)
 const selectedPlayer = computed(() => mesa.value?.players.find(player => player.id === selectedPlayerId.value))
-const canExpelSelectedPlayer = computed(() => (
+const canManageSelectedPlayer = computed(() => (
 	isOwnerMesa.value && !!selectedPlayer.value && selectedPlayer.value.userId !== auth.user?.id
 ))
 const allowedPostTypes = computed<PostType[]>(() => {
@@ -179,6 +180,25 @@ async function expelSelectedPlayer() {
 	}
 	finally {
 		isExpellingPlayer.value = false
+	}
+}
+
+async function notifySelectedPlayer() {
+	if (!selectedPlayerId.value || isNotifyingPlayer.value) return
+
+	try {
+		isNotifyingPlayer.value = true
+
+		await notifyPlayer(selectedPlayerId.value)
+
+		message.success('Jogador notificado com sucesso')
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível notificar o jogador. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isNotifyingPlayer.value = false
 	}
 }
 
@@ -456,9 +476,12 @@ getMesa()
 			v-model:show="showCharacterModal"
 			:character="selectedCharacter"
 			:loading="isLoadingCharacter"
-			:can-expel="canExpelSelectedPlayer"
+			:can-expel="canManageSelectedPlayer"
 			:expelling="isExpellingPlayer"
+			:can-notify="canManageSelectedPlayer"
+			:notifying="isNotifyingPlayer"
 			@expel="expelSelectedPlayer"
+			@notify="notifySelectedPlayer"
 		/>
 
 		<InviteModal
@@ -1065,7 +1088,7 @@ getMesa()
 	flex-shrink: 0;
 
 	width: 50px;
-	height: 100%;
+	height: 50px;
 
 	background: var(--cor-granada);
 	border: none;

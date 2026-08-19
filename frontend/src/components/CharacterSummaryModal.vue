@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { NModal, NButton, NIcon, NSpin, useDialog } from 'naive-ui'
-import { ImageOutline as IconImage, CloseOutline as IconClose, PersonRemoveOutline as IconExpel } from '@vicons/ionicons5'
+import { ImageOutline as IconImage, CloseOutline as IconClose, PersonRemoveOutline as IconExpel, NotificationsOutline as IconNotify } from '@vicons/ionicons5'
 import type { CharactersResponse } from '@/types/charactersTypes'
 
 const props = defineProps<{
@@ -8,10 +8,13 @@ const props = defineProps<{
 	loading?: boolean
 	canExpel?: boolean
 	expelling?: boolean
+	canNotify?: boolean
+	notifying?: boolean
 }>()
 
 const emit = defineEmits<{
 	expel: []
+	notify: []
 }>()
 
 const dialog = useDialog()
@@ -26,6 +29,18 @@ function expelButtonClick() {
 		negativeText: 'Cancelar',
 		onPositiveClick: () => {
 			emit('expel')
+		}
+	})
+}
+
+function notifyButtonClick() {
+	dialog.info({
+		title: 'Notificar jogador',
+		content: `Enviar uma notificação avisando que a mesa depende da jogada de ${props.character?.name ?? 'este jogador'}?`,
+		positiveText: 'Notificar',
+		negativeText: 'Cancelar',
+		onPositiveClick: () => {
+			emit('notify')
 		}
 	})
 }
@@ -80,8 +95,25 @@ function expelButtonClick() {
 					</div>
 				</div>
 
-				<div v-if="canExpel" class="modal__actions">
+				<div v-if="canExpel || canNotify" class="modal__actions">
 					<n-button
+						v-if="canNotify"
+						type="warning"
+						ghost
+						:loading="notifying"
+						:focusable="false"
+						@click="notifyButtonClick"
+					>
+						<template #icon>
+							<n-icon>
+								<IconNotify />
+							</n-icon>
+						</template>
+						Notificar jogador
+					</n-button>
+
+					<n-button
+						v-if="canExpel"
 						type="error"
 						ghost
 						:loading="expelling"
@@ -141,6 +173,7 @@ function expelButtonClick() {
 	width: 100%;
 	display: flex;
 	justify-content: flex-end;
+	gap: var(--space-3);
 	padding-top: var(--space-4);
 	border-top: 1px solid var(--cor-linha);
 }

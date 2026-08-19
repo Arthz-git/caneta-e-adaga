@@ -18,7 +18,12 @@ async function deletePlayer(id: number) {
 	await api.delete(`/players/${id}`)
 }
 
+async function notifyPlayer(id: number) {
+	await api.post(`/players/notify/${id}`)
+}
+
 export {
 	createPlayer,
-	deletePlayer
+	deletePlayer,
+	notifyPlayer
 }
