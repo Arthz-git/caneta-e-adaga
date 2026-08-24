@@ -1,6 +1,7 @@
-export type PostType = 'CHARACTER' | 'NARRATOR' | 'NPC' | 'SYSTEM' | 'OOC'
+export type PostType = 'CHARACTER' | 'NARRATOR' | 'SCENE' | 'NPC' | 'SYSTEM' | 'OOC'
 
 export const POST_TYPE_LABELS: Record<PostType, string> = {
+	SCENE: 'Cena',
 	NARRATOR: 'Narrador',
 	CHARACTER: 'Personagem',
 	NPC: 'NPC',

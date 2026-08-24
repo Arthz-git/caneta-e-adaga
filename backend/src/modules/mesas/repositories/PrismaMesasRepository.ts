@@ -17,7 +17,8 @@ const includeRelationsList = {
 			joinedAt: true,
 			updatedAt: true,
 			isFavorite: true
-		}
+		},
+		orderBy: { joinedAt: 'asc' as const }
 	}
 }
 
@@ -41,7 +42,8 @@ const includeRelationsDetail = {
 			joinedAt: true,
 			updatedAt: true,
 			isFavorite: true
-		}
+		},
+		orderBy: { joinedAt: 'asc' as const }
 	}
 }
 

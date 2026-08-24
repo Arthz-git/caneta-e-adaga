@@ -100,7 +100,7 @@ export class PrismaPlayersRepository implements IPlayersRepository {
 	}
 
 	async getPlayersByMesaId(mesaId: number) {
-		return prisma.players.findMany({ where: { mesaId } })
+		return prisma.players.findMany({ where: { mesaId }, orderBy: { joinedAt: 'asc' } })
 	}
 
 	async updateFavorite({ id, ...data }: UpdateFavoritePlayerDTO) {

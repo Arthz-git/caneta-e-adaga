@@ -10,7 +10,7 @@ const postBaseSchema = z.object({
 	text: z
 		.string(),
 	type: z
-		.enum(['CHARACTER', 'NARRATOR', 'NPC', 'SYSTEM', 'OOC']),
+		.enum(['CHARACTER', 'NARRATOR', 'SCENE', 'NPC', 'SYSTEM', 'OOC']),
 	characterId: z
 		.number()
 		.nullable(),

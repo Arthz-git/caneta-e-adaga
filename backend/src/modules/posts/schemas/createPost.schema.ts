@@ -10,7 +10,7 @@ export const createPostSchema = z.object({
 		.trim()
 		.min(1, 'Texto é um campo obrigatório'),
 	type: z
-		.enum(['CHARACTER', 'NARRATOR', 'NPC', 'SYSTEM', 'OOC'], 'Tipo inválido'),
+		.enum(['CHARACTER', 'NARRATOR', 'SCENE', 'NPC', 'SYSTEM', 'OOC'], 'Tipo inválido'),
 	characterId: z
 		.coerce
 		.number()

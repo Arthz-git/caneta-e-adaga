@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
-import { NButton, NIcon, NInputNumber, NModal } from 'naive-ui'
+import { NButton, NIcon, NInputNumber, NModal, NRadioButton, NRadioGroup } from 'naive-ui'
 import { CloseOutline as IconClose, DiceOutline as IconDice } from '@vicons/ionicons5'
 
 // ----------------------------------------------------------------------
 
 const DICE_SIDES = [4, 6, 8, 10, 12, 16, 20] as const
+
+type ResultMode = 'sum' | 'sumEqual' | 'separateAll'
 
 const show = defineModel<boolean>('show', { required: true })
 
@@ -17,6 +19,7 @@ const quantities = reactive<Record<number, number>>(
 	Object.fromEntries(DICE_SIDES.map(sides => [sides, 0])) as Record<number, number>
 )
 const modifier = ref<number | null>(null)
+const resultMode = ref<ResultMode>('sum')
 
 const hasDiceSelected = computed(() => DICE_SIDES.some(sides => quantities[sides] > 0))
 
@@ -29,32 +32,58 @@ function resetForm() {
 		quantities[sides] = 0
 	})
 	modifier.value = null
+	resultMode.value = 'sum'
+}
+
+function formatModifier(value: number) {
+	return value > 0 ? `+ ${value}` : `- ${Math.abs(value)}`
 }
 
 function rollButtonClick() {
 	if (!hasDiceSelected.value) return
 
-	const parts: string[] = []
-	let total = 0
+	const groups = DICE_SIDES
+		.filter(sides => quantities[sides] > 0)
+		.map((sides) => {
+			const quantity = quantities[sides]
+			const rolls = Array.from({ length: quantity }, () => rollDie(sides))
+			const subtotal = rolls.reduce((sum, roll) => sum + roll, 0)
+			return { sides, quantity, rolls, subtotal }
+		})
 
-	for (const sides of DICE_SIDES) {
-		const quantity = quantities[sides]
-		if (!quantity) continue
+	let result: string
 
-		const rolls = Array.from({ length: quantity }, () => rollDie(sides))
-		total += rolls.reduce((sum, roll) => sum + roll, 0)
+	if (resultMode.value === 'sumEqual') {
+		const parts = groups.map(({ sides, quantity, rolls, subtotal }) =>
+			`${quantity}d${sides} (${rolls.join(', ')}) = ${subtotal}`)
 
-		parts.push(`${quantity}d${sides} (${rolls.join(', ')})`)
+		if (modifier.value) parts.push(formatModifier(modifier.value))
+
+		result = parts.join(' | ')
+	}
+	else if (resultMode.value === 'separateAll') {
+		const parts = groups.flatMap(({ sides, rolls }) =>
+			rolls.map(roll => `d${sides} (${roll})`))
+
+		if (modifier.value) parts.push(formatModifier(modifier.value))
+
+		result = parts.join(' | ')
+	}
+	else {
+		const parts = groups.map(({ sides, quantity, rolls }) =>
+			`${quantity}d${sides} (${rolls.join(', ')})`)
+		let total = groups.reduce((sum, group) => sum + group.subtotal, 0)
+		let formula = parts.join(' + ')
+
+		if (modifier.value) {
+			total += modifier.value
+			formula += ` ${formatModifier(modifier.value)}`
+		}
+
+		result = `${formula} = ${total}`
 	}
 
-	let formula = parts.join(' + ')
-
-	if (modifier.value) {
-		total += modifier.value
-		formula += modifier.value > 0 ? ` + ${modifier.value}` : ` - ${Math.abs(modifier.value)}`
-	}
-
-	emit('roll', `${formula} = ${total}`)
+	emit('roll', result)
 
 	resetForm()
 	show.value = false
@@ -90,6 +119,7 @@ function handleAfterLeave() {
 						:min="0"
 						:max="99"
 						placeholder="0"
+						class="modal__dice-input"
 					/>
 				</div>
 			</div>
@@ -101,6 +131,15 @@ function handleAfterLeave() {
 					placeholder="Opcional, ex: 3 ou -2"
 					class="modal__modifier-input"
 				/>
+			</div>
+
+			<div class="modal__mode-field">
+				<span class="modal__dice-label">Resultado</span>
+				<n-radio-group v-model:value="resultMode" name="result-mode">
+					<n-radio-button value="sum" label="Somar tudo" />
+					<n-radio-button value="sumEqual" label="Somar iguais" />
+					<n-radio-button value="separateAll" label="Separar todos" />
+				</n-radio-group>
 			</div>
 
 			<n-button
@@ -124,8 +163,8 @@ function handleAfterLeave() {
 
 <style scoped>
 .modal__container {
-	width: 90vw;
-	max-width: 480px;
+	width: 95vw;
+	max-width: 764px;
 	padding: var(--space-6) var(--space-5);
 	display: flex;
 	flex-direction: column;
@@ -147,15 +186,21 @@ function handleAfterLeave() {
 }
 
 .modal__dice-grid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-	gap: var(--space-3);
+	display: flex;
+	flex-wrap: nowrap;
+	justify-content: space-between;
+	gap: var(--space-2);
 }
 
 .modal__dice-field {
 	display: flex;
 	flex-direction: column;
+	align-items: center;
 	gap: var(--space-1);
+}
+
+.modal__dice-input {
+	width: 90px;
 }
 
 .modal__dice-label {
@@ -174,6 +219,12 @@ function handleAfterLeave() {
 }
 
 .modal__modifier-input {
-	width: 100%;
+	width: 240px;
+}
+
+.modal__mode-field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
 }
 </style>

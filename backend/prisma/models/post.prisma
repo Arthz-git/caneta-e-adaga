@@ -33,6 +33,7 @@ model PostVisiblePlayer {
 enum PostType {
     CHARACTER
     NARRATOR
+    SCENE
     NPC
     SYSTEM
     OOC

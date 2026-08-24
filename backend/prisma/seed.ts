@@ -140,6 +140,14 @@ const NARRATOR_TEXTS = [
 	'A torre se ergue diante de vocês, suas pedras negras absorvendo a pouca luz do entardecer.'
 ]
 
+const SCENE_TEXTS = [
+	'As Ruínas de Karth-Vael',
+	'A Taverna do Corvo Cinzento',
+	'O Desfiladeiro Esquecido',
+	'A Torre Negra',
+	'O Mercado das Sombras'
+]
+
 const NPC_NAMES = ['Velho Corvin', 'Guarda Ithan', 'Mercadora Yssa', 'Xamã Doreth', 'Capitão Volund']
 
 const NPC_TEXTS = [
@@ -301,7 +309,7 @@ async function main() {
 	const postsData: {
 		userId: number
 		mesaId: number
-		type: 'CHARACTER' | 'NARRATOR' | 'NPC' | 'SYSTEM' | 'OOC'
+		type: 'CHARACTER' | 'NARRATOR' | 'SCENE' | 'NPC' | 'SYSTEM' | 'OOC'
 		text: string
 		characterId?: number
 		npcName?: string
@@ -319,6 +327,13 @@ async function main() {
 		const mesaPlayers = players.filter((player) => player.mesaId === mesa.id)
 		const master = mesaPlayers.find((player) => player.role === 'MASTER')!
 		const mesaOnlyPlayers = mesaPlayers.filter((player) => player.role === 'PLAYER')
+
+		postsData.push({
+			userId: master.userId,
+			mesaId: mesa.id,
+			type: 'SCENE',
+			text: pick(SCENE_TEXTS, mesaIndex)
+		})
 
 		postsData.push({
 			userId: master.userId,

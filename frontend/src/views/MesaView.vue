@@ -21,7 +21,8 @@ import {
 	SendOutline as IconSend,
 	RefreshOutline as IconRefresh,
 	EyeOutline as IconEye,
-	PersonRemoveOutline as IconExpel
+	PersonRemoveOutline as IconExpel,
+	DownloadOutline as IconExport
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
@@ -32,9 +33,10 @@ import PostEditor from '@/components/PostEditor.vue'
 import PostsTimeline from '@/components/PostsTimeline.vue'
 import SideChatPanel from '@/components/SideChatPanel.vue'
 import SidePanel from '@/components/SidePanel.vue'
-import { createPost } from '@/services/posts.service'
+import { createPost, getAllPosts } from '@/services/posts.service'
 import type { PostListItem, PostType } from '@/types/postTypes'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
+import { exportPostsToHtml } from '@/composables/exportPostsToHtml'
 
 const PLAYER_ALLOWED_POST_TYPES: PostType[] = ['CHARACTER', 'OOC']
 const SPECTATOR_ALLOWED_POST_TYPES: PostType[] = ['OOC']
@@ -78,6 +80,7 @@ const isExpellingPlayer = ref(false)
 const isJoiningAsSpectator = ref(false)
 const expellingSpectatorId = ref<number | null>(null)
 const isNotifyingPlayer = ref(false)
+const isExportingPosts = ref(false)
 const showInviteFriendModal = ref(false)
 const lastUpdatedAt = ref(new Date())
 let autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null
@@ -111,7 +114,7 @@ const canManageSelectedPlayer = computed(() => (
 const allowedPostTypes = computed<PostType[]>(() => {
 	if (currentPlayer.value?.role === 'PLAYER') return PLAYER_ALLOWED_POST_TYPES
 	if (currentPlayer.value?.role === 'SPECTATOR') return SPECTATOR_ALLOWED_POST_TYPES
-	return ['NARRATOR', 'CHARACTER', 'NPC', 'SYSTEM', 'OOC']
+	return ['NARRATOR', 'SCENE', 'CHARACTER', 'NPC', 'SYSTEM', 'OOC']
 })
 const sideChatPosts = computed(() => posts.value.filter(post => post.type === 'OOC' || post.type === 'SYSTEM'))
 const mentionItems = computed(() => {
@@ -123,6 +126,31 @@ const mentionItems = computed(() => {
 
 function backButtonClick() {
 	router.back()
+}
+
+async function exportPostsClick() {
+	if (!mesa.value || isExportingPosts.value) return
+
+	try {
+		isExportingPosts.value = true
+
+		const allPosts = await getAllPosts(Number(props.mesaId))
+
+		exportPostsToHtml({
+			mesaTitle: mesa.value.title,
+			posts: allPosts,
+			isMaster: currentPlayer.value?.role === 'MASTER',
+			currentPlayerId: currentPlayer.value?.id,
+			currentUserId: auth.user?.id
+		})
+	}
+	catch (err) {
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível exportar as mensagens. Tente novamente.'
+		message.error(errorMessage)
+	}
+	finally {
+		isExportingPosts.value = false
+	}
 }
 
 function vagaLivreClick() {
@@ -436,6 +464,22 @@ getMesa()
 
 				Atualizado às {{ formatDateIntoString(lastUpdatedAt, 'HH:mm:ss') }}
 			</span>
+
+			<n-button
+				circle
+				quaternary
+				:loading="isExportingPosts"
+				:focusable="false"
+				aria-label="Exportar mensagens da mesa"
+				title="Exportar mensagens"
+				@click.prevent="exportPostsClick"
+			>
+				<template #icon>
+					<n-icon>
+						<IconExport />
+					</n-icon>
+				</template>
+			</n-button>
 
 			<n-button
 				circle

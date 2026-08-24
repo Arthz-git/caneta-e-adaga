@@ -1,4 +1,4 @@
-import type { PaginatedPostsResponse, PostType } from '@/types/postTypes'
+import type { PaginatedPostsResponse, PostListItem, PostType } from '@/types/postTypes'
 import api from './api'
 
 export type CreatePostParams = {
@@ -38,6 +38,12 @@ async function getPaginatedPosts(mesaId: number, params: GetPaginatedPostsParams
 	return posts.data
 }
 
+async function getAllPosts(mesaId: number) {
+	const posts = await api.get<PostListItem[]>(`/posts/mesaId/${mesaId}`)
+
+	return posts.data
+}
+
 async function uploadPostImage(image: File) {
 	const formData = new FormData()
 	formData.append('image', image)
@@ -59,6 +65,7 @@ async function getLastPostId(mesaId: number) {
 export {
 	createPost,
 	getPaginatedPosts,
+	getAllPosts,
 	getLastPostId,
 	uploadPostImage
 }

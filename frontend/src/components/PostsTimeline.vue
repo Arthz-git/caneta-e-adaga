@@ -217,6 +217,34 @@ defineExpose({
 					</div>
 				</template>
 
+				<template v-else-if="post.type === 'SCENE'">
+					<div class="post-scene">
+						<span
+							v-if="isRestricted(post)"
+							class="restricted-badge restricted-badge--narrator"
+							:title="restrictedTitle"
+						>
+							<n-icon>
+								<IconRestricted />
+							</n-icon>
+
+							<span class="restricted-badge__label">
+								Mensagem restrita
+							</span>
+						</span>
+
+						<div class="post-scene__row">
+							<span class="post-scene__line" />
+							<div class="post-scene__text" v-html="sanitize(post.text)" />
+							<span class="post-scene__line" />
+						</div>
+
+						<span class="post-scene__time">
+							{{ formatDateIntoString(post.createdAt) }}
+						</span>
+					</div>
+				</template>
+
 				<template v-else-if="post.type === 'NARRATOR'">
 					<div class="post-narrator">
 						<span
@@ -379,6 +407,53 @@ defineExpose({
 
 .post-row + .post-row {
 	margin-top: var(--space-4);
+}
+
+.post-scene {
+	position: relative;
+
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: var(--space-1);
+
+	width: 100%;
+	padding: var(--space-2) var(--space-4);
+}
+
+.post-scene__row {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+
+	width: 100%;
+}
+
+.post-scene__line {
+	flex: 1;
+	height: 1px;
+
+	background: linear-gradient(to right, transparent, var(--cor-latao), transparent);
+}
+
+.post-scene__text {
+	color: var(--cor-latao);
+	font-family: var(--font-serif);
+	font-weight: 600;
+	font-size: 1rem;
+	letter-spacing: 0.08em;
+	text-align: center;
+	text-transform: uppercase;
+}
+
+.post-scene__text :deep(p) {
+	margin: 0;
+}
+
+.post-scene__time {
+	color: var(--cor-tinta-fraca);
+	font-family: var(--font-sans);
+	font-size: 0.7rem;
 }
 
 .post-narrator {
