@@ -24,6 +24,15 @@ export class PrismaUserCharactersRepository implements IUserCharactersRepository
 	}
 
 	async getAllByUserId(userId: number) {
-		return prisma.userCharacter.findMany({ where: { userId } })
+		const characters = await prisma.userCharacter.findMany({
+			where: { userId },
+			include: { players: { select: { mesaId: true, mesa: { select: { title: true } } } } }
+		})
+
+		return characters.map(({ players, ...character }) => ({
+			...character,
+			linkedMesaId: players[0]?.mesaId ?? null,
+			linkedMesaTitle: players[0]?.mesa.title ?? null
+		}))
 	}
 }

@@ -10,6 +10,7 @@ export interface IPlayersRepository {
 	delete(id: number): Promise<void>
 	get(id: number): Promise<PlayersModel | null>
 	getByUserAndMesa(userId: number, mesaId: number): Promise<PlayersModel | null>
+	getByUserCharacterId(userCharacterId: number): Promise<PlayersModel | null>
 	updateRole(data: UpdateRolePlayerDTO): Promise<PlayersModel>
 	updateRoleWithMasterCheck(data: UpdateRolePlayerDTO, mesaId: number, maxPlayers: number): Promise<PlayersModel>
 	updateCharacter(data: UpdateCharacterPlayerDTO): Promise<PlayersModel>

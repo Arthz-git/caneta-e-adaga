@@ -16,6 +16,7 @@ interface MesaResponse {
 	countSpectators: number
 	countPlayers: number
 	isMember: boolean
+	lastPostAt: Date | null
 }
 
 interface PaginationMeta {

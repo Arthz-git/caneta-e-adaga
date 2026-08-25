@@ -9,6 +9,7 @@ export const updateCharacterPlayerSchema = z.object({
 		.coerce
 		.number()
 		.positive()
+		.nullable()
 })
 
 export type UpdateCharacterPlayerDTO = z.infer<typeof updateCharacterPlayerSchema>

@@ -45,6 +45,12 @@ export class CreatePlayerService {
 			if (character.userId !== data.userId) {
 				throw new AppError('Personagem não pertence ao usuário', 403)
 			}
+
+			// verificação se o personagem já está vinculado a outra mesa
+			const jaVinculado = await this.playersRepository.getByUserCharacterId(data.userCharacterId)
+			if (jaVinculado) {
+				throw new AppError('Este personagem já está vinculado a outra mesa', 409)
+			}
 		}
 
 		// verificação se o jogador já está na mesa

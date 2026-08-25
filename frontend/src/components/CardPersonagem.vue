@@ -4,7 +4,8 @@ import { NButton, NIcon, NTooltip } from 'naive-ui'
 import {
 	PersonOutline as IconUser,
 	CreateOutline as IconEdit,
-	TrashBinOutline as IconTrash
+	TrashBinOutline as IconTrash,
+	LinkOutline as IconMesa
 } from '@vicons/ionicons5'
 
 defineProps<{
@@ -35,6 +36,18 @@ const emit = defineEmits<{
 				<p class="card__description card-base__clamp-2">
 					{{ char.description }}
 				</p>
+
+				<n-tooltip trigger="hover" placement="bottom" v-if="char.linkedMesaTitle">
+					<template #trigger>
+						<div class="info__item">
+							<n-icon>
+								<IconMesa />
+							</n-icon>
+							<span>{{ char.linkedMesaTitle }}</span>
+						</div>
+					</template>
+					Vinculado à mesa "{{ char.linkedMesaTitle }}"
+				</n-tooltip>
 			</div>
 		</div>
 
@@ -89,5 +102,16 @@ const emit = defineEmits<{
 	font-family: var(--font-sans);
 	color: var(--cor-tinta-fraca);
 	font-size: 0.75rem;
+}
+
+.info__item {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin-top: var(--space-2);
+
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	color: var(--cor-tinta-fraca);
 }
 </style>

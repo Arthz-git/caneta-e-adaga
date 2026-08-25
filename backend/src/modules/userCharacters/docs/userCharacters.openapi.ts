@@ -3,7 +3,7 @@ import { createUserCharacterSchema } from '../schemas/createUserCharacter.schema
 import { deleteUserCharacterSchema } from '../schemas/deleteUserCharacter.schema'
 import { getUserCharacterSchema } from '../schemas/getUserCharacter.schema'
 import { getAllUserCharacterByUserIdSchema } from '../schemas/getAllUserCharacterByUserId.schema'
-import { userCharacterResponseSchema } from '../schemas/userCharacterResponse.schema'
+import { userCharacterResponseSchema, userCharacterWithLinkResponseSchema } from '../schemas/userCharacterResponse.schema'
 import { z } from 'zod'
 
 const userCharacterResponseExample = {
@@ -15,6 +15,12 @@ const userCharacterResponseExample = {
 	imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/characters/exemplo.jpg',
 	createdAt: '2026-01-10T12:00:00.000Z',
 	updatedAt: '2026-01-10T12:00:00.000Z'
+}
+
+const userCharacterWithLinkResponseExample = {
+	...userCharacterResponseExample,
+	linkedMesaId: null,
+	linkedMesaTitle: null
 }
 
 openApiRegistry.registerPath({
@@ -152,6 +158,7 @@ openApiRegistry.registerPath({
 	path: '/characters/userId/{userId}',
 	tags: ['Characters'],
 	summary: 'Lista todos os personagens de um usuário',
+	description: 'Cada personagem inclui "linkedMesaId" e "linkedMesaTitle": o id e o título da mesa à qual ele está vinculado no momento (via Players), ou null se estiver livre para ser vinculado.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		params: getAllUserCharacterByUserIdSchema
@@ -161,8 +168,8 @@ openApiRegistry.registerPath({
 			description: 'Lista de personagens retornada com sucesso',
 			content: {
 				'application/json': {
-					schema: z.array(userCharacterResponseSchema),
-					example: [userCharacterResponseExample]
+					schema: z.array(userCharacterWithLinkResponseSchema),
+					example: [userCharacterWithLinkResponseExample]
 				}
 			}
 		},

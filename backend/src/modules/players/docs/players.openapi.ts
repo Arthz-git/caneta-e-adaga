@@ -145,7 +145,7 @@ openApiRegistry.registerPath({
 	path: '/players/character/{id}',
 	tags: ['Players'],
 	summary: 'Atualiza o personagem vinculado a um jogador',
-	description: 'Apenas o próprio jogador pode alterar o personagem vinculado ao seu registro.',
+	description: 'Apenas o próprio jogador pode alterar o personagem vinculado ao seu registro. Envie "null" para desvincular o personagem atual.',
 	security: [{ bearerAuth: [] }],
 	request: {
 		params: deletePlayerSchema,
@@ -174,10 +174,13 @@ openApiRegistry.registerPath({
 			description: 'Token não informado, mal formatado ou inválido'
 		},
 		403: {
-			description: 'Usuário autenticado não tem permissão para atualizar este registro'
+			description: 'Usuário autenticado não tem permissão para atualizar este registro, ou o personagem informado não pertence ao usuário'
 		},
 		404: {
-			description: 'Jogador não encontrado'
+			description: 'Jogador ou personagem não encontrados'
+		},
+		409: {
+			description: 'O personagem informado já está vinculado a outra mesa'
 		}
 	}
 })

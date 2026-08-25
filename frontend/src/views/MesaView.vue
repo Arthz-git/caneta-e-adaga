@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { getMesaInfo, updateMesa } from '@/services/mesas.service'
-import { getCharacterById } from '@/services/characters.service'
-import { createPlayer, deletePlayer, notifyPlayer } from '@/services/players.service'
+import { getCharacterById, getMyCharacters } from '@/services/characters.service'
+import { createPlayer, deletePlayer, notifyPlayer, updateCharacterPlayer } from '@/services/players.service'
 import type { GetMesaInfoResponse } from '@/types/mesaTypes'
 import type { CharactersResponse } from '@/types/charactersTypes'
 import {
@@ -9,9 +9,11 @@ import {
 	useDialog,
 	NIcon,
 	NButton,
-	NSpin
+	NSpin,
+	NDropdown
 } from 'naive-ui'
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import type { DropdownOption } from 'naive-ui'
+import { computed, h, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import {
 	ArrowBackOutline as IconBack,
 	ImageOutline as IconImage,
@@ -22,13 +24,17 @@ import {
 	RefreshOutline as IconRefresh,
 	EyeOutline as IconEye,
 	PersonRemoveOutline as IconExpel,
-	DownloadOutline as IconExport
+	DownloadOutline as IconExport,
+	NotificationsOutline as IconNotify,
+	LinkOutline as IconLink
 } from '@vicons/ionicons5'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuth'
 import CharacterSummaryModal from '@/components/CharacterSummaryModal.vue'
 import InviteModal from '@/components/InviteModal.vue'
+import LinkCharacterModal from '@/components/LinkCharacterModal.vue'
 import MesaFormModal from '@/components/MesaFormModal.vue'
+import PlayerProfileModal from '@/components/PlayerProfileModal.vue'
 import PostEditor from '@/components/PostEditor.vue'
 import PostsTimeline from '@/components/PostsTimeline.vue'
 import SideChatPanel from '@/components/SideChatPanel.vue'
@@ -37,6 +43,8 @@ import { createPost, getAllPosts } from '@/services/posts.service'
 import type { PostListItem, PostType } from '@/types/postTypes'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
 import { exportPostsToHtml } from '@/composables/exportPostsToHtml'
+
+type MesaPlayer = GetMesaInfoResponse['players'][number]
 
 const PLAYER_ALLOWED_POST_TYPES: PostType[] = ['CHARACTER', 'OOC']
 const SPECTATOR_ALLOWED_POST_TYPES: PostType[] = ['OOC']
@@ -75,13 +83,24 @@ const posts = ref<PostListItem[]>([])
 const showCharacterModal = ref(false)
 const isLoadingCharacter = ref(false)
 const selectedCharacter = ref<CharactersResponse | null>(null)
-const selectedPlayerId = ref<number | null>(null)
-const isExpellingPlayer = ref(false)
 const isJoiningAsSpectator = ref(false)
 const expellingSpectatorId = ref<number | null>(null)
-const isNotifyingPlayer = ref(false)
 const isExportingPosts = ref(false)
 const showInviteFriendModal = ref(false)
+
+const showPlayerProfileModal = ref(false)
+const profilePlayer = ref<{ name: string, role: 'MASTER' | 'PLAYER' | 'SPECTATOR' } | null>(null)
+
+const showLinkCharacterModal = ref(false)
+const linkingForPlayerId = ref<number | null>(null)
+const availableCharacters = ref<CharactersResponse[]>([])
+const isLoadingAvailableCharacters = ref(false)
+const linkingCharacterId = ref<number | null>(null)
+
+const expellingPlayerId = ref<number | null>(null)
+const notifyingPlayerId = ref<number | null>(null)
+const unlinkingPlayerId = ref<number | null>(null)
+const leavingMesaPlayerId = ref<number | null>(null)
 const lastUpdatedAt = ref(new Date())
 let autoRefreshIntervalId: ReturnType<typeof setInterval> | null = null
 
@@ -107,10 +126,6 @@ const occupiedPlayerSlots = computed(() => mesa.value?.players.filter(player => 
 const currentPlayer = computed(() => mesa.value?.players.find(player => player.userId === auth.user?.id))
 const isMesaMember = computed(() => !!currentPlayer.value)
 const canJoinAsSpectator = computed(() => !isMesaMember.value && !!mesa.value?.allowSpectators)
-const selectedPlayer = computed(() => mesa.value?.players.find(player => player.id === selectedPlayerId.value))
-const canManageSelectedPlayer = computed(() => (
-	isOwnerMesa.value && !!selectedPlayer.value && selectedPlayer.value.userId !== auth.user?.id
-))
 const allowedPostTypes = computed<PostType[]>(() => {
 	if (currentPlayer.value?.role === 'PLAYER') return PLAYER_ALLOWED_POST_TYPES
 	if (currentPlayer.value?.role === 'SPECTATOR') return SPECTATOR_ALLOWED_POST_TYPES
@@ -170,15 +185,67 @@ function configButtonClick() {
 	showModalConfigMesa.value = true
 }
 
-async function playerCardClick(playerId: number, userCharacterId: number | null) {
-	if (!userCharacterId) return
+function playerDropdownOptions(player: MesaPlayer): DropdownOption[] {
+	const isSelf = player.userId === auth.user?.id
+
+	if (isSelf) {
+		const options: DropdownOption[] = []
+
+		if (!player.userCharacterId) {
+			options.push({ label: 'Vincular personagem', key: 'link-character', icon: () => h(NIcon, null, { default: () => h(IconLink) }) })
+		}
+		else {
+			options.push({ label: 'Desvincular personagem', key: 'unlink-character', icon: () => h(NIcon, null, { default: () => h(IconLink) }) })
+		}
+
+		options.push({ label: 'Sair da mesa', key: 'leave-mesa', icon: () => h(NIcon, null, { default: () => h(IconExpel) }) })
+
+		return options
+	}
+
+	if (isOwnerMesa.value) {
+		const options: DropdownOption[] = [
+			{ label: 'Ver jogador', key: 'view-player', icon: () => h(NIcon, null, { default: () => h(IconPerson) }) }
+		]
+
+		if (player.userCharacterId) {
+			options.push({ label: 'Ver personagem', key: 'view-character', icon: () => h(NIcon, null, { default: () => h(IconEye) }) })
+		}
+
+		options.push({ label: 'Notificar jogador', key: 'notify', icon: () => h(NIcon, null, { default: () => h(IconNotify) }) })
+		options.push({ label: 'Expulsar jogador', key: 'expel', icon: () => h(NIcon, null, { default: () => h(IconExpel) }) })
+
+		return options
+	}
+
+	return [{ label: 'Ver jogador', key: 'view-player', icon: () => h(NIcon, null, { default: () => h(IconPerson) }) }]
+}
+
+function onPlayerMenuSelect(key: string, player: MesaPlayer) {
+	switch (key) {
+		case 'view-player': return viewPlayerClick(player)
+		case 'view-character': return viewCharacterClick(player)
+		case 'notify': return notifyPlayerClick(player)
+		case 'expel': return expelPlayerClick(player)
+		case 'link-character': return linkCharacterClick(player)
+		case 'unlink-character': return unlinkCharacterClick(player)
+		case 'leave-mesa': return leaveMesaClick(player)
+	}
+}
+
+function viewPlayerClick(player: MesaPlayer) {
+	profilePlayer.value = { name: player.user.name, role: player.role }
+	showPlayerProfileModal.value = true
+}
+
+async function viewCharacterClick(player: MesaPlayer) {
+	if (!player.userCharacterId) return
 
 	try {
-		selectedPlayerId.value = playerId
 		showCharacterModal.value = true
 		isLoadingCharacter.value = true
 
-		selectedCharacter.value = await getCharacterById(userCharacterId)
+		selectedCharacter.value = await getCharacterById(player.userCharacterId)
 	}
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar o personagem. Tente novamente.'
@@ -190,44 +257,155 @@ async function playerCardClick(playerId: number, userCharacterId: number | null)
 	}
 }
 
-async function expelSelectedPlayer() {
-	if (!selectedPlayerId.value || isExpellingPlayer.value) return
+function notifyPlayerClick(player: MesaPlayer) {
+	if (notifyingPlayerId.value) return
+
+	dialog.info({
+		title: 'Notificar jogador',
+		content: `Enviar uma notificação avisando que a mesa depende da jogada de ${player.user.name}?`,
+		positiveText: 'Notificar',
+		negativeText: 'Cancelar',
+		onPositiveClick: async () => {
+			try {
+				notifyingPlayerId.value = player.id
+
+				await notifyPlayer(player.id)
+
+				message.success('Jogador notificado com sucesso')
+			}
+			catch (err) {
+				const errorMessage = err instanceof Error ? err.message : 'Não foi possível notificar o jogador. Tente novamente.'
+				message.error(errorMessage)
+			}
+			finally {
+				notifyingPlayerId.value = null
+			}
+		}
+	})
+}
+
+function expelPlayerClick(player: MesaPlayer) {
+	if (expellingPlayerId.value) return
+
+	dialog.warning({
+		title: 'Expulsar jogador',
+		content: `Tem certeza que deseja expulsar ${player.user.name} da mesa?`,
+		positiveText: 'Expulsar',
+		negativeText: 'Cancelar',
+		onPositiveClick: async () => {
+			try {
+				expellingPlayerId.value = player.id
+
+				await deletePlayer(player.id)
+
+				message.success('Jogador expulso da mesa com sucesso')
+				await getMesa()
+			}
+			catch (err) {
+				const errorMessage = err instanceof Error ? err.message : 'Não foi possível expulsar o jogador. Tente novamente.'
+				message.error(errorMessage)
+			}
+			finally {
+				expellingPlayerId.value = null
+			}
+		}
+	})
+}
+
+async function linkCharacterClick(player: MesaPlayer) {
+	linkingForPlayerId.value = player.id
+	showLinkCharacterModal.value = true
 
 	try {
-		isExpellingPlayer.value = true
+		isLoadingAvailableCharacters.value = true
 
-		await deletePlayer(selectedPlayerId.value)
-
-		message.success('Jogador expulso da mesa com sucesso')
-		showCharacterModal.value = false
-		await getMesa()
+		const myCharacters = await getMyCharacters(auth.user!.id)
+		availableCharacters.value = myCharacters.filter(char => !char.linkedMesaId)
 	}
 	catch (err) {
-		const errorMessage = err instanceof Error ? err.message : 'Não foi possível expulsar o jogador. Tente novamente.'
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar seus personagens. Tente novamente.'
 		message.error(errorMessage)
 	}
 	finally {
-		isExpellingPlayer.value = false
+		isLoadingAvailableCharacters.value = false
 	}
 }
 
-async function notifySelectedPlayer() {
-	if (!selectedPlayerId.value || isNotifyingPlayer.value) return
+async function onLinkCharacterSubmit(characterId: number) {
+	if (!linkingForPlayerId.value || linkingCharacterId.value) return
 
 	try {
-		isNotifyingPlayer.value = true
+		linkingCharacterId.value = characterId
 
-		await notifyPlayer(selectedPlayerId.value)
+		await updateCharacterPlayer(linkingForPlayerId.value, characterId)
 
-		message.success('Jogador notificado com sucesso')
+		message.success('Personagem vinculado com sucesso')
+		showLinkCharacterModal.value = false
+		await getMesa()
 	}
 	catch (err) {
-		const errorMessage = err instanceof Error ? err.message : 'Não foi possível notificar o jogador. Tente novamente.'
+		const errorMessage = err instanceof Error ? err.message : 'Não foi possível vincular o personagem. Tente novamente.'
 		message.error(errorMessage)
 	}
 	finally {
-		isNotifyingPlayer.value = false
+		linkingCharacterId.value = null
 	}
+}
+
+function unlinkCharacterClick(player: MesaPlayer) {
+	if (unlinkingPlayerId.value) return
+
+	dialog.warning({
+		title: 'Desvincular personagem',
+		content: `Tem certeza que deseja desvincular ${player.userCharacter?.name ?? 'seu personagem'} desta mesa?`,
+		positiveText: 'Desvincular',
+		negativeText: 'Cancelar',
+		onPositiveClick: async () => {
+			try {
+				unlinkingPlayerId.value = player.id
+
+				await updateCharacterPlayer(player.id, null)
+
+				message.success('Personagem desvinculado com sucesso')
+				await getMesa()
+			}
+			catch (err) {
+				const errorMessage = err instanceof Error ? err.message : 'Não foi possível desvincular o personagem. Tente novamente.'
+				message.error(errorMessage)
+			}
+			finally {
+				unlinkingPlayerId.value = null
+			}
+		}
+	})
+}
+
+function leaveMesaClick(player: MesaPlayer) {
+	if (leavingMesaPlayerId.value) return
+
+	dialog.warning({
+		title: 'Sair da mesa',
+		content: 'Tem certeza que deseja sair da mesa?',
+		positiveText: 'Sair',
+		negativeText: 'Cancelar',
+		onPositiveClick: async () => {
+			try {
+				leavingMesaPlayerId.value = player.id
+
+				await deletePlayer(player.id)
+
+				message.success('Você saiu da mesa')
+				await router.push({ name: 'mesas' })
+			}
+			catch (err) {
+				const errorMessage = err instanceof Error ? err.message : 'Não foi possível sair da mesa. Tente novamente.'
+				message.error(errorMessage)
+			}
+			finally {
+				leavingMesaPlayerId.value = null
+			}
+		}
+	})
 }
 
 function expelSpectatorClick(spectatorId: number, spectatorName: string) {
@@ -520,12 +698,19 @@ getMesa()
 			v-model:show="showCharacterModal"
 			:character="selectedCharacter"
 			:loading="isLoadingCharacter"
-			:can-expel="canManageSelectedPlayer"
-			:expelling="isExpellingPlayer"
-			:can-notify="canManageSelectedPlayer"
-			:notifying="isNotifyingPlayer"
-			@expel="expelSelectedPlayer"
-			@notify="notifySelectedPlayer"
+		/>
+
+		<PlayerProfileModal
+			v-model:show="showPlayerProfileModal"
+			:player="profilePlayer"
+		/>
+
+		<LinkCharacterModal
+			v-model:show="showLinkCharacterModal"
+			:characters="availableCharacters"
+			:loading="isLoadingAvailableCharacters"
+			:linking-id="linkingCharacterId"
+			@link="onLinkCharacterSubmit"
 		/>
 
 		<InviteModal
@@ -559,36 +744,43 @@ getMesa()
 				</div>
 			</div>
 
-			<div
-				class="player__card"
+			<n-dropdown
 				v-for="player of jogadores"
 				:key="player.id"
-				:role="player.userCharacterId ? 'button' : undefined"
-				:tabindex="player.userCharacterId ? 0 : undefined"
-				@click="playerCardClick(player.id, player.userCharacterId)"
+				trigger="click"
+				placement="right"
+				:show-arrow="true"
+				:options="playerDropdownOptions(player)"
+				@select="(key: string) => onPlayerMenuSelect(key, player)"
 			>
-				<div class="player__card-avatar">
-					<img
-						v-if="player.userCharacter?.imageUrl"
-						:src="player.userCharacter.imageUrl"
-						:alt="player.userCharacter?.name ?? player.user.name"
-						class="player__card-avatar-img"
-					>
-					<n-icon v-else>
-						<IconPerson />
-					</n-icon>
-				</div>
+				<div
+					class="player__card"
+					role="button"
+					tabindex="0"
+				>
+					<div class="player__card-avatar">
+						<img
+							v-if="player.userCharacter?.imageUrl"
+							:src="player.userCharacter.imageUrl"
+							:alt="player.userCharacter?.name ?? player.user.name"
+							class="player__card-avatar-img"
+						>
+						<n-icon v-else>
+							<IconPerson />
+						</n-icon>
+					</div>
 
-				<div class="player__card-info">
-					<span class="player__card-player">
-						{{ player.user.name }} como
-					</span>
+					<div class="player__card-info">
+						<span class="player__card-player">
+							{{ player.user.name }} como
+						</span>
 
-					<span class="player__card-char">
-						{{ player.userCharacter?.name ?? 'Personagem não definido' }}
-					</span>
+						<span class="player__card-char">
+							{{ player.userCharacter?.name ?? 'Personagem não definido' }}
+						</span>
+					</div>
 				</div>
-			</div>
+			</n-dropdown>
 
 			<div
 				class="player__card player__card--empty"

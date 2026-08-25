@@ -18,7 +18,8 @@ export function TransformMesa(mesas: MesaResponseRepository[], userId?: number):
 			imageUrl: item.imageUrl,
 			countSpectators: item.players.filter(player => player.role === 'SPECTATOR').length,
 			countPlayers: item.players.filter(player => player.role !== 'SPECTATOR').length,
-			isMember: userId !== undefined && item.players.some(player => player.userId === userId)
+			isMember: userId !== undefined && item.players.some(player => player.userId === userId),
+			lastPostAt: item.posts?.[0]?.createdAt ?? null
 		}
 	})
 }

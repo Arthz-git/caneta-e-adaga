@@ -7,6 +7,11 @@ const includeRelationsList = {
 	creator: {
 		select: { name: true }
 	},
+	posts: {
+		select: { createdAt: true },
+		orderBy: { createdAt: 'desc' as const },
+		take: 1
+	},
 	players: {
 		select: {
 			id: true,

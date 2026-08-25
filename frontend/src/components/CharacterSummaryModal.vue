@@ -1,49 +1,14 @@
 <script setup lang="ts">
-import { NModal, NButton, NIcon, NSpin, useDialog } from 'naive-ui'
-import { ImageOutline as IconImage, CloseOutline as IconClose, PersonRemoveOutline as IconExpel, NotificationsOutline as IconNotify } from '@vicons/ionicons5'
+import { NModal, NButton, NIcon, NSpin } from 'naive-ui'
+import { ImageOutline as IconImage, CloseOutline as IconClose } from '@vicons/ionicons5'
 import type { CharactersResponse } from '@/types/charactersTypes'
 
-const props = defineProps<{
+defineProps<{
 	character: CharactersResponse | null
 	loading?: boolean
-	canExpel?: boolean
-	expelling?: boolean
-	canNotify?: boolean
-	notifying?: boolean
 }>()
-
-const emit = defineEmits<{
-	expel: []
-	notify: []
-}>()
-
-const dialog = useDialog()
 
 const show = defineModel<boolean>('show', { required: true })
-
-function expelButtonClick() {
-	dialog.warning({
-		title: 'Expulsar jogador',
-		content: `Tem certeza que deseja expulsar ${props.character?.name ?? 'este jogador'} da mesa?`,
-		positiveText: 'Expulsar',
-		negativeText: 'Cancelar',
-		onPositiveClick: () => {
-			emit('expel')
-		}
-	})
-}
-
-function notifyButtonClick() {
-	dialog.info({
-		title: 'Notificar jogador',
-		content: `Enviar uma notificação avisando que a mesa depende da jogada de ${props.character?.name ?? 'este jogador'}?`,
-		positiveText: 'Notificar',
-		negativeText: 'Cancelar',
-		onPositiveClick: () => {
-			emit('notify')
-		}
-	})
-}
 </script>
 
 <template>
@@ -94,40 +59,6 @@ function notifyButtonClick() {
 						</p>
 					</div>
 				</div>
-
-				<div v-if="canExpel || canNotify" class="modal__actions">
-					<n-button
-						v-if="canNotify"
-						type="warning"
-						ghost
-						:loading="notifying"
-						:focusable="false"
-						@click="notifyButtonClick"
-					>
-						<template #icon>
-							<n-icon>
-								<IconNotify />
-							</n-icon>
-						</template>
-						Notificar jogador
-					</n-button>
-
-					<n-button
-						v-if="canExpel"
-						type="error"
-						ghost
-						:loading="expelling"
-						:focusable="false"
-						@click="expelButtonClick"
-					>
-						<template #icon>
-							<n-icon>
-								<IconExpel />
-							</n-icon>
-						</template>
-						Expulsar jogador
-					</n-button>
-				</div>
 			</div>
 		</div>
 	</n-modal>
@@ -167,15 +98,6 @@ function notifyButtonClick() {
 	flex-direction: column;
 	gap: var(--space-5);
 	align-items: start;
-}
-
-.modal__actions {
-	width: 100%;
-	display: flex;
-	justify-content: flex-end;
-	gap: var(--space-3);
-	padding-top: var(--space-4);
-	border-top: 1px solid var(--cor-linha);
 }
 
 .modal__fields {
@@ -246,10 +168,6 @@ function notifyButtonClick() {
 		grid-template-columns: 320px 1fr;
 		gap: var(--space-6);
 		justify-items: initial;
-	}
-
-	.modal__actions {
-		grid-column: 1 / -1;
 	}
 }
 </style>

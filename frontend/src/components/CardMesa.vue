@@ -8,9 +8,10 @@ import {
 	LockOpenOutline as IconUnlocked,
 	ImageOutline as IconImage,
 	LogInOutline as IconEnter,
-	CalendarOutline as IconCalendar
+	CalendarOutline as IconCalendar,
+	ChatbubblesOutline as IconLastPost
 } from '@vicons/ionicons5'
-import { formatDateIntoString } from '@/composables/transformDateIntoString'
+import { formatDateIntoString, formatRelativeTime } from '@/composables/transformDateIntoString'
 
 defineProps<{
 	mesa: MesaResponse
@@ -95,6 +96,18 @@ defineProps<{
 					</div>
 				</template>
 				Mesa criada em {{ formatDateIntoString(mesa.createdAt) }}
+			</n-tooltip>
+
+			<n-tooltip trigger="hover" placement="bottom" v-if="mesa.lastPostAt">
+				<template #trigger>
+					<div class="info__item">
+						<n-icon>
+							<IconLastPost />
+						</n-icon>
+						<span>{{ formatRelativeTime(mesa.lastPostAt) }}</span>
+					</div>
+				</template>
+				Último post em {{ formatDateIntoString(mesa.lastPostAt) }}
 			</n-tooltip>
 		</div>
 

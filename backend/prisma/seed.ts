@@ -249,6 +249,15 @@ async function main() {
 		isFavorite: boolean
 	}[] = []
 
+	// cada personagem só pode estar vinculado a uma mesa por vez
+	const charactersByUserId = new Map<number, typeof characters[number][]>()
+	characters.forEach(character => {
+		const list = charactersByUserId.get(character.userId) ?? []
+		list.push(character)
+		charactersByUserId.set(character.userId, list)
+	})
+	const usedCharacterIds = new Set<number>()
+
 	mesas.forEach((mesa, mesaIndex) => {
 		// apenas 1 mestre por mesa
 		const masterId = pick(users, mesaIndex).id
@@ -272,13 +281,18 @@ async function main() {
 		const playersCount = Math.min(1 + (mesaIndex % 3), mesa.maxPlayers - 1)
 		for (let i = 0; i < playersCount; i++) {
 			const user = nextUnusedUser()
-			const character = pick(characters, mesaIndex + offset)
+			const availableCharacter = (charactersByUserId.get(user.id) ?? [])
+				.find(character => !usedCharacterIds.has(character.id))
+
+			if (availableCharacter) {
+				usedCharacterIds.add(availableCharacter.id)
+			}
 
 			playersData.push({
 				userId: user.id,
 				mesaId: mesa.id,
 				role: 'PLAYER',
-				userCharacterId: character.id,
+				userCharacterId: availableCharacter?.id,
 				isFavorite: (mesaIndex + offset) % 4 === 0
 			})
 		}
@@ -350,15 +364,17 @@ async function main() {
 			text: pick(NPC_TEXTS, mesaIndex)
 		})
 
-		mesaOnlyPlayers.forEach((player, playerIndex) => {
-			postsData.push({
-				userId: player.userId,
-				mesaId: mesa.id,
-				type: 'CHARACTER',
-				characterId: player.userCharacterId!,
-				text: pick(CHARACTER_TEXTS, mesaIndex + playerIndex)
+		mesaOnlyPlayers
+			.filter((player) => player.userCharacterId)
+			.forEach((player, playerIndex) => {
+				postsData.push({
+					userId: player.userId,
+					mesaId: mesa.id,
+					type: 'CHARACTER',
+					characterId: player.userCharacterId!,
+					text: pick(CHARACTER_TEXTS, mesaIndex + playerIndex)
+				})
 			})
-		})
 
 		if (mesaOnlyPlayers.length) {
 			postsData.push({
@@ -560,23 +576,30 @@ async function main() {
 		data: { userId: users[0].id, mesaId: paginationMesa.id, role: 'MASTER', isFavorite: false }
 	})
 	const paginationPlayers = await Promise.all(
-		[users[1], users[2]].map((user, index) =>
-			prisma.players.create({
+		[users[1], users[2]].map((user) => {
+			const availableCharacter = (charactersByUserId.get(user.id) ?? [])
+				.find(character => !usedCharacterIds.has(character.id))
+
+			if (availableCharacter) {
+				usedCharacterIds.add(availableCharacter.id)
+			}
+
+			return prisma.players.create({
 				data: {
 					userId: user.id,
 					mesaId: paginationMesa.id,
 					role: 'PLAYER',
-					userCharacterId: pick(characters, index).id,
+					userCharacterId: availableCharacter?.id,
 					isFavorite: false
 				}
 			})
-		)
+		})
 	)
 
 	const PAGINATION_POSTS_COUNT = 45
 	const paginationPostsData = Array.from({ length: PAGINATION_POSTS_COUNT }, (_, index) => {
 		const author = index % 3 === 0 ? paginationMaster : pick(paginationPlayers, index)
-		const type = index % 3 === 0 ? 'NARRATOR' : 'CHARACTER'
+		const type = index % 3 === 0 || !author.userCharacterId ? 'NARRATOR' : 'CHARACTER'
 
 		return {
 			userId: author.userId,

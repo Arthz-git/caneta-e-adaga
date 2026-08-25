@@ -22,8 +22,15 @@ async function notifyPlayer(id: number) {
 	await api.post(`/players/notify/${id}`)
 }
 
+async function updateCharacterPlayer(id: number, userCharacterId: number | null) {
+	const player = await api.patch(`/players/character/${id}`, { userCharacterId })
+
+	return player.data
+}
+
 export {
 	createPlayer,
 	deletePlayer,
-	notifyPlayer
+	notifyPlayer,
+	updateCharacterPlayer
 }

@@ -16,7 +16,8 @@ export const mesaResponseSchema = z.object({
 	}),
 	countSpectators: z.number(),
 	countPlayers: z.number(),
-	isMember: z.boolean()
+	isMember: z.boolean(),
+	lastPostAt: z.date().nullable()
 })
 
 export const mesaResponseRepository = z.object({
@@ -33,6 +34,9 @@ export const mesaResponseRepository = z.object({
 	creator: z.object({
 		name: z.string()
 	}),
+	posts: z.array(z.object({
+		createdAt: z.date()
+	})).optional(),
 	players: z.array(z.object({
 		id: z.number(),
 		userId: z.number(),

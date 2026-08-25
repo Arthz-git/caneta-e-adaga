@@ -24,7 +24,8 @@ const mesaResponseExample = {
 	},
 	countSpectators: 0,
 	countPlayers: 1,
-	isMember: true
+	isMember: true,
+	lastPostAt: '2026-01-12T18:30:00.000Z'
 }
 
 const mesaByIdResponseExample = {

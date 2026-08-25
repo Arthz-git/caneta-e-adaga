@@ -53,6 +53,10 @@ export class PrismaPlayersRepository implements IPlayersRepository {
 		})
 	}
 
+	async getByUserCharacterId(userCharacterId: number) {
+		return prisma.players.findUnique({ where: { userCharacterId } })
+	}
+
 	async updateRole({ id, ...data }: UpdateRolePlayerDTO) {
 		return prisma.players.update({
 			where: { id },

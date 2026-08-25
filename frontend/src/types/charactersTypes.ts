@@ -7,6 +7,8 @@ interface CharactersResponse {
 	imageUrl: string | null
 	createdAt: Date
 	updatedAt: Date
+	linkedMesaId?: number | null
+	linkedMesaTitle?: string | null
 }
 
 interface CharacterUpdateParams {
