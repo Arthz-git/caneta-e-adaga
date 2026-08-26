@@ -148,6 +148,8 @@ const SCENE_TEXTS = [
 	'O Mercado das Sombras'
 ]
 
+const GAME_SYSTEMS = ['DND5E', 'VAMPIRO_A_MASCARA', 'LIVRE'] as const
+
 const NPC_NAMES = ['Velho Corvin', 'Guarda Ithan', 'Mercadora Yssa', 'Xamã Doreth', 'Capitão Volund']
 
 const NPC_TEXTS = [
@@ -219,7 +221,8 @@ async function main() {
 			prisma.userCharacter.create({
 				data: {
 					...character,
-					userId: pick(users, index + 1).id
+					userId: pick(users, index + 1).id,
+					gameSystem: pick(GAME_SYSTEMS, index)
 				}
 			})
 		)
@@ -232,6 +235,7 @@ async function main() {
 				data: {
 					...mesa,
 					createdBy: pick(users, index).id,
+					gameSystem: pick(GAME_SYSTEMS, index),
 					isPrivate: index % 4 === 0,
 					allowSpectators: index % 5 !== 0,
 					maxPlayers: 3 + (index % 4)
@@ -282,7 +286,7 @@ async function main() {
 		for (let i = 0; i < playersCount; i++) {
 			const user = nextUnusedUser()
 			const availableCharacter = (charactersByUserId.get(user.id) ?? [])
-				.find(character => !usedCharacterIds.has(character.id))
+				.find(character => !usedCharacterIds.has(character.id) && character.gameSystem === mesa.gameSystem)
 
 			if (availableCharacter) {
 				usedCharacterIds.add(availableCharacter.id)
@@ -566,6 +570,7 @@ async function main() {
 			title: 'Mesa de Testes - Paginação de Posts',
 			description: 'Mesa criada apenas para testar a listagem paginada de posts, com um grande volume de mensagens.',
 			createdBy: users[0].id,
+			gameSystem: 'DND5E',
 			isPrivate: false,
 			allowSpectators: true,
 			maxPlayers: 4
@@ -578,7 +583,7 @@ async function main() {
 	const paginationPlayers = await Promise.all(
 		[users[1], users[2]].map((user) => {
 			const availableCharacter = (charactersByUserId.get(user.id) ?? [])
-				.find(character => !usedCharacterIds.has(character.id))
+				.find(character => !usedCharacterIds.has(character.id) && character.gameSystem === paginationMesa.gameSystem)
 
 			if (availableCharacter) {
 				usedCharacterIds.add(availableCharacter.id)

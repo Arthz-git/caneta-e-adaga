@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express'
 import { ZodError } from 'zod'
 import { AppError } from '../../../shared/errors/AppError'
+import { PrismaMesasRepository } from '../../mesas/repositories/PrismaMesasRepository'
 import { PrismaPlayersRepository } from '../../players/repositories/PrismaPlayersRepository'
 import { PrismaUserCharactersRepository } from '../../userCharacters/repositories/PrismaUserCharactersRepository'
 import { updateCharacterPlayerSchema } from '../schemas/updateCharacterPlayer.schema'
@@ -13,8 +14,9 @@ export class UpdateCharacterPlayerController {
 
 			const playersRepository = new PrismaPlayersRepository()
 			const userCharactersRepository = new PrismaUserCharactersRepository()
+			const mesasRepository = new PrismaMesasRepository()
 
-			const updateCharacterPlayerService = new UpdateCharacterPlayerService(playersRepository, userCharactersRepository)
+			const updateCharacterPlayerService = new UpdateCharacterPlayerService(playersRepository, userCharactersRepository, mesasRepository)
 
 			const player = await updateCharacterPlayerService.execute(data, req.user!.id)
 

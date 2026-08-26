@@ -1,12 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { NModal, NButton, NIcon, NSpin } from 'naive-ui'
 import { ImageOutline as IconImage, CloseOutline as IconClose } from '@vicons/ionicons5'
 import type { CharactersResponse } from '@/types/charactersTypes'
+import { CHARACTER_SHEET_TEMPLATES } from '@/constants/characterSheetTemplates'
+import { GAME_SYSTEM_LABELS } from '@/constants/gameSystems'
+import CharacterSheetSummary from './CharacterSheetSummary.vue'
 
-defineProps<{
+const props = defineProps<{
 	character: CharactersResponse | null
 	loading?: boolean
 }>()
+
+const sheetTemplate = computed(() => props.character ? CHARACTER_SHEET_TEMPLATES[props.character.gameSystem] : [])
 
 const show = defineModel<boolean>('show', { required: true })
 </script>
@@ -46,6 +52,13 @@ const show = defineModel<boolean>('show', { required: true })
 
 				<div class="modal__fields">
 					<div class="modal__field">
+						<span class="modal__field-label">Sistema de jogo</span>
+						<p class="modal__field-text">
+							{{ GAME_SYSTEM_LABELS[character.gameSystem] }}
+						</p>
+					</div>
+
+					<div class="modal__field">
 						<span class="modal__field-label">Descrição</span>
 						<p class="modal__field-text">
 							{{ character.description }}
@@ -57,6 +70,11 @@ const show = defineModel<boolean>('show', { required: true })
 						<p class="modal__field-text">
 							{{ character.lore }}
 						</p>
+					</div>
+
+					<div v-if="sheetTemplate.length" class="modal__field">
+						<span class="modal__field-label">Ficha de personagem</span>
+						<CharacterSheetSummary :template="sheetTemplate" :sheet="character.sheet" />
 					</div>
 				</div>
 			</div>

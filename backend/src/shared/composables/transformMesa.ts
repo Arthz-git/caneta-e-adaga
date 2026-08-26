@@ -6,6 +6,7 @@ export function TransformMesa(mesas: MesaResponseRepository[], userId?: number):
 			id: item.id,
 			title: item.title,
 			description: item.description,
+			gameSystem: item.gameSystem,
 			creator: {
 				id: item.createdBy,
 				name: item.creator.name

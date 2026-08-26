@@ -1,3 +1,6 @@
+import type { GameSystem } from '@/types/mesaTypes'
+import type { SheetData } from '@/constants/characterSheetTemplates'
+
 interface CharactersResponse {
 	id: number
 	userId: number
@@ -5,6 +8,8 @@ interface CharactersResponse {
 	description: string
 	lore: string
 	imageUrl: string | null
+	gameSystem: GameSystem
+	sheet: SheetData | null
 	createdAt: Date
 	updatedAt: Date
 	linkedMesaId?: number | null
@@ -16,6 +21,7 @@ interface CharacterUpdateParams {
 	name: string
 	description: string
 	lore: string
+	sheet?: SheetData
 	image?: File
 }
 

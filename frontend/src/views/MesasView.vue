@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getAllMesaPaginated, createMesa } from '@/services/mesas.service'
-import { MesaResponse } from '@/types/mesaTypes'
+import { MesaResponse, type GameSystem } from '@/types/mesaTypes'
 import { ref, reactive, watch } from 'vue'
 import {
 	SearchOutline as IconSearch,
@@ -53,6 +53,11 @@ const addMesaRules: FormRules = {
 			trigger: ['input', 'blur']
 		}
 	],
+	gameSystem: {
+		required: true,
+		message: 'Sistema de jogo é um campo obrigatório',
+		trigger: ['change', 'blur']
+	},
 	maxPlayers: {
 		required: true,
 		type: 'number',
@@ -66,6 +71,7 @@ const addMesaRules: FormRules = {
 const initialForm = {
 	title: '',
 	description: '',
+	gameSystem: null as GameSystem | null,
 	isPrivate: false,
 	allowSpectators: true,
 	maxPlayers: 4
@@ -92,7 +98,7 @@ async function handleAddMesaSubmit() {
 	try {
 		isSubmitting.value = true
 
-		await createMesa({ ...addMesaForm, image: addMesaImage.value ?? undefined })
+		await createMesa({ ...addMesaForm, gameSystem: addMesaForm.gameSystem!, image: addMesaImage.value ?? undefined })
 
 		message.success('Mesa criada com sucesso')
 
@@ -177,12 +183,14 @@ fetchMesas()
 		v-model:show="showAddMesamodal"
 		v-model:title="addMesaForm.title"
 		v-model:description="addMesaForm.description"
+		v-model:game-system="addMesaForm.gameSystem"
 		v-model:max-players="addMesaForm.maxPlayers"
 		v-model:is-private="addMesaForm.isPrivate"
 		v-model:allow-spectators="addMesaForm.allowSpectators"
 		v-model:image="addMesaImage"
 		heading="Crie uma nova mesa"
 		submit-label="Criar"
+		show-game-system
 		:rules="addMesaRules"
 		:loading="isSubmitting"
 		@submit="handleAddMesaSubmit"

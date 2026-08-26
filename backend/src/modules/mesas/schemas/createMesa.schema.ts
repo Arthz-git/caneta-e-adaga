@@ -1,6 +1,8 @@
 import { z } from 'zod'
+import { gameSystemValues } from '../../../shared/constants/gameSystems'
 
 export const createMesaSchema = z.object({
+	gameSystem: z.enum(gameSystemValues, 'Sistema de jogo inválido'),
 	title: z
 		.string('O título inválido')
 		.min(2, 'O título muito pequeno')

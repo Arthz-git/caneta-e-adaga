@@ -2,7 +2,7 @@
 import { getMesaInfo, updateMesa } from '@/services/mesas.service'
 import { getCharacterById, getMyCharacters } from '@/services/characters.service'
 import { createPlayer, deletePlayer, notifyPlayer, updateCharacterPlayer } from '@/services/players.service'
-import type { GetMesaInfoResponse } from '@/types/mesaTypes'
+import type { GameSystem, GetMesaInfoResponse } from '@/types/mesaTypes'
 import type { CharactersResponse } from '@/types/charactersTypes'
 import {
 	useMessage,
@@ -43,6 +43,7 @@ import { createPost, getAllPosts } from '@/services/posts.service'
 import type { PostListItem, PostType } from '@/types/postTypes'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
 import { exportPostsToHtml } from '@/composables/exportPostsToHtml'
+import { GAME_SYSTEM_LABELS } from '@/constants/gameSystems'
 
 type MesaPlayer = GetMesaInfoResponse['players'][number]
 
@@ -69,6 +70,7 @@ const mesaImage = ref<File | null>(null)
 const mesaConfigForm = reactive({
 	title: '',
 	description: '',
+	gameSystem: null as GameSystem | null,
 	maxPlayers: 1,
 	isPrivate: false,
 	allowSpectators: true
@@ -177,6 +179,7 @@ function configButtonClick() {
 
 	mesaConfigForm.title = mesa.value.title
 	mesaConfigForm.description = mesa.value.description
+	mesaConfigForm.gameSystem = mesa.value.gameSystem
 	mesaConfigForm.maxPlayers = mesa.value.maxPlayers
 	mesaConfigForm.isPrivate = mesa.value.isPrivate
 	mesaConfigForm.allowSpectators = mesa.value.allowSpectators
@@ -320,7 +323,7 @@ async function linkCharacterClick(player: MesaPlayer) {
 		isLoadingAvailableCharacters.value = true
 
 		const myCharacters = await getMyCharacters(auth.user!.id)
-		availableCharacters.value = myCharacters.filter(char => !char.linkedMesaId)
+		availableCharacters.value = myCharacters.filter(char => !char.linkedMesaId && char.gameSystem === mesa.value?.gameSystem)
 	}
 	catch (err) {
 		const errorMessage = err instanceof Error ? err.message : 'Não foi possível carregar seus personagens. Tente novamente.'
@@ -467,9 +470,11 @@ async function mesaConfigSubmit() {
 	try {
 		isSavingMesaConfig.value = true
 
+		const { gameSystem: _gameSystem, ...configData } = mesaConfigForm
+
 		const updatedMesa = await updateMesa({
 			id: mesa.value.id,
-			...mesaConfigForm,
+			...configData,
 			image: mesaImage.value ?? undefined
 		})
 
@@ -624,6 +629,10 @@ getMesa()
 						{{ mesa.creator.name }}
 					</strong>
 				</p>
+
+				<p class="header__game-system">
+					{{ GAME_SYSTEM_LABELS[mesa.gameSystem] }}
+				</p>
 			</div>
 
 			<div class="header__spacer" />
@@ -679,12 +688,15 @@ getMesa()
 			v-model:show="showModalConfigMesa"
 			v-model:title="mesaConfigForm.title"
 			v-model:description="mesaConfigForm.description"
+			v-model:game-system="mesaConfigForm.gameSystem"
 			v-model:max-players="mesaConfigForm.maxPlayers"
 			v-model:is-private="mesaConfigForm.isPrivate"
 			v-model:allow-spectators="mesaConfigForm.allowSpectators"
 			v-model:image="mesaImage"
 			heading="Configurações da mesa"
 			submit-label="Salvar alterações"
+			show-game-system
+			:game-system-editable="false"
 			:image-url="mesa.imageUrl"
 			:disabled="!isOwnerMesa"
 			:show-submit-button="isOwnerMesa"
@@ -991,6 +1003,18 @@ getMesa()
 	font-family: var(--font-sans);
 	color: var(--cor-tinta-fraca);
 	font-size: 0.8rem;
+
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.header__game-system {
+	font-family: var(--font-sans);
+	color: var(--cor-latao);
+	font-size: 0.7rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
 
 	white-space: nowrap;
 	overflow: hidden;

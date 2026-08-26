@@ -1,8 +1,10 @@
+type GameSystem = 'DND5E' | 'VAMPIRO_A_MASCARA' | 'LIVRE'
 
 interface MesaResponse {
 	id: number
 	title: string
 	description: string
+	gameSystem: GameSystem
 	createdAt: Date
 	updatedAt: Date
 	isPrivate: boolean
@@ -34,6 +36,7 @@ interface PaginatedMesaResponse {
 interface CreateMesaParams {
 	title: string
 	description: string
+	gameSystem: GameSystem
 	isPrivate: boolean
 	allowSpectators: boolean
 	maxPlayers: number
@@ -61,6 +64,7 @@ interface GetMesaInfoResponse {
 	id: number
 	title: string
 	description: string
+	gameSystem: GameSystem
 	createdBy: number
 	createdAt: Date
 	updatedAt: Date
@@ -91,6 +95,7 @@ interface GetMesaInfoResponse {
 }
 
 export type {
+	GameSystem,
 	MesaResponse,
 	PaginationMeta,
 	PaginatedMesaResponse,

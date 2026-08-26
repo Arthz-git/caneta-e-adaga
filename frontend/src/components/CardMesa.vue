@@ -9,9 +9,11 @@ import {
 	ImageOutline as IconImage,
 	LogInOutline as IconEnter,
 	CalendarOutline as IconCalendar,
-	ChatbubblesOutline as IconLastPost
+	ChatbubblesOutline as IconLastPost,
+	DiceOutline as IconGameSystem
 } from '@vicons/ionicons5'
 import { formatDateIntoString, formatRelativeTime } from '@/composables/transformDateIntoString'
+import { GAME_SYSTEM_LABELS } from '@/constants/gameSystems'
 
 defineProps<{
 	mesa: MesaResponse
@@ -41,6 +43,13 @@ defineProps<{
 				<p class="card-base__title">
 					{{ mesa.title }}
 				</p>
+
+				<div class="card__mesa__system">
+					<n-icon>
+						<IconGameSystem />
+					</n-icon>
+					<span>{{ GAME_SYSTEM_LABELS[mesa.gameSystem] }}</span>
+				</div>
 
 				<p class="card__mesa__subtitle card-base__clamp-2">"
 					{{ mesa.description }}"
@@ -160,6 +169,21 @@ defineProps<{
 	color: var(--cor-papel-elevado);
 }
 
+.card__mesa__system {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+
+	margin-bottom: var(--space-1);
+
+	font-family: var(--font-sans);
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--cor-latao);
+}
+
 .card__mesa__subtitle {
 	font-family: var(--font-serif);
 	color: var(--cor-tinta);
@@ -169,8 +193,9 @@ defineProps<{
 
 .card__mesa__info {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--space-4);
+	gap: var(--space-3) var(--space-4);
 }
 
 .info__item {

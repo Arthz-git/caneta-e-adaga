@@ -5,8 +5,10 @@ import {
 	PersonOutline as IconUser,
 	CreateOutline as IconEdit,
 	TrashBinOutline as IconTrash,
-	LinkOutline as IconMesa
+	LinkOutline as IconMesa,
+	DiceOutline as IconGameSystem
 } from '@vicons/ionicons5'
+import { GAME_SYSTEM_LABELS } from '@/constants/gameSystems'
 
 defineProps<{
 	char: CharactersResponse
@@ -32,6 +34,13 @@ const emit = defineEmits<{
 				<p class="card-base__title">
 					{{ char.name }}
 				</p>
+
+				<div class="card__system">
+					<n-icon>
+						<IconGameSystem />
+					</n-icon>
+					<span>{{ GAME_SYSTEM_LABELS[char.gameSystem] }}</span>
+				</div>
 
 				<p class="card__description card-base__clamp-2">
 					{{ char.description }}
@@ -98,6 +107,21 @@ const emit = defineEmits<{
 </template>
 
 <style scoped>
+.card__system {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+
+	margin-bottom: var(--space-1);
+
+	font-family: var(--font-sans);
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--cor-latao);
+}
+
 .card__description {
 	font-family: var(--font-sans);
 	color: var(--cor-tinta-fraca);

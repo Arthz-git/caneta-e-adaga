@@ -13,6 +13,8 @@ const userCharacterResponseExample = {
 	description: 'Um mercenário cansado de guerras, em busca de redenção.',
 	lore: 'Nascido nas terras geladas do norte, Aldric perdeu tudo em uma guerra que não escolheu lutar...',
 	imageUrl: 'https://res.cloudinary.com/demo/image/upload/v1/caneta-e-adaga/characters/exemplo.jpg',
+	gameSystem: 'DND5E',
+	sheet: { forca: 16, destreza: 12, classe: 'Guerreiro' },
 	createdAt: '2026-01-10T12:00:00.000Z',
 	updatedAt: '2026-01-10T12:00:00.000Z'
 }

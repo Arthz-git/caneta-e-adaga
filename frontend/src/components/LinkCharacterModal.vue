@@ -42,7 +42,7 @@ const show = defineModel<boolean>('show', { required: true })
 
 			<n-empty
 				v-else-if="!characters.length"
-				description="Nenhum personagem disponível para vincular. Crie um personagem em Meus Personagens ou desvincule um já usado em outra mesa."
+				description="Nenhum personagem disponível para vincular. Crie um personagem do sistema desta mesa em Meus Personagens ou desvincule um já usado em outra mesa."
 				class="center__container"
 			/>
 

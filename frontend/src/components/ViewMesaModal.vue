@@ -8,9 +8,11 @@ import {
 	EyeOutline as IconEye,
 	LockClosedOutline as IconLocked,
 	LockOpenOutline as IconUnlocked,
-	CalendarOutline as IconCalendar
+	CalendarOutline as IconCalendar,
+	DiceOutline as IconGameSystem
 } from '@vicons/ionicons5'
 import { formatDateIntoString } from '@/composables/transformDateIntoString'
+import { GAME_SYSTEM_LABELS } from '@/constants/gameSystems'
 import { NButton, NIcon, NModal, useMessage } from 'naive-ui'
 import { useAuthStore } from '@/stores/useAuth'
 import { useRouter } from 'vue-router'
@@ -157,6 +159,13 @@ async function handleSolicitarJogador(mesaId: number) {
 					</div>
 
 					<div class="view__info">
+						<div class="info__item">
+							<n-icon>
+								<IconGameSystem />
+							</n-icon>
+							<span>{{ GAME_SYSTEM_LABELS[props.mesa.gameSystem] }}</span>
+						</div>
+
 						<div class="info__item">
 							<n-icon>
 								<IconUsers />

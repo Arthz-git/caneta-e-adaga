@@ -1,9 +1,11 @@
 import { z } from 'zod'
+import { gameSystemValues } from '../../../shared/constants/gameSystems'
 
 export const mesaResponseSchema = z.object({
 	id: z.number(),
 	title: z.string(),
 	description: z.string(),
+	gameSystem: z.enum(gameSystemValues),
 	createdAt: z.date(),
 	updatedAt: z.date(),
 	isPrivate: z.boolean(),
@@ -24,6 +26,7 @@ export const mesaResponseRepository = z.object({
 	id: z.number(),
 	title: z.string(),
 	description: z.string(),
+	gameSystem: z.enum(gameSystemValues),
 	createdBy: z.number(),
 	createdAt: z.date(),
 	updatedAt: z.date(),

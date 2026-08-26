@@ -1,17 +1,20 @@
+import type { Prisma } from '../../../generated/prisma/client'
 import { prisma } from '../../../database/prisma-client'
 import type { CreateUserCharacterDTO } from '../schemas/createUserCharacter.schema'
 import type { UpdateUserCharacterDTO } from '../schemas/updateUserCharacter.schema'
 import type { IUserCharactersRepository } from './IUserCharactersRepository'
 
 export class PrismaUserCharactersRepository implements IUserCharactersRepository {
-	async create(data: CreateUserCharacterDTO) {
-		return prisma.userCharacter.create({ data })
+	async create({ sheet, ...data }: CreateUserCharacterDTO) {
+		return prisma.userCharacter.create({
+			data: { ...data, sheet: sheet as Prisma.InputJsonValue | undefined }
+		})
 	}
 
-	async update({ id, ...data }: UpdateUserCharacterDTO) {
+	async update({ id, sheet, ...data }: UpdateUserCharacterDTO) {
 		return prisma.userCharacter.update({
 			where: { id: id },
-			data: data
+			data: { ...data, sheet: sheet as Prisma.InputJsonValue | undefined }
 		})
 	}
 

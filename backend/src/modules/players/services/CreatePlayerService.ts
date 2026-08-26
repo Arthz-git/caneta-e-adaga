@@ -46,6 +46,11 @@ export class CreatePlayerService {
 				throw new AppError('Personagem não pertence ao usuário', 403)
 			}
 
+			// verificação se o sistema de jogo do personagem é compatível com o da mesa
+			if (character.gameSystem !== mesa.gameSystem) {
+				throw new AppError('O sistema de jogo do personagem não é compatível com o da mesa', 400)
+			}
+
 			// verificação se o personagem já está vinculado a outra mesa
 			const jaVinculado = await this.playersRepository.getByUserCharacterId(data.userCharacterId)
 			if (jaVinculado) {

@@ -1,4 +1,5 @@
 import { AppError } from '../../../shared/errors/AppError'
+import type { IMesasRepository } from '../../mesas/repositories/IMesasRepository'
 import type { IUserCharactersRepository } from '../../userCharacters/repositories/IUserCharactersRepository'
 import type { IPlayersRepository } from '../repositories/IPlayersRepository'
 import type { UpdateCharacterPlayerDTO } from '../schemas/updateCharacterPlayer.schema'
@@ -6,7 +7,8 @@ import type { UpdateCharacterPlayerDTO } from '../schemas/updateCharacterPlayer.
 export class UpdateCharacterPlayerService {
 	constructor(
 		private playersRepository: IPlayersRepository,
-		private userCharactersRepository: IUserCharactersRepository
+		private userCharactersRepository: IUserCharactersRepository,
+		private mesasRepository: IMesasRepository
 	) { }
 
 	async execute(data: UpdateCharacterPlayerDTO, userId: number) {
@@ -31,6 +33,15 @@ export class UpdateCharacterPlayerService {
 
 		if (character.userId !== userId) {
 			throw new AppError('Personagem não pertence ao usuário', 403)
+		}
+
+		const mesa = await this.mesasRepository.get(player.mesaId)
+		if (!mesa) {
+			throw new AppError('Mesa não encontrada', 404)
+		}
+
+		if (character.gameSystem !== mesa.gameSystem) {
+			throw new AppError('O sistema de jogo do personagem não é compatível com o da mesa', 400)
 		}
 
 		const jaVinculado = await this.playersRepository.getByUserCharacterId(data.userCharacterId)

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { gameSystemValues } from '../../../shared/constants/gameSystems'
 
 export const userCharacterResponseSchema = z.object({
 	id: z.number(),
@@ -7,6 +8,8 @@ export const userCharacterResponseSchema = z.object({
 	description: z.string(),
 	lore: z.string(),
 	imageUrl: z.string().nullable(),
+	gameSystem: z.enum(gameSystemValues),
+	sheet: z.record(z.string(), z.unknown()).nullable(),
 	createdAt: z.date(),
 	updatedAt: z.date()
 })

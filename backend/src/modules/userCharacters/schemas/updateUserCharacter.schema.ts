@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { sheetSchema } from './createUserCharacter.schema'
 
 export const updateUserCharacterSchema = z.object({
 	id: z
@@ -17,7 +18,8 @@ export const updateUserCharacterSchema = z.object({
 	lore: z
 		.string({ error: 'História é um campo obrigatório ' })
 		.trim()
-		.min(1, 'História é um campo obrigatório')
+		.min(1, 'História é um campo obrigatório'),
+	sheet: sheetSchema
 })
 
 export type UpdateUserCharacterDTO = z.infer<typeof updateUserCharacterSchema> & { imageUrl?: string }

@@ -1,13 +1,15 @@
 model UserCharacter {
-    id          Int       @id @default(autoincrement())
+    id          Int        @id @default(autoincrement())
     userId      Int
-    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
     name        String
-    description String    @db.Text
-    lore        String    @db.Text
+    description String     @db.Text
+    lore        String     @db.Text
     imageUrl    String?
-    createdAt   DateTime  @default(now())
-    updatedAt   DateTime  @updatedAt
+    gameSystem  GameSystem
+    sheet       Json?
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
     players     Players[]
     posts       Post[]
 

@@ -4,6 +4,8 @@ import { useAuthStore } from '@/stores/useAuth'
 import { useDialog, useMessage } from 'naive-ui'
 import { ref, reactive } from 'vue'
 import type { CharactersResponse } from '@/types/charactersTypes'
+import type { GameSystem } from '@/types/mesaTypes'
+import type { SheetData } from '@/constants/characterSheetTemplates'
 import { NButton, NIcon, NSpin } from 'naive-ui'
 import type { FormRules } from 'naive-ui'
 import { Add as IconAdd } from '@vicons/ionicons5'
@@ -24,7 +26,9 @@ const editId = ref(0) // 0 = false, number = id do personagem para editar
 const initialStateForm = {
 	name: '',
 	description: '',
-	lore: ''
+	lore: '',
+	gameSystem: null as GameSystem | null,
+	sheet: {} as SheetData
 }
 
 const characterForm = reactive({ ...initialStateForm })
@@ -46,6 +50,11 @@ const rules: FormRules = {
 		required: true,
 		message: 'História é um campo obrigatório',
 		trigger: ['input', 'blur']
+	},
+	gameSystem: {
+		required: true,
+		message: 'Sistema de jogo é um campo obrigatório',
+		trigger: ['change', 'blur']
 	}
 }
 
@@ -66,7 +75,7 @@ async function handleAddCharSubmit() {
 	try {
 		isSubmitting.value = true
 
-		await createMyCharacter({ ...characterForm, image: characterImage.value ?? undefined })
+		await createMyCharacter({ ...characterForm, gameSystem: characterForm.gameSystem!, image: characterImage.value ?? undefined })
 
 		message.success('Personagem criado com sucesso')
 
@@ -89,6 +98,8 @@ function handleEditChar(charId: number) {
 		characterForm.name = selectedChar.name
 		characterForm.description = selectedChar.description
 		characterForm.lore = selectedChar.lore
+		characterForm.gameSystem = selectedChar.gameSystem
+		characterForm.sheet = selectedChar.sheet ?? {}
 		existingImageUrl.value = selectedChar.imageUrl
 
 		showModal.value = true
@@ -100,9 +111,11 @@ async function handleEditCharSubmit() {
 	try {
 		isSubmitting.value = true
 
+		const { gameSystem: _gameSystem, ...formData } = characterForm
+
 		const payload = {
 			id: editId.value,
-			...characterForm,
+			...formData,
 			image: characterImage.value ?? undefined
 		}
 
@@ -187,10 +200,13 @@ fetchMyCharacters()
 		v-model:name="characterForm.name"
 		v-model:description="characterForm.description"
 		v-model:lore="characterForm.lore"
+		v-model:game-system="characterForm.gameSystem"
+		v-model:sheet="characterForm.sheet"
 		v-model:image="characterImage"
 		:image-url="existingImageUrl"
 		:heading="editId === 0 ? 'Novo personagem' : 'Editar personagem'"
 		:submit-label="editId === 0 ? 'Criar' : 'Editar'"
+		:game-system-editable="editId === 0"
 		:rules="rules"
 		:loading="isSubmitting"
 		@submit="handleFormSubmit"

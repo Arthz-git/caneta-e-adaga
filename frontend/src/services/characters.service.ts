@@ -1,11 +1,15 @@
 
 import api from './api'
 import type { CharactersResponse, CharacterUpdateParams } from '@/types/charactersTypes'
+import type { GameSystem } from '@/types/mesaTypes'
+import type { SheetData } from '@/constants/characterSheetTemplates'
 
 interface CreateCharacterParams {
 	name: string
 	description: string
 	lore: string
+	gameSystem: GameSystem
+	sheet?: SheetData
 	image?: File
 }
 
@@ -22,10 +26,11 @@ async function getCharacterById(id: number) {
 }
 
 async function createMyCharacter(newCharacter: CreateCharacterParams) {
-	const { image, ...data } = newCharacter
+	const { image, sheet, ...data } = newCharacter
 
 	const formData = new FormData()
 	Object.entries(data).forEach(([key, value]) => formData.append(key, value))
+	if (sheet) formData.append('sheet', JSON.stringify(sheet))
 	if (image) formData.append('image', image)
 
 	const char = await api.post<CharactersResponse>('/characters', formData)
@@ -34,10 +39,11 @@ async function createMyCharacter(newCharacter: CreateCharacterParams) {
 }
 
 async function updateMyCharacter(updatedCharacter: CharacterUpdateParams) {
-	const { id, image, ...data } = updatedCharacter
+	const { id, image, sheet, ...data } = updatedCharacter
 
 	const formData = new FormData()
 	Object.entries(data).forEach(([key, value]) => formData.append(key, value))
+	if (sheet) formData.append('sheet', JSON.stringify(sheet))
 	if (image) formData.append('image', image)
 
 	await api.put(`/characters/${id}`, formData)

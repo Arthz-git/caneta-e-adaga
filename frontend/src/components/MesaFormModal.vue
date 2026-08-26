@@ -7,6 +7,7 @@ import {
 	NFormItem,
 	NInput,
 	NInputNumber,
+	NSelect,
 	NSwitch,
 	NUpload
 } from 'naive-ui'
@@ -16,6 +17,8 @@ import {
 	ImageOutline as IconImage,
 	CloseOutline as IconClose
 } from '@vicons/ionicons5'
+import type { GameSystem } from '@/types/mesaTypes'
+import { GAME_SYSTEM_OPTIONS } from '@/constants/gameSystems'
 
 withDefaults(defineProps<{
 	heading: string
@@ -27,6 +30,8 @@ withDefaults(defineProps<{
 	submitLabel?: string
 	minPlayers?: number
 	spectatorsToggleDisabled?: boolean
+	showGameSystem?: boolean
+	gameSystemEditable?: boolean
 }>(), {
 	imageUrl: null,
 	rules: undefined,
@@ -35,7 +40,9 @@ withDefaults(defineProps<{
 	showSubmitButton: true,
 	submitLabel: 'Salvar',
 	minPlayers: 1,
-	spectatorsToggleDisabled: false
+	spectatorsToggleDisabled: false,
+	showGameSystem: false,
+	gameSystemEditable: true
 })
 
 const emit = defineEmits<{
@@ -46,6 +53,7 @@ const emit = defineEmits<{
 const show = defineModel<boolean>('show', { required: true })
 const title = defineModel<string>('title', { required: true })
 const description = defineModel<string>('description', { required: true })
+const gameSystem = defineModel<GameSystem | null>('gameSystem', { default: null })
 const maxPlayers = defineModel<number>('maxPlayers', { required: true })
 const isPrivate = defineModel<boolean>('isPrivate', { required: true })
 const allowSpectators = defineModel<boolean>('allowSpectators', { required: true })
@@ -112,7 +120,7 @@ onBeforeUnmount(resetImage)
 
 			<n-form
 				ref="formRef"
-				:model="{ title, description, maxPlayers, isPrivate, allowSpectators }"
+				:model="{ title, description, gameSystem, maxPlayers, isPrivate, allowSpectators }"
 				:rules="rules"
 				:disabled="disabled"
 				class="modal__form"
@@ -151,6 +159,20 @@ onBeforeUnmount(resetImage)
 								type="textarea"
 								placeholder="Do que se trata essa mesa?"
 								:autosize="{ minRows: 6, maxRows: 10 }"
+							/>
+						</n-form-item>
+
+						<n-form-item
+							v-if="showGameSystem"
+							label="Sistema de jogo"
+							path="gameSystem"
+							:feedback="!gameSystemEditable ? 'O sistema não pode ser alterado após a criação da mesa' : undefined"
+						>
+							<n-select
+								v-model:value="gameSystem"
+								:options="GAME_SYSTEM_OPTIONS"
+								:disabled="disabled || !gameSystemEditable"
+								placeholder="Selecione o sistema"
 							/>
 						</n-form-item>
 
