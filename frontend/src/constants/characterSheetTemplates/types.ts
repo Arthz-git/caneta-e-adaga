@@ -1,4 +1,4 @@
-type SheetFieldType = 'text' | 'number' | 'textarea'
+type SheetFieldType = 'text' | 'number' | 'textarea' | 'dots' | 'modifier'
 
 interface SheetFieldDef {
 	key: string

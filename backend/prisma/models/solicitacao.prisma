@@ -1,17 +1,16 @@
 model Solicitacao {
-    id                  Int               @id @default(autoincrement())
-    solicitanteId       Int
-    solicitante         User              @relation("SolicitacoesEnviadas", fields: [solicitanteId], references: [id], onDelete: Cascade)
-    destinoId           Int
-    destino             User              @relation("SolicitacoesRecebidas", fields: [destinoId], references: [id], onDelete: Cascade)
-    mesaId              Int?
-    mesa                Mesa?             @relation(fields: [mesaId], references: [id], onDelete: Cascade)
-    motivo              MotivoSolicitacao
-    status              StatusSolicitacao @default(PENDENTE)
-    createdAt           DateTime          @default(now())
-    updatedAt           DateTime          @updatedAt
-
-    notificacoes        Notificacao[]
+    id            Int               @id @default(autoincrement())
+    solicitanteId Int
+    solicitante   User              @relation("SolicitacoesEnviadas", fields: [solicitanteId], references: [id], onDelete: Cascade)
+    destinoId     Int
+    destino       User              @relation("SolicitacoesRecebidas", fields: [destinoId], references: [id], onDelete: Cascade)
+    mesaId        Int?
+    mesa          Mesa?             @relation(fields: [mesaId], references: [id], onDelete: Cascade)
+    motivo        MotivoSolicitacao
+    status        StatusSolicitacao @default(PENDENTE)
+    createdAt     DateTime          @default(now())
+    updatedAt     DateTime          @updatedAt
+    notificacoes  Notificacao[]
 
     @@index([solicitanteId])
     @@index([destinoId])
@@ -23,7 +22,7 @@ enum MotivoSolicitacao {
     PEDIDO_AMIZADE
     CONVITE_MESA
     PEDIDO_ENTRADA_MESA_ESPECTADOR
-	PEDIDO_ENTRADA_MESA_JOGADOR
+    PEDIDO_ENTRADA_MESA_JOGADOR
 }
 
 enum StatusSolicitacao {

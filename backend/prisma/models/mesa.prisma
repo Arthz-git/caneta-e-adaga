@@ -1,21 +1,20 @@
 model Mesa {
-    id              Int        @id @default(autoincrement())
+    id              Int           @id @default(autoincrement())
     title           String
-    description     String     @db.Text
+    description     String        @db.Text
     createdBy       Int
-    creator         User       @relation(fields: [createdBy], references: [id], onDelete: Cascade)
-    createdAt       DateTime   @default(now())
-    updatedAt       DateTime   @updatedAt
-    isPrivate       Boolean    @default(false)
-    allowSpectators Boolean    @default(true)
-    maxPlayers      Int        @default(4)
+    creator         User          @relation(fields: [createdBy], references: [id], onDelete: Cascade)
+    createdAt       DateTime      @default(now())
+    updatedAt       DateTime      @updatedAt
+    isPrivate       Boolean       @default(false)
+    allowSpectators Boolean       @default(true)
+    maxPlayers      Int           @default(4)
     imageUrl        String?
     gameSystem      GameSystem
-
-    players      Players[]
-    solicitacoes Solicitacao[]
-    posts        Post[]
-    notificacoes Notificacao[]
+    players         Players[]
+    solicitacoes    Solicitacao[]
+    posts           Post[]
+    notificacoes    Notificacao[]
 
     @@index([createdBy])
     @@map("mesas")

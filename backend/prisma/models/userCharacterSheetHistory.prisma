@@ -1,0 +1,13 @@
+model UserCharacterSheetHistory {
+    id              Int           @id @default(autoincrement())
+    userCharacterId Int
+    userCharacter   UserCharacter @relation(fields: [userCharacterId], references: [id], onDelete: Cascade)
+    changedById     Int
+    changedBy       User          @relation(fields: [changedById], references: [id], onDelete: Cascade)
+    previousSheet   Json?
+    newSheet        Json?
+    createdAt       DateTime      @default(now())
+
+    @@index([userCharacterId])
+    @@map("character_sheet_history")
+}

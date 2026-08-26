@@ -16,6 +16,17 @@ export class UpdateUserCharacterService {
 			throw new AppError('Você não tem permissão para atualizar este personagem', 403)
 		}
 
+		const sheetChanged = JSON.stringify(userCharacter.sheet ?? null) !== JSON.stringify(data.sheet ?? null)
+
 		await this.userCharactersRepository.update(data)
+
+		if (sheetChanged) {
+			await this.userCharactersRepository.addSheetHistory({
+				userCharacterId: userCharacter.id,
+				changedById: userId,
+				previousSheet: userCharacter.sheet,
+				newSheet: data.sheet ?? null
+			})
+		}
 	}
 }

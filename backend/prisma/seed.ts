@@ -221,7 +221,8 @@ async function main() {
 			prisma.userCharacter.create({
 				data: {
 					...character,
-					userId: pick(users, index + 1).id,
+					// garante que o usuário 1 sempre tenha ao menos 1 personagem
+					userId: index === 0 ? users[0].id : pick(users, index + 1).id,
 					gameSystem: pick(GAME_SYSTEMS, index)
 				}
 			})
@@ -439,12 +440,12 @@ async function main() {
 		motivo: 'PEDIDO_AMIZADE' | 'CONVITE_MESA' | 'PEDIDO_ENTRADA_MESA_JOGADOR' | 'PEDIDO_ENTRADA_MESA_ESPECTADOR'
 		status: 'PENDENTE' | 'ACEITA' | 'RECUSADA'
 	}[] = [
-		{ solicitanteId: users[1].id, destinoId: users[0].id, motivo: 'PEDIDO_AMIZADE', status: 'PENDENTE' },
-		{ solicitanteId: users[3].id, destinoId: users[2].id, motivo: 'PEDIDO_AMIZADE', status: 'ACEITA' },
-		{ solicitanteId: mesas[0].createdBy, destinoId: users[5].id, mesaId: mesas[0].id, motivo: 'CONVITE_MESA', status: 'PENDENTE' },
-		{ solicitanteId: users[6].id, destinoId: mesas[1].createdBy, mesaId: mesas[1].id, motivo: 'PEDIDO_ENTRADA_MESA_JOGADOR', status: 'PENDENTE' },
-		{ solicitanteId: users[7].id, destinoId: mesas[2].createdBy, mesaId: mesas[2].id, motivo: 'PEDIDO_ENTRADA_MESA_ESPECTADOR', status: 'RECUSADA' }
-	]
+			{ solicitanteId: users[1].id, destinoId: users[0].id, motivo: 'PEDIDO_AMIZADE', status: 'PENDENTE' },
+			{ solicitanteId: users[3].id, destinoId: users[2].id, motivo: 'PEDIDO_AMIZADE', status: 'ACEITA' },
+			{ solicitanteId: mesas[0].createdBy, destinoId: users[5].id, mesaId: mesas[0].id, motivo: 'CONVITE_MESA', status: 'PENDENTE' },
+			{ solicitanteId: users[6].id, destinoId: mesas[1].createdBy, mesaId: mesas[1].id, motivo: 'PEDIDO_ENTRADA_MESA_JOGADOR', status: 'PENDENTE' },
+			{ solicitanteId: users[7].id, destinoId: mesas[2].createdBy, mesaId: mesas[2].id, motivo: 'PEDIDO_ENTRADA_MESA_ESPECTADOR', status: 'RECUSADA' }
+		]
 
 	const solicitacoes = await Promise.all(
 		solicitacoesSeed.map((solicitacao) => prisma.solicitacao.create({ data: solicitacao }))
